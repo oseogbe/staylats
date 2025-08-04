@@ -1,6 +1,11 @@
+import { Link, useNavigate } from "react-router-dom";
+
+import Hero from "@/components/Hero";
+import PropertyCard from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+
 import { 
   MapPin, 
   Star, 
@@ -13,18 +18,16 @@ import {
   TrendingUp,
   CheckCircle
 } from "lucide-react";
-import { Link } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import PropertyCard from "@/components/PropertyCard";
+
 import { mockProperties } from "@/data/mockData";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   const featuredProperties = mockProperties.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <Hero />
 
       {/* Property Types Section */}
@@ -56,9 +59,10 @@ const Index = () => {
                   <Badge variant="outline">Fully furnished</Badge>
                   <Badge variant="outline">Flexible booking</Badge>
                 </div>
-                <Link to="/properties?type=shortlet">
-                  <Button className="w-full">Explore Shortlets</Button>
-                </Link>
+                  <Button className="w-full" onClick={() => {
+                    navigate("/properties?type=shortlet");
+                    scrollTo(0, 0);
+                  }}>Explore Shortlets</Button>
               </div>
             </Card>
 
@@ -78,9 +82,10 @@ const Index = () => {
                   <Badge variant="outline">Long-term</Badge>
                   <Badge variant="outline">All budgets</Badge>
                 </div>
-                <Link to="/properties?type=rental">
-                  <Button className="w-full">Browse Rentals</Button>
-                </Link>
+                <Button className="w-full" onClick={() => {
+                  navigate("/properties?type=rental");
+                  scrollTo(0, 0);
+                }}>Browse Rentals</Button>
               </div>
             </Card>
           </div>
@@ -120,7 +125,7 @@ const Index = () => {
               Explore Nigerian Cities
             </h2>
             <p className="text-xl text-neutral-600">
-              Currently serving Lagos and Abuja with plans to expand nationwide
+              Currently serving Abuja and Lagos with plans to expand nationwide
             </p>
           </div>
 
@@ -140,9 +145,10 @@ const Index = () => {
                   <span className="text-sm text-neutral-500">
                     {mockProperties.filter(p => p.location.includes('Lagos')).length} properties
                   </span>
-                  <Link to="/properties?city=lagos">
-                    <Button variant="outline" size="sm">Explore Lagos</Button>
-                  </Link>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    navigate("/properties?city=lagos");
+                    scrollTo(0, 0);
+                  }}>Explore Lagos</Button>
                 </div>
               </div>
             </Card>
@@ -162,9 +168,10 @@ const Index = () => {
                   <span className="text-sm text-neutral-500">
                     {mockProperties.filter(p => p.location.includes('Abuja')).length} properties
                   </span>
-                  <Link to="/properties?city=abuja">
-                    <Button variant="outline" size="sm">Explore Abuja</Button>
-                  </Link>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      navigate("/properties?city=abuja");
+                      scrollTo(0, 0);
+                    }}>Explore Abuja</Button>
                 </div>
               </div>
             </Card>
