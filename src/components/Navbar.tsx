@@ -1,7 +1,10 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 import { Search, Menu, User, Heart, HelpCircle, Home, UserPlus, Users, Gift, LogIn } from "lucide-react";
-import { useState } from "react";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,7 +15,9 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">Staylats</h1>
+            <Link to="/">
+              <h1 className="text-xl sm:text-2xl font-bold text-primary">Staylats</h1>
+            </Link>
           </div>
 
           {/* Right Side */}

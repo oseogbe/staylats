@@ -34,7 +34,7 @@ const Hero = () => {
           <span className="text-primary">Nigeria</span>
         </h1>
         <p className="text-xl md:text-2xl mb-8 text-neutral-200">
-          Discover amazing shortlets and rentals in Lagos and Abuja
+          Discover amazing shortlets and rentals in Abuja and Lagos
         </p>
 
         {/* Search Form */}
@@ -48,7 +48,7 @@ const Hero = () => {
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
                 <Input
-                  placeholder="Lagos, Abuja"
+                  placeholder="Abuja, Lagos"
                   className="pl-10 h-12 border-neutral-300 focus:border-primary"
                 />
               </div>
