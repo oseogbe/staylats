@@ -1,8 +1,10 @@
+import { useState } from "react";
+
+import { Heart, Star, MapPin, Users } from "lucide-react";
+
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, Star, MapPin } from "lucide-react";
-import { useState } from "react";
 
 interface PropertyCardProps {
   property: {
@@ -15,6 +17,7 @@ interface PropertyCardProps {
     image: string;
     type: "shortlet" | "rental";
     amenities: string[];
+    maxGuests: number;
   };
 }
 
@@ -59,6 +62,8 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
             {property.location}
           </div>
           <div className="flex items-center">
+            <Users className="h-4 w-4 mr-1" />
+            <span className="text-sm font-medium mr-2">{property.maxGuests}</span>
             <Star className="h-4 w-4 text-primary fill-current mr-1" />
             <span className="text-sm font-medium">{property.rating}</span>
             <span className="text-sm text-neutral-500 ml-1">

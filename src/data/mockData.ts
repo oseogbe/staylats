@@ -16,7 +16,7 @@ export const mockProperties = [
     description: "Beautiful luxury apartment with stunning views of the Lagos lagoon. Perfect for business travelers and tourists.",
     bedrooms: 2,
     bathrooms: 2,
-    guests: 4,
+    maxGuests: 4,
   },
   {
     id: "2",
@@ -31,7 +31,7 @@ export const mockProperties = [
     description: "Spacious modern house perfect for families. Located in the prestigious Guzape district with excellent amenities.",
     bedrooms: 4,
     bathrooms: 3,
-    guests: 8,
+    maxGuests: 6,
   },
   {
     id: "3",
@@ -46,7 +46,7 @@ export const mockProperties = [
     description: "Perfect studio for solo travelers or couples. Located close to Murtala Muhammed Airport.",
     bedrooms: 1,
     bathrooms: 1,
-    guests: 2,
+    maxGuests: 2,
   },
   {
     id: "4",
@@ -61,7 +61,7 @@ export const mockProperties = [
     description: "Luxury apartment with beach access in the heart of Lekki. Perfect for vacation and business stays.",
     bedrooms: 3,
     bathrooms: 2,
-    guests: 6,
+    maxGuests: 6,
   },
   {
     id: "5",
@@ -76,7 +76,7 @@ export const mockProperties = [
     description: "Prestigious duplex in Maitama with excellent facilities. Perfect for executives and diplomats.",
     bedrooms: 5,
     bathrooms: 4,
-    guests: 10,
+    maxGuests: 10,
   },
   {
     id: "6",
@@ -91,7 +91,7 @@ export const mockProperties = [
     description: "Fully serviced apartment with daily housekeeping. Ideal for business travelers.",
     bedrooms: 1,
     bathrooms: 1,
-    guests: 2,
+    maxGuests: 2,
   },
 ];
 
