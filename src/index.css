@@ -130,6 +130,10 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    @apply font-[Outfit] scroll-smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
   }

@@ -22,7 +22,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
-    <Card className="group overflow-hidden border-0 shadow-soft hover:shadow-medium transition-all duration-300 cursor-pointer">
+    <Card className="group overflow-hidden border-0 shadow transition-all duration-300 cursor-pointer">
       {/* Image */}
       <div className="relative overflow-hidden">
         <img
