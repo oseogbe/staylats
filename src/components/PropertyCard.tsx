@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { Heart, Star, MapPin, Users } from "lucide-react";
 
@@ -23,9 +24,13 @@ interface PropertyCardProps {
 
 const PropertyCard = ({ property }: PropertyCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
+  const navigate = useNavigate();
 
   return (
-    <Card className="group overflow-hidden border-0 shadow transition-all duration-300 cursor-pointer">
+    <Card 
+      className="group overflow-hidden border-0 shadow transition-all duration-300 cursor-pointer"
+      onClick={() => navigate(`/property/${property.id}`)}
+    >
       {/* Image */}
       <div className="relative overflow-hidden">
         <img
