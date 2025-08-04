@@ -22,9 +22,11 @@ const Navbar = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-            <Button variant="ghost" className="hidden lg:flex text-sm font-semibold px-3 py-2 rounded-full hover:bg-neutral-100">
-              List your property
-            </Button>
+            <Link to="/host/phone-registration">
+              <Button variant="ghost" className="hidden lg:flex text-sm font-semibold px-3 py-2 rounded-full hover:bg-neutral-100">
+                List your property
+              </Button>
+            </Link>
             <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full hover:bg-neutral-100">
               <Heart className="h-5 w-5" />
             </Button>
@@ -47,18 +49,20 @@ const Navbar = () => {
                   <span className="text-sm font-medium">Help Center</span>
                 </DropdownMenuItem>
                 
-                <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center">
-                      <Home className="h-4 w-4 mr-3 text-neutral-600" />
-                      <div>
-                        <p className="text-sm font-medium">Become a host</p>
-                        <p className="text-xs text-neutral-500">It's easy to start hosting and earn extra income.</p>
+                <Link to="/host/phone-registration">
+                  <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <Home className="h-4 w-4 mr-3 text-neutral-600" />
+                        <div>
+                          <p className="text-sm font-medium">Become a host</p>
+                          <p className="text-xs text-neutral-500">It's easy to start hosting and earn extra income.</p>
+                        </div>
                       </div>
+                      <div className="ml-2 text-lg">🏠</div>
                     </div>
-                    <div className="ml-2 text-lg">🏠</div>
-                  </div>
-                </DropdownMenuItem>
+                  </DropdownMenuItem>
+                </Link>
 
                 <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
                   <UserPlus className="h-4 w-4 mr-3 text-neutral-600" />

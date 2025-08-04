@@ -8,6 +8,10 @@ import PropertyListings from "./pages/PropertyListings";
 import PropertyDetails from "./pages/PropertyDetails";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
+import PhoneRegistration from "./pages/host/PhoneRegistration";
+import OtpVerification from "./pages/host/OtpVerification";
+import HostDetailsRegistration from "./pages/host/HostDetailsRegistration";
+import CreateListingPrompt from "./pages/host/CreateListingPrompt";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +26,11 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/properties" element={<PropertyListings />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
+          {/* Host onboarding routes */}
+          <Route path="/host/phone-registration" element={<PhoneRegistration />} />
+          <Route path="/host/verify-otp" element={<OtpVerification />} />
+          <Route path="/host/register-details" element={<HostDetailsRegistration />} />
+          <Route path="/host/create-listing-prompt" element={<CreateListingPrompt />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
