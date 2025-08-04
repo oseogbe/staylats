@@ -1,9 +1,20 @@
+import React from "react";
+
+import { format } from "date-fns";
+
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Calendar, Users } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+import { Search, MapPin, Users, CalendarIcon } from "lucide-react";
+
 import heroImage from "@/assets/hero-lagos.jpg";
 
 const Hero = () => {
+  const [checkInDate, setCheckInDate] = React.useState<Date>();
+  const [checkOutDate, setCheckOutDate] = React.useState<Date>();
+
   return (
     <section className="relative h-[600px] md:h-[700px] flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -48,13 +59,25 @@ const Hero = () => {
               <label className="block text-sm font-medium text-neutral-600 mb-2">
                 Check in
               </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
-                <Input
-                  type="date"
-                  className="pl-10 h-12 border-neutral-300 focus:border-primary"
-                />
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className="pl-10 h-12 w-full border-neutral-300 focus:border-primary"
+                  >
+                    <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
+                    {checkInDate ? format(checkInDate, "PPP") : <span className="absolute left-16 text-slate-400 !font-normal">Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={checkInDate}
+                    onSelect={setCheckInDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Check-out */}
@@ -62,13 +85,25 @@ const Hero = () => {
               <label className="block text-sm font-medium text-neutral-600 mb-2">
                 Check out
               </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
-                <Input
-                  type="date"
-                  className="pl-10 h-12 border-neutral-300 focus:border-primary"
-                />
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className="pl-10 h-12 w-full border-neutral-300 focus:border-primary"
+                  >
+                    <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
+                    {checkOutDate ? format(checkOutDate, "PPP") : <span className="absolute left-16 text-slate-400 !font-normal">Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={checkOutDate}
+                    onSelect={setCheckOutDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Guests */}
