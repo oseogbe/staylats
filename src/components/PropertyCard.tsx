@@ -29,7 +29,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
   return (
     <Card 
       className="group overflow-hidden border-0 shadow transition-all duration-300 cursor-pointer"
-      onClick={() => navigate(`/property/${property.id}`)}
+      onClick={() => { navigate(`/property/${property.id}`); }}
     >
       {/* Image */}
       <div className="relative overflow-hidden">

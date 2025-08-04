@@ -12,6 +12,7 @@ import PhoneRegistration from "./pages/host/PhoneRegistration";
 import OtpVerification from "./pages/host/OtpVerification";
 import HostDetailsRegistration from "./pages/host/HostDetailsRegistration";
 import CreateListingPrompt from "./pages/host/CreateListingPrompt";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Navbar />
         <Routes>
           <Route path="/" element={<Index />} />

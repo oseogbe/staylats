@@ -61,7 +61,7 @@ const Index = () => {
                 </div>
                   <Button className="w-full" onClick={() => {
                     navigate("/properties?type=shortlet");
-                    scrollTo(0, 0);
+                    
                   }}>Explore Shortlets</Button>
               </div>
             </Card>
@@ -84,7 +84,7 @@ const Index = () => {
                 </div>
                 <Button className="w-full" onClick={() => {
                   navigate("/properties?type=rental");
-                  scrollTo(0, 0);
+                  
                 }}>Browse Rentals</Button>
               </div>
             </Card>
@@ -147,7 +147,7 @@ const Index = () => {
                   </span>
                   <Button variant="outline" size="sm" onClick={() => {
                     navigate("/properties?city=lagos");
-                    scrollTo(0, 0);
+                    
                   }}>Explore Lagos</Button>
                 </div>
               </div>
@@ -170,7 +170,7 @@ const Index = () => {
                   </span>
                     <Button variant="outline" size="sm" onClick={() => {
                       navigate("/properties?city=abuja");
-                      scrollTo(0, 0);
+                      
                     }}>Explore Abuja</Button>
                 </div>
               </div>
