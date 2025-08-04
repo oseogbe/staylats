@@ -155,8 +155,8 @@ const Index = () => {
               <div className="p-6">
                 <h3 className="text-2xl font-bold text-neutral-900 mb-2">Abuja</h3>
                 <p className="text-neutral-600 mb-4">
-                  Federal Capital Territory with prestigious areas like Maitama, 
-                  Guzape, Garki, and Wuse.
+                  Federal Capital Territory with prestigious areas like Maitama, Katampe Extension, 
+                  Guzape and Wuse II.
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-neutral-500">
@@ -177,7 +177,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
-              Why Choose NaijaStay?
+              Why Choose Staylats?
             </h2>
             <p className="text-xl text-neutral-600 max-w-2xl mx-auto">
               We make finding and booking properties in Nigeria simple, secure, and reliable
@@ -225,13 +225,13 @@ const Index = () => {
             Ready to List Your Property?
           </h2>
           <p className="text-xl mb-8 text-primary-foreground/90">
-            Join thousands of hosts earning extra income by listing their properties on NaijaStay
+            Join thousands of hosts earning extra income by listing their properties on Staylats
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="secondary" size="lg" className="text-primary">
               List Your Property
             </Button>
-            <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary">
+            <Button variant="secondary" size="lg" className="text-primary">
               Learn More
             </Button>
           </div>
@@ -243,7 +243,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-primary mb-4">NaijaStay</h3>
+              <h3 className="text-2xl font-bold text-primary mb-4">Staylats</h3>
               <p className="text-neutral-400">
                 Your trusted platform for finding quality accommodations across Nigeria.
               </p>
@@ -274,7 +274,7 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-neutral-400">
-            <p>&copy; 2024 NaijaStay. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Staylats. All rights reserved.</p>
           </div>
         </div>
       </footer>
