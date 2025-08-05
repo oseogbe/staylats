@@ -7,10 +7,11 @@ export default function CreateListingPrompt() {
   const navigate = useNavigate();
 
   const handleCreateListing = (type: 'rental' | 'shortlet') => {
-    console.log('Creating listing of type:', type);
-    // This would navigate to the actual listing creation flow
-    // For now, just navigate back to home
-    navigate('/');
+    if (type === 'rental') {
+      navigate('/host/create-rental-listing');
+    } else {
+      navigate('/host/create-shortlet-listing');
+    }
   };
 
   return (

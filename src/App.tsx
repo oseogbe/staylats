@@ -12,6 +12,8 @@ import PhoneRegistration from "./pages/host/PhoneRegistration";
 import OtpVerification from "./pages/host/OtpVerification";
 import HostDetailsRegistration from "./pages/host/HostDetailsRegistration";
 import CreateListingPrompt from "./pages/host/CreateListingPrompt";
+import CreateRentalListing from "./pages/host/CreateRentalListing";
+import CreateShortletListing from "./pages/host/CreateShortletListing";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -33,6 +35,8 @@ const App = () => (
           <Route path="/host/verify-otp" element={<OtpVerification />} />
           <Route path="/host/register-details" element={<HostDetailsRegistration />} />
           <Route path="/host/create-listing-prompt" element={<CreateListingPrompt />} />
+          <Route path="/host/create-rental-listing" element={<CreateRentalListing />} />
+          <Route path="/host/create-shortlet-listing" element={<CreateShortletListing />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
