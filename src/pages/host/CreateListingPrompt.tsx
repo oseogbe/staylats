@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Home, Building, CheckCircle, Plus, ArrowRight } from 'lucide-react';
+import { Home, Building2, CheckCircle, Plus, ArrowRight } from 'lucide-react';
 
 export default function CreateListingPrompt() {
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ export default function CreateListingPrompt() {
               <CardContent className="p-6" onClick={() => handleCreateListing('shortlet')}>
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                    <Building className="h-6 w-6 text-green-600" />
+                    <Building2 className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold">Short-term Shortlet</h4>

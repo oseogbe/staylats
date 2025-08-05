@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ArrowLeft, ArrowRight, Upload, X, MapPin, Users, Bed, Bath, Building, CheckCircle, CalendarIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Upload, X, MapPin, Users, Bed, Bath, Building2, CheckCircle, CalendarIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -722,7 +722,7 @@ export default function CreateShortletListing() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Building className="h-5 w-5 text-green-600" />
+            <Building2 className="h-5 w-5 text-green-600" />
             <span className="text-sm font-medium text-green-600">Shortlet Property</span>
           </div>
         </div>

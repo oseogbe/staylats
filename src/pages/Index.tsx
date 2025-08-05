@@ -13,7 +13,7 @@ import {
   Car, 
   Shield, 
   Home, 
-  Building, 
+  Building2, 
   Users,
   TrendingUp,
   CheckCircle
@@ -70,7 +70,7 @@ const Index = () => {
             <Card className="group overflow-hidden border-0 shadow-soft hover:shadow-medium transition-all duration-300 cursor-pointer">
               <div className="p-8 text-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Building className="h-8 w-8 text-primary" />
+                  <Building2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-neutral-900 mb-4">Rentals</h3>
                 <p className="text-neutral-600 mb-6">
