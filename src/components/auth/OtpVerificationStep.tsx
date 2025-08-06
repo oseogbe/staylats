@@ -107,7 +107,7 @@ const OtpVerificationStep = ({ phoneNumber, onOtpVerification, onBack, onResendO
 
             <Button
               type="submit"
-              className="w-full bg-[#E31C5F] hover:bg-[#D70A4F] text-white font-medium py-3"
+              className="w-full"
               disabled={isLoading || form.watch("otp").length !== 6}
             >
               {isLoading ? "Verifying..." : "Continue"}

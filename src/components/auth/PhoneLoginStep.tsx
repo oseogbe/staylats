@@ -51,12 +51,6 @@ const PhoneLoginStep = ({ onPhoneSubmit, onSocialLogin, onClose }: PhoneLoginSte
   return (
     <>
       <DialogHeader className="relative">
-        <button
-          onClick={onClose}
-          className="absolute -top-2 -right-2 p-2 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
         <DialogTitle className="text-xl font-semibold text-center">
           Log in or sign up
         </DialogTitle>
@@ -97,7 +91,7 @@ const PhoneLoginStep = ({ onPhoneSubmit, onSocialLogin, onClose }: PhoneLoginSte
 
             <Button
               type="submit"
-              className="w-full bg-[#E31C5F] hover:bg-[#D70A4F] text-white font-medium py-3"
+              className="w-full"
               disabled={isLoading}
             >
               {isLoading ? "Sending..." : "Continue"}

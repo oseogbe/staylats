@@ -148,7 +148,7 @@ const UserRegistrationStep = ({ phoneNumber, onRegistrationComplete, onBack }: U
 
             <Button
               type="submit"
-              className="w-full bg-[#E31C5F] hover:bg-[#D70A4F] text-white font-medium py-3"
+              className="w-full"
               disabled={isLoading}
             >
               {isLoading ? "Creating account..." : "Agree and continue"}
