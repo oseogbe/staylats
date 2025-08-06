@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import AuthModal from "@/components/auth/AuthModal";
 
 import { Search, Menu, User, Heart, HelpCircle, Home, UserPlus, Users, Gift, LogIn } from "lucide-react";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
     <nav className="sticky top-0 z-50 bg-background border-b border-neutral-200">
@@ -81,7 +83,10 @@ const Navbar = () => {
 
                 <DropdownMenuSeparator className="my-2" />
 
-                <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
+                <DropdownMenuItem 
+                  className="p-4 hover:bg-neutral-50 cursor-pointer"
+                  onClick={() => setIsAuthModalOpen(true)}
+                >
                   <LogIn className="h-4 w-4 mr-3 text-neutral-600" />
                   <span className="text-sm font-medium">Log in or sign up</span>
                 </DropdownMenuItem>
@@ -90,6 +95,11 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+      
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </nav>
   );
 };
