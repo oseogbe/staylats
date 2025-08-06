@@ -64,7 +64,7 @@ export default function CreateListingPrompt() {
                   <div>
                     <h4 className="text-lg font-semibold">Short-term Shortlet</h4>
                     <p className="text-sm text-muted-foreground">
-                      List properties for daily or weekly stays
+                      List properties for daily or weekly vacational stays
                     </p>
                   </div>
                   <Button variant="outline" className="w-full">
