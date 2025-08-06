@@ -3,11 +3,12 @@ import { useState } from "react";
 import { ArrowLeft, Star, MapPin, Users, Bed, Bath, Heart, Share, Wifi, Car, Shield, Dumbbell, Waves, Zap, ChefHat, Sparkles, Home } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Separator } from "@/components/ui/separator";
+import { ShortletBookingCard } from "@/components/booking/ShortletBookingCard";
+import { RentalBookingCard } from "@/components/booking/RentalBookingCard";
 import { mockProperties } from "@/data/mockData";
 
 const amenityIcons: Record<string, any> = {
@@ -194,51 +195,20 @@ const PropertyDetails = () => {
 
           {/* Booking Card */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-24">
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-2xl font-bold">₦{property.price.toLocaleString()}</span>
-                    <span className="text-muted-foreground">
-                      {property.type === "shortlet" ? "/ night" : "/ month"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    <Star className="h-4 w-4 fill-current text-primary" />
-                    <span className="text-sm font-medium">{property.rating}</span>
-                    <span className="text-sm text-muted-foreground">({property.reviews} reviews)</span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <Button className="w-full" size="lg">
-                    {property.type === "shortlet" ? "Book Now" : "Contact Owner"}
-                  </Button>
-                  <Button variant="outline" className="w-full" size="lg">
-                    Send Inquiry
-                  </Button>
-                </div>
-
-                <div className="text-center text-sm text-muted-foreground">
-                  You won't be charged yet
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Service fee</span>
-                    <span>₦{Math.round(property.price * 0.1).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>₦{Math.round(property.price * 1.1).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            {property.type === "shortlet" ? (
+              <ShortletBookingCard
+                price={property.price}
+                rating={property.rating}
+                reviews={property.reviews}
+                maxGuests={property.maxGuests}
+              />
+            ) : (
+              <RentalBookingCard
+                price={property.price}
+                rating={property.rating}
+                reviews={property.reviews}
+              />
+            )}
           </div>
         </div>
       </div>
