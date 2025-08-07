@@ -202,15 +202,188 @@ const HostDashboard = () => {
             </Tabs>
           </TabsContent>
 
-          {/* Other tab contents */}
-          <TabsContent value="dashboard">
+          {/* Dashboard Tab Content */}
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Greeting Section */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2 text-sm text-neutral-600">
+                <span>🕕 {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                <span>•</span>
+                <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+              <h2 className="text-2xl font-semibold text-neutral-900">
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, Host
+              </h2>
+            </div>
+
+            {/* Metrics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Home className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-neutral-600">Total Properties</p>
+                      <p className="text-2xl font-bold text-neutral-900">3</p>
+                      <p className="text-xs text-neutral-500">2 rentals, 1 shortlet</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-neutral-600">Current Monthly Income</p>
+                      <p className="text-2xl font-bold text-neutral-900">₦0</p>
+                      <p className="text-xs text-neutral-500">From 0 active properties</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-yellow-100 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-neutral-600">Potential Income</p>
+                      <p className="text-2xl font-bold text-neutral-900">₦0</p>
+                      <p className="text-xs text-neutral-500">From all 3 properties</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Users className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-neutral-600">Occupancy Rate</p>
+                      <p className="text-2xl font-bold text-neutral-900">0%</p>
+                      <p className="text-xs text-neutral-500">No properties rented yet</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Overview Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Dashboard Overview</CardTitle>
-                <CardDescription>View your property performance and key metrics</CardDescription>
+                <CardTitle>Overview</CardTitle>
+                <CardDescription>A summary of your properties including current and potential earnings.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-neutral-600">Dashboard content coming soon...</p>
+                <div className="text-center py-8">
+                  <p className="text-neutral-600">No property data available</p>
+                  <p className="text-sm text-neutral-500 mt-1">Add properties to view your financial overview</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Property Overview and Tenants/Guests Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Property Overview</CardTitle>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-primary hover:text-primary-hover">
+                    View all
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-neutral-600">No properties found. Add properties to get started!</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Tenants & Guests</CardTitle>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-primary hover:text-primary-hover">
+                    View all
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-neutral-600">No tenants or guests found</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Payouts */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Payouts</CardTitle>
+                <CardDescription>Latest rent and booking payouts received from your properties</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <p className="text-neutral-600">No recent payouts recorded</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Button 
+                    onClick={handleCreateListing}
+                    className="h-16 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 flex flex-col items-center justify-center space-y-1"
+                    variant="outline"
+                  >
+                    <Home className="w-5 h-5" />
+                    <span className="text-sm">Add New Property</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => setActiveTab("property-management")}
+                    className="h-16 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 flex flex-col items-center justify-center space-y-1"
+                    variant="outline"
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span className="text-sm">Manage Properties</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => setActiveTab("tenant")}
+                    className="h-16 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200 flex flex-col items-center justify-center space-y-1"
+                    variant="outline"
+                  >
+                    <Users className="w-5 h-5" />
+                    <span className="text-sm">View Tenants</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => setActiveTab("finance")}
+                    className="h-16 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 flex flex-col items-center justify-center space-y-1"
+                    variant="outline"
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    <span className="text-sm">View Finances</span>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
