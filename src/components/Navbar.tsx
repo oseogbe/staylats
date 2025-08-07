@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -8,6 +8,7 @@ import AuthModal from "@/components/auth/AuthModal";
 import { Search, Menu, User, Heart, HelpCircle, Home, UserPlus, Users, Gift, LogIn } from "lucide-react";
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -51,6 +52,22 @@ const Navbar = () => {
                   <span className="text-sm font-medium">Help Center</span>
                 </DropdownMenuItem>
                 
+                <DropdownMenuItem 
+                  className="p-4 hover:bg-neutral-50 cursor-pointer"
+                  onClick={() => navigate("/host/dashboard")}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center">
+                      <Home className="h-4 w-4 mr-3 text-neutral-600" />
+                      <div>
+                        <p className="text-sm font-medium">Switch to hosting</p>
+                        <p className="text-xs text-neutral-500">Manage your properties and earnings.</p>
+                      </div>
+                    </div>
+                    <div className="ml-2 text-lg">🏠</div>
+                  </div>
+                </DropdownMenuItem>
+
                 <Link to="/host/phone-registration">
                   <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
                     <div className="flex items-center justify-between w-full">
