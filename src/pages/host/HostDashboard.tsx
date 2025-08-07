@@ -74,10 +74,6 @@ const HostDashboard = () => {
               <h1 className="text-2xl font-semibold text-neutral-900">Host Dashboard</h1>
               <p className="text-neutral-600 mt-1">Manage your properties and bookings</p>
             </div>
-            <Button onClick={handleCreateListing} className="bg-primary hover:bg-primary-hover">
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Listing
-            </Button>
           </div>
         </div>
       </div>
