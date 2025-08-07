@@ -95,12 +95,12 @@ const Index = () => {
       {/* Featured Properties */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
+          <div className="flex items-start md:items-center justify-between md:mb-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
                 Featured Properties
               </h2>
-              <p className="text-xl text-neutral-600">
+              <p className="text-xl text-neutral-600 hidden md:block">
                 Hand-picked properties with excellent reviews and great amenities
               </p>
             </div>
@@ -108,6 +108,10 @@ const Index = () => {
               <Button variant="outline">View All Properties</Button>
             </Link>
           </div>
+
+          <p className="text-xl text-neutral-600 md:hidden mb-12">
+            Hand-picked properties with excellent reviews and great amenities
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProperties.map((property) => (
