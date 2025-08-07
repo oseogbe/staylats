@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import PropertyListings from "./pages/PropertyListings";
 import PropertyDetails from "./pages/PropertyDetails";
+import SavedListings from "./pages/SavedListings";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 import PhoneRegistration from "./pages/host/PhoneRegistration";
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/properties" element={<PropertyListings />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
+          <Route path="/saved-listings" element={<SavedListings />} />
           {/* Host onboarding routes */}
           <Route path="/host/phone-registration" element={<PhoneRegistration />} />
           <Route path="/host/verify-otp" element={<OtpVerification />} />

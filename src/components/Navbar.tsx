@@ -30,7 +30,12 @@ const Navbar = () => {
                 List your property
               </Button>
             </Link>
-            <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full hover:bg-neutral-100">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="hidden sm:flex rounded-full hover:bg-neutral-100"
+              onClick={() => navigate('/saved-listings')}
+            >
               <Heart className="h-5 w-5" />
             </Button>
             <DropdownMenu>
