@@ -9,14 +9,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 import { Search, MapPin, Users, CalendarIcon } from "lucide-react";
 
-import heroImage from "@/assets/hero-lagos.jpg";
+import heroImage from "@/assets/serviced-apartment.png";
 
 const Hero = () => {
   const [checkInDate, setCheckInDate] = React.useState<Date>();
   const [checkOutDate, setCheckOutDate] = React.useState<Date>();
 
   return (
-    <section className="relative h-[600px] md:h-[700px] flex items-center justify-center overflow-hidden">
+    <section className="relative h-screen md:h-[700px] flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
