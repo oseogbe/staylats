@@ -172,7 +172,7 @@ const Hero = () => {
                         className="pl-10 h-12 w-full border-neutral-300 focus:border-primary justify-start"
                       >
                         <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
-                        {moveInDate ? format(moveInDate, "PPP") : <span className="absolute left-16 text-slate-400 !font-normal">Pick a date</span>}
+                        {moveInDate ? format(moveInDate, "PPP") : <span className="text-slate-400 !font-normal">Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
