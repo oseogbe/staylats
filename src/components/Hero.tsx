@@ -12,6 +12,14 @@ import { Search, MapPin, Users, CalendarIcon } from "lucide-react";
 
 import heroImage from "@/assets/serviced-apartment.png";
 
+const contractTerms = [
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'quarterly', label: 'Quarterly (3 months)' },
+  { value: 'bi-annual', label: 'Bi-annual (6 months)' },
+  { value: 'yearly', label: 'Yearly (12 months)' },
+  { value: 'biennial', label: 'Biennial (24 months)' }
+];
+
 const Hero = () => {
   const [propertyType, setPropertyType] = React.useState<"shortlets" | "rentals">("shortlets");
   const [checkInDate, setCheckInDate] = React.useState<Date>();
@@ -24,7 +32,7 @@ const Hero = () => {
       <div className="absolute inset-0">
         <img
           src={heroImage}
-          alt="Lagos skyline"
+          alt="a modern serviced apartment in Nigeria"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-neutral-900/40"></div>
@@ -94,7 +102,7 @@ const Hero = () => {
                         className="pl-10 h-12 w-full border-neutral-300 focus:border-primary justify-start"
                       >
                         <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
-                        {checkInDate ? format(checkInDate, "PPP") : <span className="absolute left-16 text-slate-400 !font-normal">Pick a date</span>}
+                        {checkInDate ? format(checkInDate, "PPP") : <span className="text-slate-400 !font-normal">Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -121,7 +129,7 @@ const Hero = () => {
                         className="pl-10 h-12 w-full border-neutral-300 focus:border-primary justify-start"
                       >
                         <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
-                        {checkOutDate ? format(checkOutDate, "PPP") : <span className="absolute left-16 text-slate-400 !font-normal">Pick a date</span>}
+                        {checkOutDate ? format(checkOutDate, "PPP") : <span className="text-slate-400 !font-normal">Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -189,11 +197,11 @@ const Hero = () => {
                       <SelectValue placeholder="Select term" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="6months">6 months</SelectItem>
-                      <SelectItem value="1year">1 year</SelectItem>
-                      <SelectItem value="2years">2 years</SelectItem>
-                      <SelectItem value="3years">3 years</SelectItem>
-                      <SelectItem value="flexible">Flexible</SelectItem>
+                      {contractTerms.map((term) => (
+                        <SelectItem key={term.value} value={term.value}>
+                          {term.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
