@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import AuthModal from "@/components/auth/AuthModal";
+
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 import { Search, Menu, User, Heart, HelpCircle, Home, UserPlus, Users, Gift, LogIn, Settings } from "lucide-react";
 
@@ -56,13 +63,8 @@ const Navbar = () => {
                   className="p-4 hover:bg-neutral-50 cursor-pointer"
                   onClick={() => navigate("/my-account")}
                 >
-                  <Settings className="h-4 w-4 mr-3 text-neutral-600" />
+                  <User className="h-4 w-4 mr-3 text-neutral-600" />
                   <span className="text-sm font-medium">My Account</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
-                  <HelpCircle className="h-4 w-4 mr-3 text-neutral-600" />
-                  <span className="text-sm font-medium">Help Center</span>
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
@@ -96,7 +98,7 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 </Link>
 
-                <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
+                {/* <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
                   <UserPlus className="h-4 w-4 mr-3 text-neutral-600" />
                   <span className="text-sm font-medium">Refer a Host</span>
                 </DropdownMenuItem>
@@ -109,6 +111,11 @@ const Navbar = () => {
                 <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
                   <Gift className="h-4 w-4 mr-3 text-neutral-600" />
                   <span className="text-sm font-medium">Gift cards</span>
+                </DropdownMenuItem> */}
+
+                <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer" onClick={() => navigate("/help-center")}>
+                  <HelpCircle className="h-4 w-4 mr-3 text-neutral-600" />
+                  <span className="text-sm font-medium">Help Center</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator className="my-2" />
