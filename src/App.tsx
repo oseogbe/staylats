@@ -16,6 +16,7 @@ import CreateListingPrompt from "./pages/host/CreateListingPrompt";
 import CreateRentalListing from "./pages/host/CreateRentalListing";
 import CreateShortletListing from "./pages/host/CreateShortletListing";
 import HostDashboard from "./pages/host/HostDashboard";
+import MyAccount from "./pages/MyAccount";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/host/create-rental-listing" element={<CreateRentalListing />} />
           <Route path="/host/create-shortlet-listing" element={<CreateShortletListing />} />
           <Route path="/host/dashboard" element={<HostDashboard />} />
+          <Route path="/my-account" element={<MyAccount />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

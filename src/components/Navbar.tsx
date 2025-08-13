@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import AuthModal from "@/components/auth/AuthModal";
 
-import { Search, Menu, User, Heart, HelpCircle, Home, UserPlus, Users, Gift, LogIn } from "lucide-react";
+import { Search, Menu, User, Heart, HelpCircle, Home, UserPlus, Users, Gift, LogIn, Settings } from "lucide-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -52,6 +52,14 @@ const Navbar = () => {
                 className="w-64 mt-2 bg-background border border-neutral-200 shadow-lg rounded-xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2"
                 sideOffset={8}
               >
+                <DropdownMenuItem 
+                  className="p-4 hover:bg-neutral-50 cursor-pointer"
+                  onClick={() => navigate("/my-account")}
+                >
+                  <Settings className="h-4 w-4 mr-3 text-neutral-600" />
+                  <span className="text-sm font-medium">My Account</span>
+                </DropdownMenuItem>
+
                 <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
                   <HelpCircle className="h-4 w-4 mr-3 text-neutral-600" />
                   <span className="text-sm font-medium">Help Center</span>
