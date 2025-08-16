@@ -1,13 +1,11 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const phoneSchema = z.object({
   phoneNumber: z
@@ -22,10 +20,10 @@ interface PhoneLoginStepProps {
   onPhoneSubmit: (phoneNumber: string) => void;
   onSocialLogin: (provider: "google" | "facebook") => void;
   onClose: () => void;
+  isLoading: boolean;
 }
 
-const PhoneLoginStep = ({ onPhoneSubmit, onSocialLogin, onClose }: PhoneLoginStepProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+const PhoneLoginStep = ({ onPhoneSubmit, onSocialLogin, onClose, isLoading }: PhoneLoginStepProps) => {
 
   const form = useForm<PhoneFormData>({
     resolver: zodResolver(phoneSchema),
@@ -35,13 +33,7 @@ const PhoneLoginStep = ({ onPhoneSubmit, onSocialLogin, onClose }: PhoneLoginSte
   });
 
   const onSubmit = async (data: PhoneFormData) => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API delay
-      onPhoneSubmit(data.phoneNumber);
-    } finally {
-      setIsLoading(false);
-    }
+    onPhoneSubmit(data.phoneNumber);
   };
 
   const handleSocialLogin = (provider: "google" | "facebook") => {

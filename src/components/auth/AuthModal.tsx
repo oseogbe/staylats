@@ -1,8 +1,13 @@
 import { useState } from "react";
+
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
+
 import PhoneLoginStep from "./PhoneLoginStep";
 import OtpVerificationStep from "./OtpVerificationStep";
 import UserRegistrationStep from "./UserRegistrationStep";
+
+import { authAPI } from "@/services/api";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -12,39 +17,87 @@ interface AuthModalProps {
 export type AuthStep = "phone" | "otp" | "registration" | "complete";
 
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<AuthStep>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePhoneSubmit = async (phone: string) => {
-    setPhoneNumber(phone);
-    // Mock API call - in real implementation, this would send OTP
-    console.log("Sending OTP to:", phone);
-    setCurrentStep("otp");
-  };
-
-  const handleOtpVerification = async (otp: string) => {
-    // Mock API call - in real implementation, this would verify OTP and check if user exists
-    console.log("Verifying OTP:", otp);
-    
-    // Mock: determine if this is a new user
-    const userExists = Math.random() > 0.5; // Random for demo
-    setIsNewUser(!userExists);
-    
-    if (userExists) {
-      // Existing user - complete login
-      console.log("User logged in successfully");
-      handleAuthComplete();
-    } else {
-      // New user - show registration
-      setCurrentStep("registration");
+    try {
+      setIsLoading(true);
+      setPhoneNumber(phone);
+      const response = await authAPI.initiatePhoneAuth(phone);
+      setCurrentStep("otp");
+      toast({
+        description: response.message,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        description: error.response?.data?.message || "Failed to send OTP",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRegistrationComplete = async (userData: any) => {
-    // Mock API call - in real implementation, this would create user account
-    console.log("Creating user account:", userData);
-    handleAuthComplete();
+  const handleOtpVerification = async (otp: string) => {
+    try {
+      setIsLoading(true);
+      const response = await authAPI.verifyPhoneOTP(phoneNumber, otp);
+      const { user, accessToken } = response.data;
+
+      if (user) {
+        // Existing user - complete login
+        localStorage.setItem('accessToken', accessToken);
+        handleAuthComplete();
+        toast({
+          description: "Login successful!",
+        });
+      } else {
+        // New user - show registration
+        setIsNewUser(true);
+        setCurrentStep("registration");
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        description: error.response?.data?.message || "Failed to verify OTP",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegistrationComplete = async (userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    dateOfBirth: string;
+    gender?: "male" | "female" | "other";
+  }) => {
+    try {
+      setIsLoading(true);
+      await authAPI.completeRegistration({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        dateOfBirth: userData.dateOfBirth,
+        gender: userData.gender || "other",
+      });
+      handleAuthComplete();
+      toast({
+        description: "Registration successful!",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        description: error.response?.data?.message || "Failed to complete registration",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAuthComplete = () => {
@@ -80,6 +133,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             onPhoneSubmit={handlePhoneSubmit}
             onSocialLogin={handleSocialLogin}
             onClose={onClose}
+            isLoading={isLoading}
           />
         )}
         
@@ -89,14 +143,15 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             onOtpVerification={handleOtpVerification}
             onBack={handleBack}
             onResendOtp={() => handlePhoneSubmit(phoneNumber)}
+            isLoading={isLoading}
           />
         )}
         
         {currentStep === "registration" && (
           <UserRegistrationStep
-            phoneNumber={phoneNumber}
             onRegistrationComplete={handleRegistrationComplete}
             onBack={handleBack}
+            isLoading={isLoading}
           />
         )}
         

@@ -1,30 +1,31 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
 import { ArrowLeft } from "lucide-react";
 
 const userRegistrationSchema = z.object({
   firstName: z.string().min(1, "First name is required").min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(1, "Last name is required").min(2, "Last name must be at least 2 characters"),
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
-  dateOfBirth: z.string().min(1, "Date of birth is required")
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  gender: z.enum(["male", "female", "other"]).optional()
 });
 
 type UserRegistrationFormData = z.infer<typeof userRegistrationSchema>;
 
 interface UserRegistrationStepProps {
-  phoneNumber: string;
-  onRegistrationComplete: (userData: UserRegistrationFormData & { phoneNumber: string }) => void;
+  onRegistrationComplete: (userData: UserRegistrationFormData) => void;
   onBack: () => void;
+  isLoading: boolean;
 }
 
-const UserRegistrationStep = ({ phoneNumber, onRegistrationComplete, onBack }: UserRegistrationStepProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+const UserRegistrationStep = ({ onRegistrationComplete, onBack, isLoading }: UserRegistrationStepProps) => {
 
   const form = useForm<UserRegistrationFormData>({
     resolver: zodResolver(userRegistrationSchema),
@@ -37,13 +38,7 @@ const UserRegistrationStep = ({ phoneNumber, onRegistrationComplete, onBack }: U
   });
 
   const onSubmit = async (data: UserRegistrationFormData) => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API delay
-      onRegistrationComplete({ ...data, phoneNumber });
-    } finally {
-      setIsLoading(false);
-    }
+    onRegistrationComplete(data);
   };
 
   return (

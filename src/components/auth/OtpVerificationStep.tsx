@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+
+import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
 import { ArrowLeft } from "lucide-react";
 
 const otpSchema = z.object({
@@ -19,10 +21,10 @@ interface OtpVerificationStepProps {
   onOtpVerification: (otp: string) => void;
   onBack: () => void;
   onResendOtp: () => void;
+  isLoading: boolean;
 }
 
-const OtpVerificationStep = ({ phoneNumber, onOtpVerification, onBack, onResendOtp }: OtpVerificationStepProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+const OtpVerificationStep = ({ phoneNumber, onOtpVerification, onBack, onResendOtp, isLoading }: OtpVerificationStepProps) => {
   const [isResending, setIsResending] = useState(false);
 
   const form = useForm<OtpFormData>({
@@ -33,13 +35,7 @@ const OtpVerificationStep = ({ phoneNumber, onOtpVerification, onBack, onResendO
   });
 
   const onSubmit = async (data: OtpFormData) => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API delay
-      onOtpVerification(data.otp);
-    } finally {
-      setIsLoading(false);
-    }
+    onOtpVerification(data.otp);
   };
 
   const handleResendOtp = async () => {
