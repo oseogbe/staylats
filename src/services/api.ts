@@ -84,9 +84,19 @@ export const authAPI = {
         return response.data;
     },
 
+    validateToken: async () => {
+        try {
+            const response = await api.get('/auth/validate');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     logout: async () => {
         const response = await api.post('/auth/logout');
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('userData');
         return response.data;
     }
 };

@@ -1,23 +1,28 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import Index from "@/pages/Index";
+import MyAccount from "@/pages/MyAccount";
+import PropertyListings from "@/pages/PropertyListings";
+import PropertyDetails from "@/pages/PropertyDetails";
+import SavedListings from "@/pages/SavedListings";
+import PhoneRegistration from "@/pages/host/PhoneRegistration";
+import OtpVerification from "@/pages/host/OtpVerification";
+import HostDetailsRegistration from "@/pages/host/HostDetailsRegistration";
+import CreateListingPrompt from "@/pages/host/CreateListingPrompt";
+import CreateRentalListing from "@/pages/host/CreateRentalListing";
+import CreateShortletListing from "@/pages/host/CreateShortletListing";
+import HostDashboard from "@/pages/host/HostDashboard";
+import NotFound from "@/pages/NotFound";
+
+import Navbar from "@/components/Navbar";
+import ScrollToTop from "@/components/ScrollToTop";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import PropertyListings from "./pages/PropertyListings";
-import PropertyDetails from "./pages/PropertyDetails";
-import SavedListings from "./pages/SavedListings";
-import NotFound from "./pages/NotFound";
-import Navbar from "./components/Navbar";
-import PhoneRegistration from "./pages/host/PhoneRegistration";
-import OtpVerification from "./pages/host/OtpVerification";
-import HostDetailsRegistration from "./pages/host/HostDetailsRegistration";
-import CreateListingPrompt from "./pages/host/CreateListingPrompt";
-import CreateRentalListing from "./pages/host/CreateRentalListing";
-import CreateShortletListing from "./pages/host/CreateShortletListing";
-import HostDashboard from "./pages/host/HostDashboard";
-import MyAccount from "./pages/MyAccount";
-import ScrollToTop from "./components/ScrollToTop";
+
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -27,25 +32,95 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <ScrollToTop />
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/properties" element={<PropertyListings />} />
-          <Route path="/property/:id" element={<PropertyDetails />} />
-          <Route path="/saved-listings" element={<SavedListings />} />
-          {/* Host onboarding routes */}
-          <Route path="/host/phone-registration" element={<PhoneRegistration />} />
-          <Route path="/host/verify-otp" element={<OtpVerification />} />
-          <Route path="/host/register-details" element={<HostDetailsRegistration />} />
-          <Route path="/host/create-listing-prompt" element={<CreateListingPrompt />} />
-          <Route path="/host/create-rental-listing" element={<CreateRentalListing />} />
-          <Route path="/host/create-shortlet-listing" element={<CreateShortletListing />} />
-          <Route path="/host/dashboard" element={<HostDashboard />} />
-          <Route path="/my-account" element={<MyAccount />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <ScrollToTop />
+          <Navbar />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/properties" element={<PropertyListings />} />
+            <Route path="/property/:id" element={<PropertyDetails />} />
+            <Route path="*" element={<NotFound />} />
+
+            {/* Host onboarding routes (accessible when not logged in) */}
+            <Route
+              path="/host/phone-registration"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <PhoneRegistration />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/verify-otp"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <OtpVerification />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/register-details"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <HostDetailsRegistration />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected routes for authenticated users */}
+            <Route
+              path="/saved-listings"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <SavedListings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-account"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <MyAccount />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected routes for hosts only */}
+            <Route
+              path="/host/create-listing-prompt"
+              element={
+                <ProtectedRoute allowedRoles={['host']}>
+                  <CreateListingPrompt />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/create-rental-listing"
+              element={
+                <ProtectedRoute allowedRoles={['host']}>
+                  <CreateRentalListing />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/create-shortlet-listing"
+              element={
+                <ProtectedRoute allowedRoles={['host']}>
+                  <CreateShortletListing />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['host']}>
+                  <HostDashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
