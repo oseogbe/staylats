@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ArrowLeft, ArrowRight, Upload, X, MapPin, Users, Bed, Bath, Building2, CheckCircle, CalendarIcon } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -118,10 +118,7 @@ export default function CreateShortletListing() {
 
   const onSubmit = (data: FormData) => {
     console.log('Shortlet listing data:', data);
-    toast({
-      title: "Listing Created Successfully!",
-      description: "Your shortlet listing is now live and available for bookings.",
-    });
+    toast.success("Your shortlet listing is now live and available for bookings.");
     navigate('/');
   };
 

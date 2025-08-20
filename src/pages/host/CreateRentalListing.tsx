@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { ArrowLeft, ArrowRight, Upload, X, MapPin, Users, Bed, Bath, Home, CheckCircle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import toast from 'react-hot-toast';
 
 const steps = [
   { id: 1, title: 'Property Basics', description: 'Tell us about your property' },
@@ -108,10 +108,7 @@ export default function CreateRentalListing() {
 
   const onSubmit = (data: FormData) => {
     console.log('Rental listing data:', data);
-    toast({
-      title: "Listing Created Successfully!",
-      description: "Your rental listing is now live and available for tenants to view.",
-    });
+    toast.success("Your rental listing is now live and available for tenants to view.");
     navigate('/');
   };
 
