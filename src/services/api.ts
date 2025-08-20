@@ -60,27 +60,14 @@ export const authAPI = {
     },
 
     completeRegistration: async (userData: {
+        phoneNumber: string;
         firstName: string;
         lastName: string;
         email: string;
         gender: string;
         dateOfBirth: string;
-        image?: File;
     }) => {
-        const formData = new FormData();
-        Object.entries(userData).forEach(([key, value]) => {
-            if (value instanceof File) {
-                formData.append(key, value);
-            } else if (Array.isArray(value)) {
-                value.forEach(item => formData.append(key, item));
-            } else {
-                formData.append(key, value);
-            }
-        });
-
-        const response = await api.post('/auth/register', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const response = await api.post('/auth/register', userData);
         return response.data;
     },
 

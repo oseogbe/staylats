@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { UseFormSetError } from "react-hook-form";
+import toast from "react-hot-toast";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
 
 import PhoneLoginStep from "./PhoneLoginStep";
 import OtpVerificationStep from "./OtpVerificationStep";
@@ -17,7 +18,6 @@ interface AuthModalProps {
 export type AuthStep = "phone" | "otp" | "registration" | "complete";
 
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
-  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<AuthStep>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
@@ -29,14 +29,9 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       setPhoneNumber(phone);
       const response = await authAPI.initiatePhoneAuth(phone);
       setCurrentStep("otp");
-      toast({
-        description: response.message,
-      });
+      toast.success(response.message);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: error.response?.data?.message || "Failed to send OTP",
-      });
+      toast.error(error.response?.data?.message || "Failed to send OTP");
     } finally {
       setIsLoading(false);
     }
@@ -52,49 +47,72 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         // Existing user - complete login
         localStorage.setItem('accessToken', accessToken);
         handleAuthComplete();
-        toast({
-          description: "Login successful!",
-        });
+        toast.success("Login successful!");
       } else {
         // New user - show registration
+        toast.success("Verification successful! Please complete your registration");
         setIsNewUser(true);
         setCurrentStep("registration");
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: error.response?.data?.message || "Failed to verify OTP",
-      });
+      toast.error(error.response?.data?.message || "Failed to verify OTP");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRegistrationComplete = async (userData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    dateOfBirth: string;
-    gender?: "male" | "female" | "other";
-  }) => {
+  const handleRegistrationComplete = async (
+    userData: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      dateOfBirth: Date;
+      gender?: "male" | "female";
+    },
+    setFieldError: UseFormSetError<{
+      firstName: string;
+      lastName: string;
+      email: string;
+      dateOfBirth: Date;
+      gender?: "male" | "female";
+    }>
+  ) => {
     try {
       setIsLoading(true);
       await authAPI.completeRegistration({
+        phoneNumber,
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
-        dateOfBirth: userData.dateOfBirth,
-        gender: userData.gender || "other",
+        dateOfBirth: userData.dateOfBirth.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+        gender: userData.gender,
       });
       handleAuthComplete();
-      toast({
-        description: "Registration successful!",
-      });
+      toast.success("Registration successful!");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        description: error.response?.data?.message || "Failed to complete registration",
-      });
+      // Handle validation errors
+      if (error.response?.data?.errors) {
+        error.response.data.errors.forEach((err: any) => {
+          // Map server field names to form field names
+          const fieldMap: { [key: string]: keyof typeof userData } = {
+            dateOfBirth: "dateOfBirth",
+            email: "email",
+            firstName: "firstName",
+            lastName: "lastName",
+            gender: "gender"
+          };
+          
+          const field = fieldMap[err.param];
+          if (field) {
+            setFieldError(field, {
+              type: "manual",
+              message: err.msg
+            });
+          }
+        });
+      } else {
+        toast.error(error.response?.data?.message || "Failed to complete registration");
+      }
     } finally {
       setIsLoading(false);
     }
