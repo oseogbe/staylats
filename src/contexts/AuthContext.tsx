@@ -40,18 +40,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const validateAuth = async () => {
       const token = localStorage.getItem('accessToken');
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
+      
       try {
-        const response = await authAPI.validateToken();
-        const { user: userData } = response.data;
-        setUser(userData);
-        localStorage.setItem('userData', JSON.stringify(userData));
+        if (!token) {
+          // Try to refresh the token if no access token exists
+          const refreshResponse = await authAPI.refreshToken();
+          const { accessToken } = refreshResponse.data.data;
+          
+          // Store new access token
+          localStorage.setItem('accessToken', accessToken);
+          
+          // Validate the new token
+          const response = await authAPI.validateToken();
+          const { user: userData } = response.data;
+          setUser(userData);
+          localStorage.setItem('userData', JSON.stringify(userData));
+        } else {
+          // Validate existing token
+          const response = await authAPI.validateToken();
+          const { user: userData } = response.data;
+          setUser(userData);
+          localStorage.setItem('userData', JSON.stringify(userData));
+        }
       } catch (error) {
-        // If token validation fails, clear stored data
+        // Clear stored data on failure
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userData');
         setUser(null);

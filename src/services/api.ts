@@ -80,6 +80,15 @@ export const authAPI = {
         }
     },
 
+    refreshToken: async () => {
+        try {
+            const response = await api.post('/auth/refresh-token');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     logout: async () => {
         const response = await api.post('/auth/logout');
         localStorage.removeItem('accessToken');
