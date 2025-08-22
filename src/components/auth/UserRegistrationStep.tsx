@@ -6,13 +6,10 @@ import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { MonthYearCalendar } from "@/components/MonthYearCalendar";
 
-import { ArrowLeft, CalendarIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 const userRegistrationSchema = z.object({
   firstName: z.string().min(2, ""),
@@ -40,21 +37,6 @@ interface UserRegistrationStepProps {
   onBack: () => void;
   isLoading: boolean;
 }
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 const UserRegistrationStep = ({ onRegistrationComplete, onBack, isLoading }: UserRegistrationStepProps) => {
 
@@ -168,79 +150,14 @@ const UserRegistrationStep = ({ onRegistrationComplete, onBack, isLoading }: Use
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of birth</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <div className="p-3">
-                        <div className="flex justify-center gap-2 pb-4">
-                          <Select
-                            onValueChange={(month) => {
-                              const newDate = new Date(field.value || new Date());
-                              newDate.setMonth(MONTHS.indexOf(month));
-                              field.onChange(newDate);
-                            }}
-                            value={MONTHS[field.value?.getMonth() || new Date().getMonth()]}
-                          >
-                            <SelectTrigger className="w-[140px]">
-                              <SelectValue placeholder="Month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {MONTHS.map((month) => (
-                                <SelectItem key={month} value={month}>
-                                  {month}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Select
-                            onValueChange={(year) => {
-                              const newDate = new Date(field.value || new Date());
-                              newDate.setFullYear(parseInt(year));
-                              field.onChange(newDate);
-                            }}
-                            value={field.value?.getFullYear().toString() || new Date().getFullYear().toString()}
-                          >
-                            <SelectTrigger className="w-[95px]">
-                              <SelectValue placeholder="Year" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({ length: 124 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                                <SelectItem key={year} value={year.toString()}>
-                                  {year}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                        />
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <MonthYearCalendar
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Pick a date"
+                      maxDate={new Date()}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
