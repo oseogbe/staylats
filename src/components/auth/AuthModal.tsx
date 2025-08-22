@@ -140,8 +140,8 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
 
   const handleAuthComplete = () => {
     setCurrentStep("complete");
+    onClose();
     setTimeout(() => {
-      onClose();
       // Reset state
       setCurrentStep("phone");
       setPhoneNumber("");
