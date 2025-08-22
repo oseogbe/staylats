@@ -100,15 +100,15 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
         id: response.data.user.id,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        email: userData.email,
+        image: null,
         role: 'visitor' as const,
-        image: null
       };
       localStorage.setItem('userData', JSON.stringify(user));
+      localStorage.setItem('accessToken', response.data.accessToken);
       setUser(user);
 
       handleAuthComplete();
-      toast.success("Registration successful!");
+      toast.success(response.message);
     } catch (error: any) {
       // Handle validation errors
       if (error.response?.data?.errors) {
