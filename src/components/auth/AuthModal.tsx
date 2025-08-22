@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { UseFormSetError } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -9,15 +10,19 @@ import OtpVerificationStep from "./OtpVerificationStep";
 import UserRegistrationStep from "./UserRegistrationStep";
 
 import { authAPI } from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  redirectPath?: string;
 }
 
 export type AuthStep = "phone" | "otp" | "registration" | "complete";
 
-const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
+const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [currentStep, setCurrentStep] = useState<AuthStep>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
@@ -46,6 +51,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       if (user) {
         // Existing user - complete login
         localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('userData', JSON.stringify(user));
+        setUser(user);
         handleAuthComplete();
         toast.success("Login successful!");
       } else {
@@ -79,7 +86,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   ) => {
     try {
       setIsLoading(true);
-      await authAPI.completeRegistration({
+      const response = await authAPI.completeRegistration({
         phoneNumber,
         firstName: userData.firstName,
         lastName: userData.lastName,
@@ -87,6 +94,19 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         dateOfBirth: userData.dateOfBirth.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
         gender: userData.gender,
       });
+
+      // Store user data and update auth context
+      const user = {
+        id: response.data.user.id,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        role: 'visitor' as const,
+        image: null
+      };
+      localStorage.setItem('userData', JSON.stringify(user));
+      setUser(user);
+
       handleAuthComplete();
       toast.success("Registration successful!");
     } catch (error: any) {
@@ -126,6 +146,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       setCurrentStep("phone");
       setPhoneNumber("");
       setIsNewUser(false);
+      
+      // Navigate to redirect path if provided
+      if (redirectPath) {
+        navigate(redirectPath);
+      }
     }, 1000);
   };
 
@@ -173,7 +198,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           />
         )}
         
-        {currentStep === "complete" && (
+        {/* {currentStep === "complete" && (
           <div className="text-center py-8">
             <div className="text-2xl mb-2">✅</div>
             <h3 className="text-lg font-semibold mb-2">Welcome to Staylats!</h3>
@@ -181,7 +206,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               You're all set. Redirecting...
             </p>
           </div>
-        )}
+        )} */}
       </DialogContent>
     </Dialog>
   );

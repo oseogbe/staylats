@@ -28,6 +28,12 @@ const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalRedirectPath, setAuthModalRedirectPath] = useState<string>();
+
+  const openAuthModal = (redirectPath?: string) => {
+    setAuthModalRedirectPath(redirectPath);
+    setIsAuthModalOpen(true);
+  };
 
   const handleLogout = async () => {
     try {
@@ -64,7 +70,13 @@ const Navbar = () => {
               variant="ghost"
               size="icon"
               className="hidden sm:flex rounded-full hover:bg-neutral-100"
-              onClick={() => navigate('/saved-listings')}
+              onClick={() => {
+                if (isAuthenticated) {
+                  navigate('/saved-listings');
+                } else {
+                  openAuthModal('/saved-listings');
+                }
+              }}
             >
               <Heart className="h-5 w-5" />
             </Button>
@@ -146,7 +158,7 @@ const Navbar = () => {
                 {!isAuthenticated && (
                   <DropdownMenuItem
                     className="p-4 hover:bg-neutral-50 cursor-pointer"
-                    onClick={() => setIsAuthModalOpen(true)}
+                    onClick={() => openAuthModal()}
                   >
                     <LogIn className="h-4 w-4 mr-3 text-neutral-600" />
                     <span className="text-sm font-medium">Log in or sign up</span>
@@ -171,7 +183,11 @@ const Navbar = () => {
 
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthModalRedirectPath(undefined);
+        }}
+        redirectPath={authModalRedirectPath}
       />
     </nav>
   );

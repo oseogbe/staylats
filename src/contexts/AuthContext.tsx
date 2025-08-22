@@ -27,6 +27,7 @@ interface AuthContextType {
   login: (phoneNumber: string, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthorized: (allowedRoles: UserRole[]) => boolean;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -116,6 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         isAuthorized,
+        setUser,
       }}
     >
       {children}
