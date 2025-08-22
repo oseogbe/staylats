@@ -41,10 +41,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const validateAuth = async () => {
       const token = localStorage.getItem('accessToken');
+      const userData = localStorage.getItem('userData');
       
       try {
-        if (!token) {
-          // Try to refresh the token if no access token exists
+        if (!token && userData) {
+          // Only try to refresh if we had a previous session (userData exists)
           const refreshResponse = await authAPI.refreshToken();
           const { accessToken } = refreshResponse.data.data;
           
@@ -56,12 +57,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const { user: userData } = response.data;
           setUser(userData);
           localStorage.setItem('userData', JSON.stringify(userData));
-        } else {
+        } else if (token) {
           // Validate existing token
           const response = await authAPI.validateToken();
           const { user: userData } = response.data;
           setUser(userData);
           localStorage.setItem('userData', JSON.stringify(userData));
+        } else {
+          // No token and no previous session, just set loading to false
+          setUser(null);
         }
       } catch (error) {
         // Clear stored data on failure
