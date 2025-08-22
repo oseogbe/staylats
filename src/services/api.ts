@@ -91,8 +91,6 @@ export const authAPI = {
 
     logout: async () => {
         const response = await api.post('/auth/logout');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('userData');
         return response.data;
     }
 };
