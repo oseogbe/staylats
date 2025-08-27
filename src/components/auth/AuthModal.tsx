@@ -18,7 +18,7 @@ interface AuthModalProps {
   redirectPath?: string;
 }
 
-export type AuthStep = "phone" | "otp" | "registration" | "complete";
+export type AuthStep = "phone" | "otp" | "registration";
 
 const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
   const navigate = useNavigate();
@@ -139,19 +139,18 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
   };
 
   const handleAuthComplete = () => {
-    setCurrentStep("complete");
+    // Close modal immediately
     onClose();
-    setTimeout(() => {
-      // Reset state
-      setCurrentStep("phone");
-      setPhoneNumber("");
-      setIsNewUser(false);
-      
-      // Navigate to redirect path if provided
-      if (redirectPath) {
-        navigate(redirectPath);
-      }
-    }, 1000);
+    
+    // Reset state
+    setCurrentStep("phone");
+    setPhoneNumber("");
+    setIsNewUser(false);
+    
+    // Navigate to redirect path if provided
+    if (redirectPath) {
+      navigate(redirectPath);
+    }
   };
 
   const handleSocialLogin = (provider: "google" | "facebook") => {
@@ -197,16 +196,6 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
             isLoading={isLoading}
           />
         )}
-        
-        {/* {currentStep === "complete" && (
-          <div className="text-center py-8">
-            <div className="text-2xl mb-2">✅</div>
-            <h3 className="text-lg font-semibold mb-2">Welcome to Staylats!</h3>
-            <p className="text-sm text-muted-foreground">
-              You're all set. Redirecting...
-            </p>
-          </div>
-        )} */}
       </DialogContent>
     </Dialog>
   );
