@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI } from '@/services/api';
+
+import authAPI from '@/services/auth';
+import profileAPI from '@/services/profile';
 
 // Define user types
 type UserRole = 'visitor' | 'tenant' | 'host' | 'admin' | 'superadmin';
@@ -41,36 +43,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const validateAuth = async () => {
       const token = localStorage.getItem('accessToken');
-      const userData = localStorage.getItem('userData');
+      const hadPreviousSession = localStorage.getItem('hadSession') === 'true';
       
       try {
-        if (!token && userData) {
-          // Only try to refresh if we had a previous session (userData exists)
-          const refreshResponse = await authAPI.refreshToken();
-          const { accessToken } = refreshResponse.data.data;
-          
-          // Store new access token
-          localStorage.setItem('accessToken', accessToken);
-          
-          // Validate the new token
-          const response = await authAPI.validateToken();
-          const { user: userData } = response.data;
-          setUser(userData);
-          localStorage.setItem('userData', JSON.stringify(userData));
-        } else if (token) {
-          // Validate existing token
-          const response = await authAPI.validateToken();
-          const { user: userData } = response.data;
-          setUser(userData);
-          localStorage.setItem('userData', JSON.stringify(userData));
+        if (token) {
+          // Get user profile if we have a token
+          const response = await profileAPI.getCurrentUser();
+          const { user } = response.data;
+          setUser(user);
+        } else if (hadPreviousSession) {
+          // Only try to refresh if there was a previous session
+          try {
+            const refreshResponse = await authAPI.refreshToken();
+            const { accessToken } = refreshResponse.data;
+            
+            // Store new access token
+            localStorage.setItem('accessToken', accessToken);
+            
+            // Get user profile with new token
+            const response = await profileAPI.getCurrentUser();
+            const { user } = response.data;
+            setUser(user);
+          } catch (refreshError: any) {
+            // Only clear hadSession if refresh token is invalid/expired
+            if (refreshError.response?.status === 401) {
+              localStorage.removeItem('hadSession');
+            }
+            localStorage.removeItem('accessToken');
+            setUser(null);
+          }
         } else {
-          // No token and no previous session, just set loading to false
+          // No token and no previous session
           setUser(null);
         }
-      } catch (error) {
-        // Clear stored data on failure
+      } catch (error: any) {
+        // Only clear hadSession on auth errors
+        if (error.response?.status === 401) {
+          localStorage.removeItem('hadSession');
+        }
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('userData');
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -83,11 +94,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (phoneNumber: string, otp: string) => {
     try {
       const response = await authAPI.verifyPhoneOTP(phoneNumber, otp);
-      const { user: userData, accessToken } = response.data;
+      const { accessToken } = response.data;
 
+      // Store access token and mark session
       localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('userData', JSON.stringify(userData));
-      setUser(userData);
+      localStorage.setItem('hadSession', 'true');
+
+      // Get user profile
+      const profileResponse = await profileAPI.getCurrentUser();
+      const { user } = profileResponse.data;
+      setUser(user);
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -98,7 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await authAPI.logout();
       localStorage.removeItem('accessToken');
-      localStorage.removeItem('userData');
+      localStorage.removeItem('hadSession');
       setUser(null);
       navigate('/');
     } catch (error) {

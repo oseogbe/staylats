@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const API_BASE_URL = 'http://localhost:3000/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL!;
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -28,7 +28,7 @@ api.interceptors.response.use(
             try {
                 // Try to refresh the token
                 const response = await api.post('/auth/refresh-token');
-                const { accessToken } = response.data.data;
+                const { accessToken } = response.data;
 
                 // Update stored token
                 localStorage.setItem('accessToken', accessToken);
@@ -39,6 +39,7 @@ api.interceptors.response.use(
             } catch (refreshError) {
                 // If refresh fails, clear tokens and redirect to login
                 localStorage.removeItem('accessToken');
+                localStorage.removeItem('hadSession');
                 window.location.href = '/';
                 return Promise.reject(refreshError);
             }
@@ -47,52 +48,5 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
-
-export const authAPI = {
-    initiatePhoneAuth: async (phoneNumber: string) => {
-        const response = await api.post('/auth/phone/initiate', { phoneNumber });
-        return response.data;
-    },
-
-    verifyPhoneOTP: async (phoneNumber: string, otp: string) => {
-        const response = await api.post('/auth/phone/verify', { phoneNumber, otp });
-        return response.data;
-    },
-
-    completeRegistration: async (userData: {
-        phoneNumber: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        gender: string;
-        dateOfBirth: string;
-    }) => {
-        const response = await api.post('/auth/register', userData);
-        return response.data;
-    },
-
-    validateToken: async () => {
-        try {
-            const response = await api.get('/auth/validate');
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    refreshToken: async () => {
-        try {
-            const response = await api.post('/auth/refresh-token');
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    logout: async () => {
-        const response = await api.post('/auth/logout');
-        return response.data;
-    }
-};
 
 export default api;

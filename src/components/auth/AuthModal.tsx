@@ -9,7 +9,7 @@ import PhoneLoginStep from "./PhoneLoginStep";
 import OtpVerificationStep from "./OtpVerificationStep";
 import UserRegistrationStep from "./UserRegistrationStep";
 
-import { authAPI } from "@/services/api";
+import authAPI from "@/services/auth";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthModalProps {
@@ -51,7 +51,6 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
       if (user) {
         // Existing user - complete login
         localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('userData', JSON.stringify(user));
         setUser(user);
         handleAuthComplete();
         toast.success("Login successful!");
@@ -95,17 +94,9 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
         gender: userData.gender,
       });
 
-      // Store user data and update auth context
-      const user = {
-        id: response.data.user.id,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        image: null,
-        role: 'visitor' as const,
-      };
-      localStorage.setItem('userData', JSON.stringify(user));
+      // Store access token and update auth context
       localStorage.setItem('accessToken', response.data.accessToken);
-      setUser(user);
+      setUser(response.data.user);
 
       handleAuthComplete();
       toast.success(response.message);
