@@ -56,12 +56,12 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
         toast.success("Login successful!");
       } else {
         // New user - show registration
-        toast.success("Verification successful! Please complete your registration");
+        toast.success("Verification successful! Please complete your registration.");
         setIsNewUser(true);
         setCurrentStep("registration");
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to verify OTP");
+      toast.error(error.response?.data?.message || "Failed to verify OTP.");
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +90,7 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
-        dateOfBirth: userData.dateOfBirth.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+        dateOfBirth: new Date(userData.dateOfBirth.getTime() - userData.dateOfBirth.getTimezoneOffset() * 60000).toISOString().split('T')[0], // Convert to YYYY-MM-DD format in UTC
         gender: userData.gender,
       });
 

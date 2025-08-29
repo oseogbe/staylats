@@ -57,7 +57,7 @@ const AccountTab = () => {
       await profileAPI.updateBasicInfo({
         firstName: data.firstName,
         lastName: data.lastName,
-        dateOfBirth: data.dateOfBirth.toISOString().split('T')[0],
+        dateOfBirth: new Date(data.dateOfBirth.getTime() - data.dateOfBirth.getTimezoneOffset() * 60000).toISOString().split('T')[0], // Convert to YYYY-MM-DD format in UTC
         gender: data.gender
       });
 
