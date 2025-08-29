@@ -1,25 +1,95 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PersonalInfoForm from './PersonalInfoForm';
 import PasswordForm from './PasswordForm';
 
-import { UserData } from '@/types/account';
+import profileAPI from '@/services/profile';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserData, PersonalInfoFormData } from '@/types/account';
 
 const AccountTab = () => {
   const [activeSubTab, setActiveSubTab] = useState("personal-info");
+  const [isLoading, setIsLoading] = useState(true);
+  const { user, setUser } = useAuth();
   
-  // Mock user data - in real app this would come from context/API
   const [userData, setUserData] = useState<UserData>({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phoneNumber: '+2348123456789',
-    dateOfBirth: '1990-01-01',
-    gender: 'male',
-    avatar: '',
-    accountStatus: 'ACTIVE ACCOUNT'
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    dateOfBirth: new Date(),
+    gender: '',
+    image: '',
+    role: ''
   });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await profileAPI.getCurrentUser();
+        const { user } = response.data;
+        
+        setUserData({
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          email: user.email || '',
+          phoneNumber: user.phoneNumber || '',
+          dateOfBirth: new Date(user.dateOfBirth),
+          gender: user.gender || '',
+          image: user.image || '',
+          role: user.role || ''
+        });
+      } catch (error) {
+        toast.error('Failed to load user data');
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const handleUpdateUserData = async (data: PersonalInfoFormData) => {
+    try {
+      await profileAPI.updateBasicInfo({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        dateOfBirth: data.dateOfBirth.toISOString().split('T')[0],
+        gender: data.gender
+      });
+
+      // Update local state
+      setUserData(prev => ({ ...prev, ...data }));
+      
+      // Update auth context if needed
+      if (user) {
+        setUser({ ...user, firstName: data.firstName, lastName: data.lastName });
+      }
+
+      toast.success('Profile information updated');
+    } catch (error) {
+      toast.error('Failed to update profile information');
+      console.error('Error updating profile information:', error);
+      throw error;
+    }
+  };
+
+  const handleImageUpdate = (imageUrl: string) => {
+    // Update local state
+    setUserData(prev => ({ ...prev, image: imageUrl }));
+    
+    // Update auth context if needed
+    if (user) {
+      setUser({ ...user, image: imageUrl });
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
@@ -29,7 +99,11 @@ const AccountTab = () => {
       </TabsList>
 
       <TabsContent value="personal-info" className="space-y-6">
-        <PersonalInfoForm userData={userData} setUserData={setUserData} />
+        <PersonalInfoForm 
+          userData={userData} 
+          onSubmit={handleUpdateUserData}
+          onImageUpdate={handleImageUpdate}
+        />
       </TabsContent>
 
       <TabsContent value="password" className="space-y-6">

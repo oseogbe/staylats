@@ -3,8 +3,14 @@ import { z } from 'zod';
 export const personalInfoSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
+  phoneNumber: z.string(),
+  dateOfBirth: z.date({
+    required_error: "Date of birth is required"
+  }).refine((date) => {
+    const now = new Date();
+    const age = now.getFullYear() - date.getFullYear();
+    return age >= 18;
+  }, "Must be at least 18 years old"),
   gender: z.string().min(1, 'Gender is required'),
 });
 
@@ -25,10 +31,10 @@ export interface UserData {
   lastName: string;
   email: string;
   phoneNumber: string;
-  dateOfBirth: string;
+  dateOfBirth: Date;
   gender: string;
-  avatar: string;
-  accountStatus: string;
+  image: string;
+  role: string;
 }
 
 export interface TabConfig {
