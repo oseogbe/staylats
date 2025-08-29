@@ -16,28 +16,46 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Track refresh token promise
+let refreshTokenPromise: Promise<string> | null = null;
+
 // Response interceptor to handle token refresh
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
 
+        // Check if error is 401 and we haven't retried yet
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
             try {
-                // Try to refresh the token
-                const response = await api.post('/auth/refresh-token');
-                const { accessToken } = response.data;
+                let accessToken: string;
 
-                // Update stored token
-                localStorage.setItem('accessToken', accessToken);
+                // If a refresh is already in progress, wait for it
+                if (refreshTokenPromise) {
+                    accessToken = await refreshTokenPromise;
+                } else {
+                    // Start new refresh token request
+                    refreshTokenPromise = (async () => {
+                        try {
+                            const response = await api.post('/auth/refresh-token');
+                            const token = response.data.accessToken;
+                            localStorage.setItem('accessToken', token);
+                            return token;
+                        } finally {
+                            refreshTokenPromise = null;
+                        }
+                    })();
 
-                // Retry the original request
+                    accessToken = await refreshTokenPromise;
+                }
+
+                // Retry the original request with new token
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                 return api(originalRequest);
             } catch (refreshError) {
-                // If refresh fails, clear tokens and redirect to login
+                // Only clear tokens if refresh actually failed
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('hadSession');
                 window.location.href = '/';
