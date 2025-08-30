@@ -25,7 +25,6 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
   const { setUser } = useAuth();
   const [currentStep, setCurrentStep] = useState<AuthStep>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isNewUser, setIsNewUser] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePhoneSubmit = async (phone: string) => {
@@ -43,23 +42,24 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
   };
 
   const handleOtpVerification = async (otp: string) => {
-    try {
-      setIsLoading(true);
-      const response = await authAPI.verifyPhoneOTP(phoneNumber, otp);
-      const { user, accessToken } = response.data;
-
-      if (user) {
-        // Existing user - complete login
-        localStorage.setItem('accessToken', accessToken);
-        setUser(user);
-        handleAuthComplete();
-        toast.success("Login successful!");
-      } else {
-        // New user - show registration
-        toast.success("Verification successful! Please complete your registration.");
-        setIsNewUser(true);
-        setCurrentStep("registration");
-      }
+      try {
+        setIsLoading(true);
+        
+        const response = await authAPI.verifyPhoneOTP(phoneNumber, otp);
+        const { user, accessToken } = response.data;
+        
+        if (user) {
+          // Existing user - complete login
+          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('hadSession', 'true');
+          setUser(user);
+          handleAuthComplete();
+          toast.success("Login successful!");
+        } else {
+          // New user - show registration
+          toast.success("Verification successful! Please complete your registration.");
+          setCurrentStep("registration");
+        }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to verify OTP.");
     } finally {
@@ -96,6 +96,7 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
 
       // Store access token and update auth context
       localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('hadSession', 'true');
       setUser(response.data.user);
 
       handleAuthComplete();
@@ -136,7 +137,6 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
     // Reset state
     setCurrentStep("phone");
     setPhoneNumber("");
-    setIsNewUser(false);
     
     // Navigate to redirect path if provided
     if (redirectPath) {
