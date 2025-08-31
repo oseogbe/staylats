@@ -7,6 +7,8 @@ import MyAccount from "@/pages/MyAccount";
 import PropertyListings from "@/pages/PropertyListings";
 import PropertyDetails from "@/pages/PropertyDetails";
 import SavedListings from "@/pages/SavedListings";
+import EmailVerification from "@/pages/EmailVerification";
+import ResendEmailVerification from "@/pages/ResendEmailVerification";
 import PhoneRegistration from "@/pages/host/PhoneRegistration";
 import OtpVerification from "@/pages/host/OtpVerification";
 import HostDetailsRegistration from "@/pages/host/HostDetailsRegistration";
@@ -49,6 +51,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/properties" element={<PropertyListings />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
+            <Route path="/verify-email" element={<EmailVerification />} />
+            <Route path="/resend-verification" element={<ResendEmailVerification />} />
             <Route path="*" element={<NotFound />} />
 
             {/* Host onboarding routes (accessible when not logged in) */}
