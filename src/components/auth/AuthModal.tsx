@@ -27,15 +27,21 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handlePhoneSubmit = async (phone: string) => {
+  const handlePhoneSubmit = async (phone: string, suppressToast = false) => {
     try {
       setIsLoading(true);
       setPhoneNumber(phone);
       const response = await authAPI.initiatePhoneAuth(phone);
       setCurrentStep("otp");
-      toast.success(response.message);
+      if (!suppressToast) {
+        toast.success(response.message);
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to send OTP");
+      if (!suppressToast) {
+        toast.error(error.response?.data?.message || "Failed to send OTP");
+      }
+      // Re-throw error so resend logic can handle it
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +67,8 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
           setCurrentStep("registration");
         }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to verify OTP.");
+      // Re-throw the error so the OtpVerificationStep can handle rate limiting
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +182,7 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
             phoneNumber={phoneNumber}
             onOtpVerification={handleOtpVerification}
             onBack={handleBack}
-            onResendOtp={() => handlePhoneSubmit(phoneNumber)}
+            onResendOtp={() => handlePhoneSubmit(phoneNumber, true)}
             isLoading={isLoading}
           />
         )}
