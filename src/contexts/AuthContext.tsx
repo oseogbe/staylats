@@ -30,6 +30,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthorized: (allowedRoles: UserRole[]) => boolean;
   setUser: (user: User | null) => void;
+  getAccessToken: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -128,6 +129,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return allowedRoles.includes(user.role);
   };
 
+  const getAccessToken = () => {
+    return localStorage.getItem('accessToken');
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -138,6 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         isAuthorized,
         setUser,
+        getAccessToken,
       }}
     >
       {children}

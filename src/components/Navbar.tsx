@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import AuthModal from '@/components/auth/AuthModal';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -26,7 +27,6 @@ import {
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalRedirectPath, setAuthModalRedirectPath] = useState<string>();
 
@@ -80,6 +80,9 @@ const Navbar = () => {
             >
               <Heart className="h-5 w-5" />
             </Button>
+            {isAuthenticated && (
+              <NotificationBell />
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
