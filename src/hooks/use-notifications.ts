@@ -19,22 +19,29 @@ export function useNotifications(userId: string) {
   const [error, setError] = useState<string | null>(null);
   const { getAccessToken } = useAuth();
 
-  const initializeSocket = useCallback(async () => {
+  const initializeSocket = useCallback(() => {
     if (!userId) return;
 
     try {
-      const token = await getAccessToken();
-      
-      if (!socket) {
-        // Ensure we connect to the root namespace
-        socket = io(import.meta.env.VITE_API_URL, {
-          auth: { token },
-          reconnection: true,
-          reconnectionDelay: 1000,
-          reconnectionDelayMax: 5000,
-          reconnectionAttempts: 5
-        });
+      // Always create a new socket instance
+      if (socket) {
+        socket.disconnect();
       }
+
+      // Ensure we connect to the root namespace
+      // Connect to base URL (without /api/v1)
+      const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
+      socket = io(baseUrl, {
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+        path: '/socket.io',
+        withCredentials: true,
+        auth: {
+          token: getAccessToken()
+        }
+      });
 
       socket.on('connect', () => {
         setIsConnected(true);
@@ -72,7 +79,7 @@ export function useNotifications(userId: string) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize socket connection');
     }
-  }, [userId, getAccessToken]);
+  }, [userId]);
 
   useEffect(() => {
     initializeSocket();
@@ -85,6 +92,8 @@ export function useNotifications(userId: string) {
         socket.off('new_notification');
         socket.off('notification_read');
         socket.off('connect_error');
+        socket.disconnect();
+        socket = null;
       }
     };
   }, [userId, initializeSocket]);
