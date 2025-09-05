@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-hot-toast';
 
@@ -60,6 +61,7 @@ export default function PersonalInfoForm({
   onSubmit,
   onImageUpdate,
 }: PersonalInfoFormProps) {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -248,14 +250,36 @@ export default function PersonalInfoForm({
             </div>
             <div className="text-center">
               <p className="font-medium text-foreground">{userData.email}</p>
-              <Badge
-                variant="secondary"
-                className="mt-2 bg-green-100 text-green-800"
-              >
-                {userData.role === 'visitor'
-                  ? 'Basic'
-                  : capitalize(userData.role)}
-              </Badge>
+              <div className="flex flex-wrap justify-center gap-2 mt-2">
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800"
+                >
+                  {userData.role === 'visitor'
+                    ? 'Basic'
+                    : capitalize(userData.role)}
+                </Badge>
+                <Badge
+                  variant="secondary"
+                  className={`
+                    ${userData.emailVerified !== null ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}
+                    ${userData.emailVerified === null ? "cursor-pointer hover:bg-yellow-200 transition-colors" : ""}
+                  `}
+                  onClick={() => {
+                    if (userData.emailVerified === null) {
+                      navigate('/resend-verification', { state: { from: '/my-account' } });
+                    }
+                  }}
+                >
+                  {userData.emailVerified !== null ? "Email Verified" : "Email Unverified"}
+                </Badge>
+                <Badge
+                  variant="secondary"
+                  className={userData.kycVerified ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}
+                >
+                  {userData.kycVerified ? "KYC Verified" : "KYC Unverified"}
+                </Badge>
+              </div>
             </div>
           </div>
         </CardContent>

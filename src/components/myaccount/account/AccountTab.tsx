@@ -22,7 +22,9 @@ const AccountTab = () => {
     dateOfBirth: new Date(),
     gender: '',
     image: '',
-    role: ''
+    role: '',
+    emailVerified: null,
+    kycVerified: false
   });
 
   useEffect(() => {
@@ -39,7 +41,9 @@ const AccountTab = () => {
           dateOfBirth: new Date(user.dateOfBirth),
           gender: user.gender || '',
           image: user.image || '',
-          role: user.role || ''
+          role: user.role || '',
+          emailVerified: user.emailVerified || null,
+          kycVerified: user.kycVerified || false
         });
       } catch (error) {
         toast.error('Failed to load user data');
@@ -58,7 +62,7 @@ const AccountTab = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         dateOfBirth: new Date(data.dateOfBirth.getTime() - data.dateOfBirth.getTimezoneOffset() * 60000).toISOString().split('T')[0], // Convert to YYYY-MM-DD format in UTC
-        gender: data.gender
+        gender: data.gender,
       });
 
       // Update local state

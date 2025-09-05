@@ -35,6 +35,8 @@ export interface UserData {
   gender: string;
   image: string;
   role: string;
+  emailVerified: Date | null;
+  kycVerified: boolean;
 }
 
 export interface TabConfig {
