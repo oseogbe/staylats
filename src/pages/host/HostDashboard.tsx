@@ -52,7 +52,7 @@ const HostDashboard = () => {
   const draftListings = mockListings.filter(listing => listing.status === "draft")
 
   const handleCreateListing = () => {
-    navigate("/host/create-listing-prompt")
+    navigate("/host/create-listing")
   }
 
   const handleContinueListing = (listing: PropertyListing) => {

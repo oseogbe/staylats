@@ -136,16 +136,16 @@ const PropertyDetails = () => {
               </div>
 
               {/* Property Stats */}
-              <div className="flex items-center gap-6 py-4 border-y">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center max-sm:justify-between gap-6 py-4 border-y">
+                <div className="flex flex-col sm:flex-row items-center gap-2">
                   <Bed className="h-5 w-5 text-muted-foreground" />
                   <span>{property.bedrooms} bedrooms</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center gap-2">
                   <Bath className="h-5 w-5 text-muted-foreground" />
                   <span>{property.bathrooms} bathrooms</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center gap-2">
                   <Users className="h-5 w-5 text-muted-foreground" />
                   <span>Up to {property.maxGuests} guests</span>
                 </div>

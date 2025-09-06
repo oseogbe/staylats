@@ -58,7 +58,7 @@ const Navbar = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-            <Link to="/host/phone-registration">
+            <Link to="/host/create-listing">
               <Button
                 variant="ghost"
                 className="hidden lg:flex text-sm font-semibold px-3 py-2 rounded-full hover:bg-neutral-100"
@@ -131,7 +131,7 @@ const Navbar = () => {
 
                 {/* Become a host - visible to everyone except hosts */}
                 {(!isAuthenticated || (isAuthenticated && user?.role !== 'host')) && (
-                  <Link to="/host/phone-registration">
+                  <Link to="/host/create-listing">
                     <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
                       <div className="flex items-center">
                         <Home className="h-5 w-5 mr-3 text-neutral-600" />

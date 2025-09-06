@@ -9,9 +9,6 @@ import PropertyDetails from "@/pages/PropertyDetails";
 import SavedListings from "@/pages/SavedListings";
 import EmailVerification from "@/pages/EmailVerification";
 import ResendEmailVerification from "@/pages/ResendEmailVerification";
-import PhoneRegistration from "@/pages/host/PhoneRegistration";
-import OtpVerification from "@/pages/host/OtpVerification";
-import HostDetailsRegistration from "@/pages/host/HostDetailsRegistration";
 import CreateListingPrompt from "@/pages/host/CreateListingPrompt";
 import CreateRentalListing from "@/pages/host/CreateRentalListing";
 import CreateShortletListing from "@/pages/host/CreateShortletListing";
@@ -55,32 +52,6 @@ const App = () => (
             <Route path="/resend-verification" element={<ResendEmailVerification />} />
             <Route path="*" element={<NotFound />} />
 
-            {/* Host onboarding routes (accessible when not logged in) */}
-            <Route
-              path="/host/phone-registration"
-              element={
-                <ProtectedRoute requireAuth={false}>
-                  <PhoneRegistration />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/host/verify-otp"
-              element={
-                <ProtectedRoute requireAuth={false}>
-                  <OtpVerification />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/host/register-details"
-              element={
-                <ProtectedRoute requireAuth={false}>
-                  <HostDetailsRegistration />
-                </ProtectedRoute>
-              }
-            />
-
             {/* Protected routes for authenticated users */}
             <Route
               path="/saved-listings"
@@ -101,9 +72,9 @@ const App = () => (
 
             {/* Protected routes for hosts only */}
             <Route
-              path="/host/create-listing-prompt"
+              path="/host/create-listing"
               element={
-                <ProtectedRoute allowedRoles={['host']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
                   <CreateListingPrompt />
                 </ProtectedRoute>
               }
@@ -111,7 +82,7 @@ const App = () => (
             <Route
               path="/host/create-rental-listing"
               element={
-                <ProtectedRoute allowedRoles={['host']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
                   <CreateRentalListing />
                 </ProtectedRoute>
               }
@@ -119,7 +90,7 @@ const App = () => (
             <Route
               path="/host/create-shortlet-listing"
               element={
-                <ProtectedRoute allowedRoles={['host']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
                   <CreateShortletListing />
                 </ProtectedRoute>
               }
