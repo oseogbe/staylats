@@ -31,6 +31,7 @@ interface AuthContextType {
   isAuthorized: (allowedRoles: UserRole[]) => boolean;
   setUser: (user: User | null) => void;
   getAccessToken: () => string | null;
+  refreshAccessToken: () => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -133,6 +134,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return localStorage.getItem('accessToken');
   };
 
+  const refreshAccessToken = async () => {
+    try {
+      const refreshResponse = await authAPI.refreshToken();
+      const { accessToken } = refreshResponse.data;
+      
+      // Store new access token
+      localStorage.setItem('accessToken', accessToken);
+      
+      // Get user profile with new token
+      const response = await profileAPI.getCurrentUser();
+      const { user: newUser } = response.data;
+      setUser(newUser);
+
+      return accessToken;
+    } catch (error) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('hadSession');
+      setUser(null);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -144,6 +167,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthorized,
         setUser,
         getAccessToken,
+        refreshAccessToken,
       }}
     >
       {children}

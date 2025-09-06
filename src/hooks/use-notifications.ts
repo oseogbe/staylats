@@ -17,7 +17,7 @@ export function useNotifications(userId: string) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { getAccessToken } = useAuth();
+  const { getAccessToken, refreshAccessToken } = useAuth();
 
   const initializeSocket = useCallback(() => {
     if (!userId) return;
@@ -49,9 +49,23 @@ export function useNotifications(userId: string) {
         socket?.emit('join', userId);
       });
 
-      socket.on('connect_error', (err) => {
-        setError(`Connection error: ${err.message}`);
+      socket.on('connect_error', async (err) => {
         setIsConnected(false);
+        
+        if (err.message === 'Token expired') {
+          // Token expired, attempt to refresh
+          try {
+            await refreshAccessToken();
+            // Reinitialize socket with new token
+            initializeSocket();
+            return;
+          } catch (refreshError) {
+            setError('Session expired. Please log in again.');
+            return;
+          }
+        }
+        
+        setError(`Connection error: ${err.message}`);
       });
 
       socket.on('disconnect', () => {
