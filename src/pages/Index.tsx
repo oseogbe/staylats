@@ -6,18 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-import { 
-  MapPin, 
-  Star, 
-  Wifi, 
-  Car, 
-  Shield, 
-  Home, 
-  Building2, 
-  Users,
-  TrendingUp,
-  CheckCircle
-} from "lucide-react";
+import { MapPin, Shield, Users, CheckCircle, BedDouble, House } from "lucide-react";
 
 import { mockProperties } from "@/data/mockData";
 
@@ -47,7 +36,7 @@ const Index = () => {
             <Card className="group overflow-hidden border-0 shadow-soft hover:shadow-medium transition-all duration-300 cursor-pointer">
               <div className="p-8 text-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Home className="h-8 w-8 text-primary" />
+                  <BedDouble className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-neutral-900 mb-4">Shortlets</h3>
                 <p className="text-neutral-600 mb-6">
@@ -70,7 +59,7 @@ const Index = () => {
             <Card className="group overflow-hidden border-0 shadow-soft hover:shadow-medium transition-all duration-300 cursor-pointer">
               <div className="p-8 text-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Building2 className="h-8 w-8 text-primary" />
+                  <House className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-neutral-900 mb-4">Rentals</h3>
                 <p className="text-neutral-600 mb-6">
