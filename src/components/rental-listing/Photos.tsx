@@ -1,13 +1,27 @@
 import { Upload, X } from 'lucide-react';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormDescription, 
+  FormMessage 
+} from '@/components/ui/form';
+
 import { usePhotoUpload } from './use-photo-upload';
+
 import type { StepProps } from './types';
 
 export function Photos({ form }: StepProps) {
-  const { uploadedPhotos, handlePhotoUpload, removePhoto } = usePhotoUpload(form.setValue);
+  const { uploadedPhotos, handlePhotoUpload, removePhoto, fileInputRef, handleFileSelect } = usePhotoUpload(
+    form.setValue,
+    form.setError,
+    form.clearErrors
+  );
 
   return (
     <div className="space-y-6">
@@ -54,44 +68,58 @@ export function Photos({ form }: StepProps) {
         )}
       />
 
-      <div>
-        <FormLabel>Property Photos</FormLabel>
-        <FormDescription className="mb-4">Upload at least 5 photos of your property</FormDescription>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-          {uploadedPhotos.map((photo, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={photo}
-                alt={`Property photo ${index + 1}`}
-                className="w-full h-32 object-cover rounded-lg"
-              />
-              <button
-                type="button"
-                onClick={() => removePhoto(index)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-3 w-3" />
-              </button>
+      <FormField
+        control={form.control}
+        name="photos"
+        render={({ field, fieldState }) => (
+          <FormItem>
+            <FormLabel>Property Photos</FormLabel>
+            <FormDescription className="mb-4">Upload at least 5 photos of your property (max 2MB each)</FormDescription>
+            
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+              {uploadedPhotos.map((photo, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={photo}
+                    alt={`Property photo ${index + 1}`}
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handlePhotoUpload}
-          className="w-full"
-          disabled={uploadedPhotos.length >= 10}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Photo ({uploadedPhotos.length}/10)
-        </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePhotoUpload}
+              className="w-full"
+              disabled={uploadedPhotos.length >= 10}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {uploadedPhotos.length === 0 ? 'Select Photos' : `Add More Photos (${uploadedPhotos.length}/10)`}
+            </Button>
 
-        {uploadedPhotos.length < 5 && (
-          <p className="text-sm text-red-500 mt-2">You need at least 5 photos to continue</p>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
     </div>
   );
 }
