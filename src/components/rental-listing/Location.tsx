@@ -18,7 +18,6 @@ export function Location({ form }: StepProps) {
                 <Input placeholder="e.g., 123 Victoria Island, Lagos" {...field} />
               </div>
             </FormControl>
-            <FormDescription>Provide the full address of your property</FormDescription>
             <FormMessage />
           </FormItem>
         )}

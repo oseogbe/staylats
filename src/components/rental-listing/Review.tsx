@@ -1,4 +1,5 @@
 import { CheckCircle } from 'lucide-react';
+
 import { contractTerms } from './types';
 import type { StepProps } from './types';
 
@@ -24,7 +25,14 @@ export function Review({ form }: StepProps) {
             <span className="font-medium">Capacity:</span> {formData.bedrooms} bed, {formData.bathrooms} bath, {formData.maxGuests} guests
           </div>
           <div>
-            <span className="font-medium">Contract:</span> {contractTerms.find(t => t.value === formData.contractTerm)?.label}
+            <span className="font-medium">Contract Terms:</span> {
+              formData.contractTerms && formData.contractTerms.length > 0 
+                ? formData.contractTerms
+                    .map(termValue => contractTerms.find(t => t.value === termValue)?.label)
+                    .filter(Boolean)
+                    .join(', ')
+                : 'No contract terms selected'
+            }
           </div>
           <div>
             <span className="font-medium">Monthly Rent:</span> ₦{formData.price?.toLocaleString()}
@@ -44,7 +52,7 @@ export function Review({ form }: StepProps) {
           <span className="text-green-800 font-medium">Ready to publish!</span>
         </div>
         <p className="text-green-700 text-sm mt-1">
-          Your listing will be reviewed and go live within 24 hours.
+          Your listing will be reviewed and go live within 24 hours once approved.
         </p>
       </div>
     </div>

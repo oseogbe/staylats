@@ -1,34 +1,49 @@
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { MultiSelect } from '@/components/MultiSelect';
+
 import { contractTerms } from './types';
 import type { StepProps } from './types';
 
 export function Pricing({ form }: StepProps) {
+  // Convert contractTerms to MultiSelect format
+  const contractOptions = contractTerms.map(term => ({
+    label: term.label,
+    value: term.value
+  }));
+
   return (
     <div className="space-y-6">
       <FormField
         control={form.control}
-        name="contractTerm"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Contract Term</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+        name="contractTerms"
+        render={({ field }) => {
+          // Convert array to Set for MultiSelect
+          const fieldValue = field.value as string[] | undefined;
+          const selectedValues = new Set<string>(fieldValue || []);
+          
+          const handleSelectionChange = (newSelectedValues: Set<string>) => {
+            // Convert Set back to array for form
+            field.onChange(Array.from(newSelectedValues));
+          };
+
+          return (
+            <FormItem>
+              <FormLabel>Available Contract Terms</FormLabel>
+              <FormDescription>Select all contract durations you're willing to offer</FormDescription>
               <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select contract duration" />
-                </SelectTrigger>
+                <MultiSelect
+                  placeholder="Select contract terms..."
+                  options={contractOptions}
+                  selectedValues={selectedValues}
+                  onSelectionChange={handleSelectionChange}
+                />
               </FormControl>
-              <SelectContent>
-                {contractTerms.map((term) => (
-                  <SelectItem key={term.value} value={term.value}>{term.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <FormField
