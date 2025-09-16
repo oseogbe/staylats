@@ -35,10 +35,17 @@ export default function CreateShortletListing() {
 
   const form = useForm<ShortletListingFormData>({
     resolver: zodResolver(shortletListingSchema),
+    mode: 'onChange', // Trigger validation on change
     defaultValues: {
+      propertyType: '',
+      title: '',
+      description: '',
       bedrooms: 1,
       bathrooms: 1,
       maxGuests: 2,
+      address: '',
+      city: '',
+      state: '',
       photos: [],
       amenities: [],
       pricePerNight: 15000,
@@ -51,21 +58,99 @@ export default function CreateShortletListing() {
     }
   });
 
-  const nextStep = () => {
+  // Watch form values to make validation reactive
+  const watchedValues = form.watch();
+  
+  // Check if current step has validation errors or missing required fields
+  const getCurrentStepErrors = () => {
+    const stepFields: Record<number, (keyof ShortletListingFormData)[]> = {
+      1: ['propertyType', 'bedrooms', 'bathrooms', 'maxGuests'],
+      2: ['address', 'city', 'state'],
+      3: ['title', 'description', 'photos'],
+      4: ['amenities'],
+      5: ['pricePerNight', 'cleaningFee', 'securityDeposit', 'minimumStay', 'maximumStay', 'checkInTime', 'checkOutTime'],
+      6: [] // Review step - no validation needed
+    };
+
+    const fieldsToCheck = stepFields[currentStep];
+    if (!fieldsToCheck) return false;
+
+    // Check if any of the current step fields have errors
+    const hasErrors = fieldsToCheck.some(field => {
+      const fieldState = form.getFieldState(field);
+      return fieldState.error !== undefined;
+    });
+
+    // Check for missing required fields based on current step
+    const hasMissingFields = (() => {
+      switch (currentStep) {
+        case 1:
+          return !watchedValues.propertyType || watchedValues.propertyType === '';
+        case 2:
+          return !watchedValues.address || watchedValues.address === '' || 
+                 !watchedValues.city || watchedValues.city === '' || 
+                 !watchedValues.state || watchedValues.state === '';
+        case 3:
+          return !watchedValues.photos || watchedValues.photos.length < 5;
+        case 4:
+          return !watchedValues.amenities || watchedValues.amenities.length === 0;
+        case 5:
+          return !watchedValues.pricePerNight || watchedValues.pricePerNight < 5000;
+        case 6:
+          return false; // Review step - no validation needed
+        default:
+          return false;
+      }
+    })();
+
+    return hasErrors || hasMissingFields;
+  };
+
+  const hasCurrentStepErrors = getCurrentStepErrors();
+
+  const nextStep = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    
     if (currentStep < steps.length) {
+      // Define the fields to validate for each step
+      const stepFields: Record<number, (keyof ShortletListingFormData)[]> = {
+        1: ['propertyType', 'bedrooms', 'bathrooms', 'maxGuests'],
+        2: ['address', 'city', 'state'],
+        3: ['title', 'description', 'photos'],
+        4: ['amenities'],
+        5: ['pricePerNight', 'cleaningFee', 'securityDeposit', 'minimumStay', 'maximumStay', 'checkInTime', 'checkOutTime'],
+        6: [] // Review step - no validation needed
+      };
+
+      const fieldsToValidate = stepFields[currentStep];
+      
+      if (fieldsToValidate && fieldsToValidate.length > 0) {
+        // Trigger validation for the current step fields
+        const isValid = await form.trigger(fieldsToValidate);
+        
+        if (!isValid) {
+          // Validation failed, don't proceed to next step
+          return;
+        }
+      }
+      
       setCurrentStep(currentStep + 1);
     }
   };
 
-  const prevStep = () => {
+  const prevStep = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    
     if (currentStep > 1) {
+      // Clear validation errors when going back
+      form.clearErrors();
       setCurrentStep(currentStep - 1);
     }
   };
 
   const onSubmit = (data: ShortletListingFormData) => {
     console.log('Shortlet listing data:', data);
-    toast.success("Your shortlet listing is now live and available for bookings.");
+    toast.success("Your shortlet listing has successfully submitted for review.");
     navigate('/');
   };
 
@@ -153,10 +238,7 @@ export default function CreateShortletListing() {
                     <Button
                       type="button"
                       onClick={nextStep}
-                      disabled={
-                        (currentStep === 3 && form.getValues('photos')?.length < 5) ||
-                        (currentStep === 4 && form.getValues('amenities')?.length === 0)
-                      }
+                      disabled={hasCurrentStepErrors}
                     >
                       Next
                       <ArrowRight className="h-4 w-4 ml-2" />

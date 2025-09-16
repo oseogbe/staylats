@@ -20,7 +20,7 @@ export const shortletListingSchema = z.object({
   propertyType: z.string().min(1, 'Property type is required'),
   title: z.string().min(5, 'Title must be at least 5 characters').max(60, 'Title must be less than 60 characters'),
   description: z.string().min(50, 'Description must be at least 50 characters').max(500, 'Description must be less than 500 characters'),
-  address: z.string().min(10, 'Please provide a detailed address'),
+  address: z.string().min(10, 'Please enter a valid address'),
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State is required'),
   bedrooms: z.number().min(1, 'At least 1 bedroom required'),
