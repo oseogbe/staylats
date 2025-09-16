@@ -20,6 +20,8 @@ import {
   Heart,
   HelpCircle,
   Home,
+  ClipboardList,
+  CalendarCheck,
   LogIn,
   LogOut,
 } from 'lucide-react';
@@ -58,31 +60,28 @@ const Navbar = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-            <Link to="/host/create-listing">
+            <Link to="/properties">
               <Button
                 variant="ghost"
                 className="hidden lg:flex text-sm font-semibold px-3 py-2 rounded-full hover:bg-neutral-100"
               >
-                List your property
+                View Listings
               </Button>
             </Link>
             <Button
               variant="ghost"
-              size="icon"
-              className="hidden sm:flex rounded-full hover:bg-neutral-100"
+              className="hidden lg:flex text-sm text-primary-foreground font-semibold px-3 py-2 rounded-full bg-primary hover:bg-primary/80"
               onClick={() => {
                 if (isAuthenticated) {
-                  navigate('/saved-listings');
+                  navigate('/host/create-listing');
                 } else {
-                  openAuthModal('/saved-listings');
+                  openAuthModal('/host/create-listing');
                 }
               }}
             >
-              <Heart className="h-5 w-5" />
+              List your property
             </Button>
-            {isAuthenticated && (
-              <NotificationBell />
-            )}
+            {isAuthenticated && <NotificationBell />}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -100,51 +99,74 @@ const Navbar = () => {
                 className="w-64 mt-2 bg-background border border-neutral-200 shadow-lg rounded-xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2"
                 sideOffset={8}
               >
-                {/* My Account - visible for logged in users */}
+                {/* My Account, Switch to hosting, My Applications - visible to authenticated users */}
                 {isAuthenticated && (
-                  <DropdownMenuItem
-                    className="p-4 hover:bg-neutral-50 cursor-pointer"
-                    onClick={() => navigate('/my-account')}
-                  >
-                    <User className="h-4 w-4 mr-3 text-neutral-600" />
-                    <span className="text-sm font-medium">My Account</span>
-                  </DropdownMenuItem>
-                )}
+                  <>
+                    <DropdownMenuItem
+                      className="p-4 hover:bg-neutral-50 cursor-pointer"
+                      onClick={() => navigate('/my-account')}
+                    >
+                      <User className="h-4 w-4 mr-3 text-neutral-600" />
+                      <span className="text-sm font-medium">My Account</span>
+                    </DropdownMenuItem>
 
-                {/* Switch to hosting - visible only for hosts */}
-                {isAuthenticated && user?.role === 'host' && (
-                  <DropdownMenuItem
-                    className="p-4 hover:bg-neutral-50 cursor-pointer"
-                    onClick={() => navigate('/host/dashboard')}
-                  >
-                    <div className="flex items-center">
-                      <Home className="h-4 w-4 mr-3 text-neutral-600" />
-                      <div>
-                        <p className="text-sm font-medium">Switch to hosting</p>
-                        <p className="text-xs text-neutral-500">
-                          Manage your properties and earnings.
-                        </p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                )}
-
-                {/* Become a host - visible to everyone except hosts */}
-                {(!isAuthenticated || (isAuthenticated && user?.role !== 'host')) && (
-                  <Link to="/host/create-listing">
-                    <DropdownMenuItem className="p-4 hover:bg-neutral-50 cursor-pointer">
+                    <DropdownMenuItem
+                      className="p-4 hover:bg-neutral-50 cursor-pointer"
+                      onClick={() => navigate('/host/dashboard')}
+                    >
                       <div className="flex items-center">
-                        <Home className="h-5 w-5 mr-3 text-neutral-600" />
+                        <Home className="h-4 w-4 mr-3 text-neutral-600" />
                         <div>
-                          <p className="text-sm font-medium">Become a host</p>
+                          <p className="text-sm font-medium">
+                            Switch to hosting
+                          </p>
                           <p className="text-xs text-neutral-500">
-                            It's easy to start hosting and earn extra income.
+                            Manage your properties and earnings.
                           </p>
                         </div>
                       </div>
                     </DropdownMenuItem>
-                  </Link>
+
+                    <DropdownMenuItem
+                      className="p-4 hover:bg-neutral-50 cursor-pointer"
+                      onClick={() => navigate('/#')}
+                    >
+                        <ClipboardList className="h-4 w-4 mr-3 text-neutral-600" />
+                        <span className="text-sm font-medium">Applications</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      className="p-4 hover:bg-neutral-50 cursor-pointer"
+                      onClick={() => navigate('/#')}
+                    >
+                        <CalendarCheck className="h-4 w-4 mr-3 text-neutral-600" />
+                        <span className="text-sm font-medium">Reservations</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      className="p-4 hover:bg-neutral-50 cursor-pointer"
+                      onClick={() => navigate('/saved-listings')}
+                    >
+                        <Heart className="h-4 w-4 mr-3 text-neutral-600" />
+                        <span className="text-sm font-medium">Saved Listings</span>
+                    </DropdownMenuItem>
+                  </>
                 )}
+
+                {/* Login/Signup - visible to unauthenticated users */}
+                {!isAuthenticated && (
+                  <DropdownMenuItem
+                    className="p-4 hover:bg-neutral-50 cursor-pointer"
+                    onClick={() => openAuthModal()}
+                  >
+                    <LogIn className="h-4 w-4 mr-3 text-neutral-600" />
+                    <span className="text-sm font-medium">
+                      Log in or sign up
+                    </span>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator className="my-2" />
 
                 {/* Help Center - visible to everyone */}
                 <DropdownMenuItem
@@ -154,19 +176,6 @@ const Navbar = () => {
                   <HelpCircle className="h-4 w-4 mr-3 text-neutral-600" />
                   <span className="text-sm font-medium">Help Center</span>
                 </DropdownMenuItem>
-
-                <DropdownMenuSeparator className="my-2" />
-
-                {/* Login/Signup - visible to unauthenticated users */}
-                {!isAuthenticated && (
-                  <DropdownMenuItem
-                    className="p-4 hover:bg-neutral-50 cursor-pointer"
-                    onClick={() => openAuthModal()}
-                  >
-                    <LogIn className="h-4 w-4 mr-3 text-neutral-600" />
-                    <span className="text-sm font-medium">Log in or sign up</span>
-                  </DropdownMenuItem>
-                )}
 
                 {/* Logout - visible to authenticated users */}
                 {isAuthenticated && (

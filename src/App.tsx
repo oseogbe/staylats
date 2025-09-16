@@ -98,7 +98,7 @@ const App = () => (
             <Route
               path="/host/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['host']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
                   <HostDashboard />
                 </ProtectedRoute>
               }
