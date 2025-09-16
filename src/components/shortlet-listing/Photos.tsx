@@ -63,6 +63,11 @@ export function Photos({ form }: StepProps) {
             <FormDescription>
               {field.value?.length || 0}/500 characters. Highlight unique features and guest benefits.
             </FormDescription>
+            <div className="bg-amber-50 border border-amber-200 p-3 rounded-md">
+              <p className="text-amber-800 text-sm">
+                <strong>⚠️ Important:</strong> Do not include contact information, phone numbers, email addresses, social media handles or location details in your description. This information will be handled separately through our secure contact and booking system.
+              </p>
+            </div>
             <FormMessage />
           </FormItem>
         )}

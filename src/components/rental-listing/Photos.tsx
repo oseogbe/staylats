@@ -63,6 +63,11 @@ export function Photos({ form }: StepProps) {
             <FormDescription>
               {field.value?.length || 0}/500 characters. Highlight key features and benefits.
             </FormDescription>
+            <div className="bg-amber-50 border border-amber-200 p-3 rounded-md">
+              <p className="text-amber-800 text-sm">
+                <strong>⚠️ Important:</strong> Do not include contact information, phone numbers, email addresses, social media handles or location details in your description. This information will be handled separately through our secure contact and booking system.
+              </p>
+            </div>
             <FormMessage />
           </FormItem>
         )}
@@ -74,8 +79,6 @@ export function Photos({ form }: StepProps) {
         render={({ field, fieldState }) => (
           <FormItem>
             <FormLabel>Property Photos</FormLabel>
-            <FormDescription className="mb-4">Upload at least 5 photos of your property (max 2MB each)</FormDescription>
-            
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -85,7 +88,6 @@ export function Photos({ form }: StepProps) {
               onChange={handleFileSelect}
               className="hidden"
             />
-            
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
               {uploadedPhotos.map((photo, index) => (
                 <div key={index} className="relative group">
@@ -104,7 +106,6 @@ export function Photos({ form }: StepProps) {
                 </div>
               ))}
             </div>
-
             <Button
               type="button"
               variant="outline"
@@ -115,6 +116,8 @@ export function Photos({ form }: StepProps) {
               <Upload className="h-4 w-4 mr-2" />
               {uploadedPhotos.length === 0 ? 'Select Photos' : `Add More Photos (${uploadedPhotos.length}/10)`}
             </Button>
+            
+            <FormDescription className="mb-4">Upload at least 5 photos of your property (max 2MB each)</FormDescription>
 
             <FormMessage />
           </FormItem>

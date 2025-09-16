@@ -46,7 +46,7 @@ export function Review({ form }: StepProps) {
           <span className="text-green-800 font-medium">Ready to publish!</span>
         </div>
         <p className="text-green-700 text-sm mt-1">
-          Your listing will be reviewed and go live within 24 hours.
+          Your listing will be reviewed and go live within 24 hours once approved.
         </p>
       </div>
     </div>
