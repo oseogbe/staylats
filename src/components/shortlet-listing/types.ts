@@ -4,6 +4,10 @@ export const propertyTypes = [
   'Apartment', 'House', 'Studio', 'Duplex', 'Villa', 'Cottage', 'Penthouse', 'Loft', 'Cabin'
 ] as const;
 
+export const states = [
+  'Abuja', 'Lagos'
+] as const;
+
 export const amenitiesList = [
   'WiFi', 'Air Conditioning', 'Kitchen', 'Washing Machine', 'TV', 'Parking',
   'Swimming Pool', 'Hot Tub', 'Gym', 'Security', 'Generator', 'Garden',
@@ -27,6 +31,7 @@ export const shortletListingSchema = z.object({
   bathrooms: z.number().min(1, 'At least 1 bathroom required'),
   maxGuests: z.number().min(1, 'At least 1 guest capacity required'),
   photos: z.array(z.string()).min(5, 'At least 5 photos are required'),
+  photoFiles: z.array(z.instanceof(File)).optional(),
   amenities: z.array(z.string()).min(1, 'Select at least one amenity'),
   pricePerNight: z.number().min(5000, 'Minimum price is ₦5,000 per night'),
   cleaningFee: z.number().min(0, 'Cleaning fee must be positive'),
@@ -43,6 +48,7 @@ export type ShortletListingFormData = z.infer<typeof shortletListingSchema>;
 
 export interface StepProps {
   form: any; // We'll replace this with the proper type from react-hook-form
+  photoUploadHook?: any; // Photo upload hook instance
   onNext?: () => void;
   onPrev?: () => void;
   isLastStep?: boolean;

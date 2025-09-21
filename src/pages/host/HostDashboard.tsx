@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Home, FileText, DollarSign, Users, MessageSquare } from "lucide-react";
 
@@ -11,40 +11,16 @@ import {
   RentalResponsesTab,
   type PropertyListing
 } from "@/components/host";
+import listingsService, { type DraftSummary } from "@/services/listings";
 
-const mockListings: PropertyListing[] = [
-  {
-    id: "1",
-    title: "Unnamed Property",
-    type: "rental",
-    status: "draft",
-    stepsRemaining: 3,
-    lastUpdated: "Apr 19, 2025 at 7:43 PM"
-  },
-  {
-    id: "2", 
-    title: "Unnamed Property",
-    type: "shortlet",
-    status: "draft",
-    stepsRemaining: 2,
-    lastUpdated: "Apr 19, 2025 at 7:09 PM"
-  },
-  {
-    id: "3",
-    title: "Unnamed Property", 
-    type: "rental",
-    status: "draft",
-    stepsRemaining: 5,
-    lastUpdated: "Apr 4, 2025 at 7:18 AM"
-  }
-];
+const mockListings: PropertyListing[] = [];
 
 export default function HostDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("property-management");
+  const [draftListings, setDraftListings] = useState<PropertyListing[]>(mockListings);
 
   const publishedListings = mockListings.filter(listing => listing.status === "published");
-  const draftListings = mockListings.filter(listing => listing.status === "draft");
 
   const handleCreateListing = () => {
     navigate("/host/create-listing");
@@ -52,11 +28,30 @@ export default function HostDashboard() {
 
   const handleContinueListing = (listing: PropertyListing) => {
     if (listing.type === "rental") {
-      navigate("/host/create-rental-listing");
+      navigate("/host/create-rental-listing", { state: { draftId: listing.id } });
     } else {
-      navigate("/host/create-shortlet-listing");
+      navigate("/host/create-shortlet-listing", { state: { draftId: listing.id } });
     }
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await listingsService.getDrafts();
+        const mapped: PropertyListing[] = data.drafts.map((d: DraftSummary) => ({
+          id: d.id,
+          title: d.title,
+          type: d.type,
+          status: 'draft',
+          stepsRemaining: d.stepsRemaining,
+          lastUpdated: new Date(d.lastUpdated).toLocaleString()
+        }));
+        setDraftListings(mapped);
+      } catch (err) {
+        // silently ignore or add toast later
+      }
+    })();
+  }, []);
 
   return (
     <div className="min-h-screen bg-neutral-50">

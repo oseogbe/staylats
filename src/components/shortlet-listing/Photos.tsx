@@ -1,27 +1,30 @@
+import { useEffect } from 'react';
 import { Upload, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl, 
-  FormDescription, 
-  FormMessage 
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage
 } from '@/components/ui/form';
 
 import { usePhotoUpload } from './use-photo-upload';
 
 import type { StepProps } from './types';
 
-export function Photos({ form }: StepProps) {
-  const { uploadedPhotos, handlePhotoUpload, removePhoto, fileInputRef, handleFileSelect } = usePhotoUpload(
-    form.setValue,
-    form.setError,
-    form.clearErrors
-  );
+export function Photos({ form, photoUploadHook }: StepProps) {
+  const { uploadedPhotos, handlePhotoUpload, removePhoto, fileInputRef, handleFileSelect, loadExistingPhotos } = photoUploadHook;
+
+  useEffect(() => {
+    const photoUrls = form.getValues('photos') || [];
+    // Initializing Photos component with photoUrls
+    loadExistingPhotos(photoUrls);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -32,7 +35,7 @@ export function Photos({ form }: StepProps) {
           <FormItem>
             <FormLabel>Property Title</FormLabel>
             <FormControl>
-              <Input 
+              <Input
                 placeholder="e.g., Luxury Oceanview Apartment in Victoria Island"
                 maxLength={60}
                 {...field}
@@ -80,7 +83,7 @@ export function Photos({ form }: StepProps) {
           <FormItem>
             <FormLabel>Property Photos</FormLabel>
             <FormDescription className="mb-4">Upload at least 5 photos of your property (max 2MB each)</FormDescription>
-            
+
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -90,7 +93,7 @@ export function Photos({ form }: StepProps) {
               onChange={handleFileSelect}
               className="hidden"
             />
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
               {uploadedPhotos.map((photo, index) => (
                 <div key={index} className="relative group">

@@ -1,13 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle, BedDouble } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
 
 import {
   PropertyBasics,
@@ -19,6 +36,9 @@ import {
   shortletListingSchema,
   type ShortletListingFormData
 } from '@/components/shortlet-listing';
+import { usePhotoUpload } from '@/components/shortlet-listing/use-photo-upload';
+
+import listingsService from '@/services/listings';
 
 const steps = [
   { id: 1, title: 'Property Basics', description: 'Tell us about your property', Component: PropertyBasics },
@@ -32,6 +52,10 @@ const steps = [
 export default function CreateShortletListing() {
   const [currentStep, setCurrentStep] = useState(1);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [draftId, setDraftId] = useState<string | undefined>(undefined);
+  const [confirmBackOpen, setConfirmBackOpen] = useState(false);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
 
   const form = useForm<ShortletListingFormData>({
     resolver: zodResolver(shortletListingSchema),
@@ -47,6 +71,7 @@ export default function CreateShortletListing() {
       city: '',
       state: '',
       photos: [],
+      photoFiles: [],
       amenities: [],
       pricePerNight: 15000,
       cleaningFee: 5000,
@@ -60,7 +85,77 @@ export default function CreateShortletListing() {
 
   // Watch form values to make validation reactive
   const watchedValues = form.watch();
-  
+
+  // Get the photo upload hook for loading existing photos
+  const photoUploadHook = usePhotoUpload(
+    form.setValue
+  );
+
+  // Load draft data if draftId is provided
+  useEffect(() => {
+    const loadDraft = async () => {
+      const stateDraftId = location.state?.draftId;
+      if (stateDraftId) {
+        setIsLoadingDraft(true);
+        try {
+          const draftData = await listingsService.getDraftById(stateDraftId);
+          const draft = draftData.draft;
+
+          if (draft) {
+            setDraftId(draft.id);
+
+            // Set the current step based on draft data
+            if (draft.step) {
+              setCurrentStep(draft.step);
+            }
+
+            // Pre-fill form with draft data
+            if (draft.formData) {
+              const formData = draft.formData as any;
+
+              // Reset form with draft data (excluding photos for now)
+              form.reset({
+                propertyType: formData.propertyType || '',
+                title: formData.title || '',
+                description: formData.description || '',
+                address: formData.address || '',
+                city: formData.city || '',
+                state: formData.state || '',
+                bedrooms: formData.bedrooms || 1,
+                bathrooms: formData.bathrooms || 1,
+                maxGuests: formData.maxGuests || 2,
+                photos: draft.images || [],
+                photoFiles: [], // Will be empty for loaded drafts
+                amenities: formData.amenities || [],
+                pricePerNight: formData.pricePerNight || 15000,
+                cleaningFee: formData.cleaningFee || 5000,
+                securityDeposit: formData.securityDeposit || 20000,
+                minimumStay: formData.minimumStay || 1,
+                maximumStay: formData.maximumStay || 30,
+                checkInTime: formData.checkInTime || '15:00',
+                checkOutTime: formData.checkOutTime || '11:00',
+                availableFrom: formData.availableFrom ? new Date(formData.availableFrom) : undefined,
+                availableUntil: formData.availableUntil ? new Date(formData.availableUntil) : undefined
+              });
+
+              // Load existing photos into the photo upload hook
+              if (draft.images && draft.images.length > 0) {
+                photoUploadHook.loadExistingPhotos(draft.images);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load draft:', error);
+          toast.error('Failed to load listing draft');
+        } finally {
+          setIsLoadingDraft(false);
+        }
+      }
+    };
+
+    loadDraft();
+  }, [location.state?.draftId, form]);
+
   // Check if current step has validation errors or missing required fields
   const getCurrentStepErrors = () => {
     const stepFields: Record<number, (keyof ShortletListingFormData)[]> = {
@@ -87,9 +182,9 @@ export default function CreateShortletListing() {
         case 1:
           return !watchedValues.propertyType || watchedValues.propertyType === '';
         case 2:
-          return !watchedValues.address || watchedValues.address === '' || 
-                 !watchedValues.city || watchedValues.city === '' || 
-                 !watchedValues.state || watchedValues.state === '';
+          return !watchedValues.address || watchedValues.address === '' ||
+            !watchedValues.city || watchedValues.city === '' ||
+            !watchedValues.state || watchedValues.state === '';
         case 3:
           return !watchedValues.photos || watchedValues.photos.length < 5;
         case 4:
@@ -110,7 +205,7 @@ export default function CreateShortletListing() {
 
   const nextStep = async (e?: React.MouseEvent) => {
     e?.preventDefault();
-    
+
     if (currentStep < steps.length) {
       // Define the fields to validate for each step
       const stepFields: Record<number, (keyof ShortletListingFormData)[]> = {
@@ -123,24 +218,24 @@ export default function CreateShortletListing() {
       };
 
       const fieldsToValidate = stepFields[currentStep];
-      
+
       if (fieldsToValidate && fieldsToValidate.length > 0) {
         // Trigger validation for the current step fields
         const isValid = await form.trigger(fieldsToValidate);
-        
+
         if (!isValid) {
           // Validation failed, don't proceed to next step
           return;
         }
       }
-      
+
       setCurrentStep(currentStep + 1);
     }
   };
 
   const prevStep = (e?: React.MouseEvent) => {
     e?.preventDefault();
-    
+
     if (currentStep > 1) {
       // Clear validation errors when going back
       form.clearErrors();
@@ -156,16 +251,117 @@ export default function CreateShortletListing() {
 
   const CurrentStepComponent = steps[currentStep - 1].Component;
 
+  if (isLoadingDraft) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading draft...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/host/create-listing')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
+            {currentStep <= 2 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/host/create-listing')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            ) : (
+              <AlertDialog open={confirmBackOpen} onOpenChange={setConfirmBackOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmBackOpen(true)}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Save this listing as a draft?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You have unsaved progress. Choose whether to save your current form data as a draft before leaving.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setConfirmBackOpen(false)}>
+                      Stay
+                    </AlertDialogCancel>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        // Leave without saving
+                        setConfirmBackOpen(false);
+                        navigate('/host/create-listing');
+                      }}
+                    >
+                      Leave without saving
+                    </Button>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        try {
+                          const formData = form.getValues();
+
+                          // Remove photos and photoFiles from formData since they're handled separately
+                          const { photos, photoFiles, ...cleanFormData } = formData;
+
+                          if (draftId) {
+                            // Update existing draft - send PhotoItems array and File objects
+                            await listingsService.updateDraft(draftId, {
+                              type: 'shortlet',
+                              title: formData.title,
+                              step: currentStep,
+                              totalSteps: steps.length,
+                              formData: cleanFormData,
+                              photoItems: photoUploadHook.photos,
+                              photoFiles: photoUploadHook.uploadedFiles
+                            });
+                          } else {
+                            // Create new draft
+                            const response = await listingsService.saveDraft({
+                              type: 'shortlet',
+                              title: formData.title,
+                              step: currentStep,
+                              totalSteps: steps.length,
+                              formData: cleanFormData,
+                              images: formData.photoFiles || []
+                            });
+                            if (response?.data?.draftId) {
+                              setDraftId(response.data.draftId);
+                            }
+                          }
+                          toast.success('Draft saved');
+                        } catch (error) {
+                          toast.error('Failed to save draft');
+                        } finally {
+                          setConfirmBackOpen(false);
+                          navigate('/host/create-listing');
+                        }
+                      }}
+                    >
+                      Save draft and leave
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
             <div>
               <h1 className="text-2xl font-bold">Create Shortlet Listing</h1>
               <p className="text-muted-foreground">Step {currentStep} of {steps.length}</p>
@@ -182,9 +378,8 @@ export default function CreateShortletListing() {
           <div className="flex items-center justify-between">
             {steps.map((step) => (
               <div key={step.id} className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  currentStep >= step.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= step.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
                   {step.id}
                 </div>
                 <div className="text-xs text-center mt-2 max-w-20">
@@ -194,7 +389,7 @@ export default function CreateShortletListing() {
             ))}
           </div>
           <div className="mt-4 bg-muted rounded-full h-2">
-            <div 
+            <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${(currentStep / steps.length) * 100}%` }}
             />
@@ -212,6 +407,7 @@ export default function CreateShortletListing() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <CurrentStepComponent
                   form={form}
+                  photoUploadHook={photoUploadHook}
                   onNext={nextStep}
                   onPrev={prevStep}
                   isLastStep={currentStep === steps.length}

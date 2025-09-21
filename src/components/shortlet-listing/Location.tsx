@@ -1,7 +1,22 @@
 import { MapPin } from 'lucide-react';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormMessage 
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import type { StepProps } from './types';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+
+import { states, type StepProps } from './types';
 
 export function Location({ form }: StepProps) {
   return (
@@ -44,9 +59,18 @@ export function Location({ form }: StepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>State</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Lagos State" {...field} />
-              </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state} value={state}>{state}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               <FormMessage />
             </FormItem>
           )}
