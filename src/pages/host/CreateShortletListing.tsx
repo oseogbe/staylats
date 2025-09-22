@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle, BedDouble } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ArrowLeft, ArrowRight, CheckCircle, BedDouble } from 'lucide-react';
+
+import { LoadingOverlay } from '@/components/LoadingOverlay';
 
 import {
   AlertDialog,
@@ -56,6 +58,7 @@ export default function CreateShortletListing() {
   const [draftId, setDraftId] = useState<string | undefined>(undefined);
   const [confirmBackOpen, setConfirmBackOpen] = useState(false);
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const form = useForm<ShortletListingFormData>({
     resolver: zodResolver(shortletListingSchema),
@@ -243,10 +246,30 @@ export default function CreateShortletListing() {
     }
   };
 
-  const onSubmit = (data: ShortletListingFormData) => {
-    console.log('Shortlet listing data:', data);
-    toast.success("Your shortlet listing has successfully submitted for review.");
-    navigate('/');
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const onSubmit = async (data: ShortletListingFormData) => {
+    try {
+      setIsPublishing(true);
+
+      // Remove photos and photoFiles from formData since they're handled separately
+      const { photos, photoFiles, ...cleanFormData } = data;
+
+      await listingsService.publishListing({
+        draftId: draftId, // Will be undefined for new listings
+        formData: cleanFormData,
+        photoItems: photoUploadHook.photos,
+        photoFiles: photoUploadHook.uploadedFiles
+      });
+
+      toast.success("Your shortlet listing has successfully submitted for review.");
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to publish listing:', error);
+      toast.error('Failed to publish listing. Please try again.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const CurrentStepComponent = steps[currentStep - 1].Component;
@@ -267,7 +290,11 @@ export default function CreateShortletListing() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-4 relative">
+      <LoadingOverlay 
+        isLoading={isPublishing || isSavingDraft}
+        message={isPublishing ? 'Publishing your listing...' : 'Saving draft...'}
+      />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -301,11 +328,15 @@ export default function CreateShortletListing() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setConfirmBackOpen(false)}>
+                    <AlertDialogCancel 
+                      disabled={isSavingDraft}
+                      onClick={() => setConfirmBackOpen(false)}
+                    >
                       Stay
                     </AlertDialogCancel>
                     <Button
                       variant="secondary"
+                      disabled={isSavingDraft}
                       onClick={() => {
                         // Leave without saving
                         setConfirmBackOpen(false);
@@ -315,8 +346,10 @@ export default function CreateShortletListing() {
                       Leave without saving
                     </Button>
                     <AlertDialogAction
+                      disabled={isSavingDraft}
                       onClick={async () => {
                         try {
+                          setIsSavingDraft(true);
                           const formData = form.getValues();
 
                           // Remove photos and photoFiles from formData since they're handled separately
@@ -348,11 +381,11 @@ export default function CreateShortletListing() {
                             }
                           }
                           toast.success('Draft saved');
-                        } catch (error) {
-                          toast.error('Failed to save draft');
-                        } finally {
                           setConfirmBackOpen(false);
                           navigate('/host/create-listing');
+                        } catch (error) {
+                          toast.error('Failed to save draft');
+                          setIsSavingDraft(false);
                         }
                       }}
                     >
@@ -426,9 +459,21 @@ export default function CreateShortletListing() {
                   </Button>
 
                   {currentStep === steps.length ? (
-                    <Button type="submit">
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Publish Listing
+                    <Button 
+                      type="submit" 
+                      disabled={isPublishing}
+                    >
+                      {isPublishing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                          Publishing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Publish Listing
+                        </>
+                      )}
                     </Button>
                   ) : (
                     <Button

@@ -98,14 +98,45 @@ export default {
         return res.data
     },
 
-    publishDraft: async (id: string) => {
-        const res = await api.post(`/listing/drafts/${id}/publish`)
-        return res.data
-    },
-
     deleteDraft: async (id: string) => {
         const res = await api.delete(`/listing/drafts/${id}`)
         return res.data.data
+    },
+
+    publishListing: async (payload: {
+        draftId?: string
+        formData: Record<string, any>
+        photoItems?: Array<{
+            url: string
+            fileName?: string
+            isNew: boolean
+        }>
+        photoFiles?: File[]
+    }) => {
+        const formData = new FormData()
+        
+        // Add JSON fields
+        if (payload.draftId) formData.append('draftId', payload.draftId)
+        formData.append('formData', JSON.stringify(payload.formData))
+        
+        // Add photo items
+        if (payload.photoItems && payload.photoItems.length > 0) {
+            formData.append('photoItems', JSON.stringify(payload.photoItems))
+        }
+        
+        // Add photo files
+        if (payload.photoFiles && payload.photoFiles.length > 0) {
+            payload.photoFiles.forEach((file) => {
+                formData.append('images', file)
+            })
+        }
+        
+        const res = await api.post('/listing/publish', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+        return res.data
     }
 }
 
