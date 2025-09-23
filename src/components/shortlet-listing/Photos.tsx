@@ -3,7 +3,6 @@ import { Upload, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import {
   FormField,
   FormItem,
@@ -12,8 +11,7 @@ import {
   FormDescription,
   FormMessage
 } from '@/components/ui/form';
-
-import { usePhotoUpload } from './use-photo-upload';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 import type { StepProps } from './types';
 
@@ -52,19 +50,29 @@ export function Photos({ form, photoUploadHook }: StepProps) {
       <FormField
         control={form.control}
         name="description"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <FormItem>
             <FormLabel>Property Description</FormLabel>
             <FormControl>
-              <Textarea
-                placeholder="Describe your property, its features, nearby attractions, and what makes it special for guests..."
+              <RichTextEditor
+                value={field.value || ""}
+                onChange={field.onChange}
+                placeholder=""
                 maxLength={500}
-                rows={4}
-                {...field}
+                className="min-h-[120px]"
+                onTextChange={(textLength) => {
+                  // Only validate if the field has been touched
+                  if (fieldState.isTouched) {
+                    form.setError('description', {
+                      type: 'manual',
+                      message: textLength < 50 ? 'Description must be at least 50 characters' : undefined
+                    });
+                  }
+                }}
               />
             </FormControl>
             <FormDescription>
-              {field.value?.length || 0}/500 characters. Highlight unique features and guest benefits.
+              Describe your property, its features, nearby attractions, and what makes it special for guests.
             </FormDescription>
             <div className="bg-amber-50 border border-amber-200 p-3 rounded-md">
               <p className="text-amber-800 text-sm">
@@ -79,7 +87,7 @@ export function Photos({ form, photoUploadHook }: StepProps) {
       <FormField
         control={form.control}
         name="photos"
-        render={({ field, fieldState }) => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Property Photos</FormLabel>
             <FormDescription className="mb-4">Upload at least 5 photos of your property (max 2MB each)</FormDescription>
@@ -95,7 +103,7 @@ export function Photos({ form, photoUploadHook }: StepProps) {
             />
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-              {uploadedPhotos.map((photo, index) => (
+              {uploadedPhotos.map((photo: string, index: number) => (
                 <div key={index} className="relative group">
                   <img
                     src={photo}

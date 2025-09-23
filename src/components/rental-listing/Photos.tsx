@@ -2,26 +2,28 @@ import { Upload, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl, 
-  FormDescription, 
-  FormMessage 
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
 } from '@/components/ui/form';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 import { usePhotoUpload } from './use-photo-upload';
 
 import type { StepProps } from './types';
 
 export function Photos({ form }: StepProps) {
-  const { uploadedPhotos, handlePhotoUpload, removePhoto, fileInputRef, handleFileSelect } = usePhotoUpload(
-    form.setValue,
-    form.setError,
-    form.clearErrors
-  );
+  const {
+    uploadedPhotos,
+    handlePhotoUpload,
+    removePhoto,
+    fileInputRef,
+    handleFileSelect,
+  } = usePhotoUpload(form.setValue, form.setError, form.clearErrors);
 
   return (
     <div className="space-y-6">
@@ -32,14 +34,15 @@ export function Photos({ form }: StepProps) {
           <FormItem>
             <FormLabel>Property Title</FormLabel>
             <FormControl>
-              <Input 
+              <Input
                 placeholder="e.g., Modern 2BR Apartment in Victoria Island"
                 maxLength={60}
                 {...field}
               />
             </FormControl>
             <FormDescription>
-              {field.value?.length || 0}/60 characters. Keep it concise for property cards.
+              {field.value?.length || 0}/60 characters. Keep it concise for
+              property cards.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -49,23 +52,37 @@ export function Photos({ form }: StepProps) {
       <FormField
         control={form.control}
         name="description"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <FormItem>
             <FormLabel>Property Description</FormLabel>
             <FormControl>
-              <Textarea
-                placeholder="Describe your property, its features, and what makes it special..."
+              <RichTextEditor
+                value={field.value || ''}
+                onChange={field.onChange}
+                placeholder=""
                 maxLength={500}
-                rows={4}
-                {...field}
+                className="min-h-[120px]"
+                onTextChange={(textLength) => {
+                  // Only validate if the field has been touched
+                  if (fieldState.isTouched) {
+                    form.setError('description', {
+                      type: 'manual',
+                      message: textLength < 50 ? 'Description must be at least 50 characters' : undefined
+                    });
+                  }
+                }}
               />
             </FormControl>
             <FormDescription>
-              {field.value?.length || 0}/500 characters. Highlight key features and benefits.
+              Describe your property, its features, nearby attractions, and what makes it special for guests.
             </FormDescription>
             <div className="bg-amber-50 border border-amber-200 p-3 rounded-md">
               <p className="text-amber-800 text-sm">
-                <strong>⚠️ Important:</strong> Do not include contact information, phone numbers, email addresses, social media handles or location details in your description. This information will be handled separately through our secure contact and booking system.
+                <strong>⚠️ Important:</strong> Do not include contact
+                information, phone numbers, email addresses, social media
+                handles or location details in your description. This
+                information will be handled separately through our secure
+                contact and booking system.
               </p>
             </div>
             <FormMessage />
@@ -76,7 +93,7 @@ export function Photos({ form }: StepProps) {
       <FormField
         control={form.control}
         name="photos"
-        render={({ field, fieldState }) => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Property Photos</FormLabel>
             {/* Hidden file input */}
@@ -89,7 +106,7 @@ export function Photos({ form }: StepProps) {
               className="hidden"
             />
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-              {uploadedPhotos.map((photo, index) => (
+              {uploadedPhotos.map((photo: string, index: number) => (
                 <div key={index} className="relative group">
                   <img
                     src={photo}
@@ -114,10 +131,14 @@ export function Photos({ form }: StepProps) {
               disabled={uploadedPhotos.length >= 10}
             >
               <Upload className="h-4 w-4 mr-2" />
-              {uploadedPhotos.length === 0 ? 'Select Photos' : `Add More Photos (${uploadedPhotos.length}/10)`}
+              {uploadedPhotos.length === 0
+                ? 'Select Photos'
+                : `Add More Photos (${uploadedPhotos.length}/10)`}
             </Button>
-            
-            <FormDescription className="mb-4">Upload at least 5 photos of your property (max 2MB each)</FormDescription>
+
+            <FormDescription className="mb-4">
+              Upload at least 5 photos of your property (max 2MB each)
+            </FormDescription>
 
             <FormMessage />
           </FormItem>
