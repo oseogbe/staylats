@@ -107,8 +107,35 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+			},
+			typography: {
+				DEFAULT: {
+					css: {
+						maxWidth: 'none',
+						color: 'inherit',
+						p: {
+							color: 'inherit',
+						},
+						strong: {
+							color: 'inherit',
+						},
+						a: {
+							color: 'inherit',
+							textDecoration: 'none',
+						},
+						ul: {
+							color: 'inherit',
+						},
+						ol: {
+							color: 'inherit',
+						},
+					},
+				},
+			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		require("@tailwindcss/typography")
+	],
 } satisfies Config;
