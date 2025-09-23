@@ -1,13 +1,20 @@
 import { z } from 'zod';
 
 export const propertyTypes = [
-  'Apartment', 'House', 'Studio', 'Duplex', 'Mansion', 'Bungalow', 'Penthouse', 'Room'
+  'Apartment', 'Semi-Detached Duplex', 'Detached Duplex', 'Studio', 'Duplex', 
+  'Mansion', 'Bungalow', 'Penthouse', 'Room'
+] as const;
+
+export const states = [
+  'Abuja', 'Lagos'
 ] as const;
 
 export const amenitiesList = [
-  'WiFi', 'Air Conditioning', 'Kitchen', 'Washing Machine', 'TV', 'Parking',
+  'WiFi', 'Air Conditioning', 'Kitchen', 'Washing Machine', 'TV', 'Parking Area',
+  'Walk-in Closet', 'All Rooms En-Suite', 'Gated Community', 'CCTV', 'BBQ Area',
   'Swimming Pool', 'Gym', 'Security', 'Generator', 'Garden', 'Balcony',
-  'Furnished', 'Pet Friendly', 'Smoking Allowed'
+  'Supermarket', 'Spa', 'Smart Home', '24/7 Electricity', 'Furnished', 
+  'Accessible Road', 'Green Space', 'Constant Water Supply', 'Serene Environment'
 ] as const;
 
 export const contractTerms = [

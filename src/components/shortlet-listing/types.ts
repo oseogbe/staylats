@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const propertyTypes = [
-  'Apartment', 'House', 'Studio', 'Duplex', 'Villa', 'Cottage', 'Penthouse', 'Loft', 'Cabin'
+  'Studio Apartment', 'Shared Apartment', 'Bungalow', 'Duplex', 'Semi-Detached Duplex', 'Penthouse', 'Room'
 ] as const;
 
 export const states = [
@@ -9,10 +9,12 @@ export const states = [
 ] as const;
 
 export const amenitiesList = [
-  'WiFi', 'Air Conditioning', 'Kitchen', 'Washing Machine', 'TV', 'Parking',
-  'Swimming Pool', 'Hot Tub', 'Gym', 'Security', 'Generator', 'Garden',
-  'Balcony', 'Terrace', 'Beach Access', 'City View', 'Ocean View', 'Mountain View',
-  'Fireplace', 'BBQ Area', 'Game Room', 'Netflix', 'Self Check-in', 'Concierge'
+  'WiFi', 'Air Conditioning', 'Kitchen', 'Washing Machine', 'TV', 'Parking Area',
+  'Swimming Pool', 'Hot Tub', 'Gym', 'Security', 'CCTV', 'Generator', 'Garden',
+  'Balcony', 'Terrace', 'Beach Access', 'City View', 'Mountain View', 'Serene Environment',
+  'Fireplace', 'BBQ Area', 'Game Room', 'PS5', 'Pool Table', 'Netflix', 'Self Check-in', 
+  'Concierge', 'Self Check-out', 'Free Breakfast', '24/7 Electricity', 'Cleaning Service', 
+  'Laundry Service', 'Housekeeping', 'BQ', 'Pet Friendly', 'Smoking Allowed', 'Accessible Road'
 ] as const;
 
 export const timeOptions = [
