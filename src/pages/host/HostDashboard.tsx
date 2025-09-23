@@ -13,14 +13,11 @@ import {
 } from "@/components/host";
 import listingsService, { type DraftSummary } from "@/services/listings";
 
-const mockListings: PropertyListing[] = [];
-
 export default function HostDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("property-management");
-  const [draftListings, setDraftListings] = useState<PropertyListing[]>(mockListings);
-
-  const publishedListings = mockListings.filter(listing => listing.status === "published");
+  const [publishedListings, setPublishedListings] = useState<PropertyListing[]>([]);
+  const [draftListings, setDraftListings] = useState<PropertyListing[]>([]);
 
   const handleCreateListing = () => {
     navigate("/host/create-listing");
@@ -37,8 +34,9 @@ export default function HostDashboard() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await listingsService.getDrafts();
-        const mapped: PropertyListing[] = data.drafts.map((d: DraftSummary) => ({
+        // Fetch drafts
+        const draftsData = await listingsService.getDrafts();
+        const mappedDrafts: PropertyListing[] = draftsData.drafts.map((d: DraftSummary) => ({
           id: d.id,
           title: d.title,
           type: d.type,
@@ -46,7 +44,24 @@ export default function HostDashboard() {
           stepsRemaining: d.stepsRemaining,
           lastUpdated: new Date(d.lastUpdated).toLocaleString()
         }));
-        setDraftListings(mapped);
+        setDraftListings(mappedDrafts);
+
+        // Fetch published listings
+        const publishedData = await listingsService.getUserListings();
+        const mappedPublished: PropertyListing[] = publishedData.listings
+          .map(listing => ({
+            id: listing.id,
+            title: listing.title,
+            type: listing.type,
+            status: listing.status,
+            description: listing.description,
+            address: listing.address,
+            propertyType: listing.propertyType,
+            images: listing.images,
+            amenities: listing.amenities,
+            lastUpdated: new Date(listing.updatedAt).toLocaleString()
+          }));
+        setPublishedListings(mappedPublished);
       } catch (err) {
         // silently ignore or add toast later
       }

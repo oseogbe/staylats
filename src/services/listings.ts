@@ -12,7 +12,26 @@ export interface DraftSummary {
     image?: string
 }
 
+export interface UserListing {
+    id: string
+    title: string
+    type: DraftType
+    description: string
+    address: string
+    propertyType: string
+    images: string[]
+    amenities: string[]
+    status: "draft" | "pending" | "approved" | "rejected"
+    createdAt: string
+    updatedAt: string
+}
+
 export default {
+    getUserListings: async (): Promise<{ listings: UserListing[] }> => {
+        const res = await api.get('/listing/published')
+        return res.data.data
+    },
+
     saveDraft: async (payload: {
         draftId?: string
         type: DraftType
