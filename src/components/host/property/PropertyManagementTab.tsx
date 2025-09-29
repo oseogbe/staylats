@@ -78,10 +78,7 @@ export function PropertyManagementTab({
                   <FileText className="w-6 h-6 text-neutral-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-neutral-900 mb-2">No Draft Properties found!</h3>
-                <p className="text-neutral-600 mb-6">Start creating your property listing to see drafts here.</p>
-                <Button onClick={onCreateListing} className="bg-primary hover:bg-primary-hover">
-                  Add New Listing
-                </Button>
+                <p className="text-neutral-600 mb-6">Incomplete listings can be found here.</p>
               </CardContent>
             </Card>
           ) : (

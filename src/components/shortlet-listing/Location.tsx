@@ -1,5 +1,3 @@
-import { MapPin } from 'lucide-react';
-
 import { 
   FormField, 
   FormItem, 
@@ -15,10 +13,44 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { PlacesAutocomplete } from '@/components/PlacesAutocomplete';
 
 import { states, type StepProps } from './types';
 
 export function Location({ form }: StepProps) {
+
+  const handlePlaceSelect = (place: {
+    address: string
+    coordinates: { lat: number; lng: number }
+    components: google.maps.GeocoderAddressComponent[]
+  }) => {
+    const cityComponent = place.components.find(component => 
+      component.types.includes('neighborhood') || component.types.includes('political')
+    )
+    const stateComponent = place.components.find(component => 
+      component.types.includes('locality') || component.types.includes('administrative_area_level_2')
+    )
+
+    if (cityComponent) {
+      form.setValue('city', cityComponent.long_name)
+    }
+    if (stateComponent) {
+      const stateName = stateComponent.long_name
+      const matchedState = states.find(state => 
+        state.toLowerCase().includes(stateName.toLowerCase()) ||
+        stateName.toLowerCase().includes(state.toLowerCase())
+      )
+      if (matchedState) {
+        form.setValue('state', matchedState)
+      } else {
+        form.setValue('state', stateName)
+      }
+    }
+
+    form.setValue('latitude', place.coordinates.lat)
+    form.setValue('longitude', place.coordinates.lng)
+  }
+
   return (
     <div className="space-y-6">
       <FormField
@@ -28,10 +60,13 @@ export function Location({ form }: StepProps) {
           <FormItem>
             <FormLabel>Property Address</FormLabel>
             <FormControl>
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <Input placeholder="e.g., 123 Victoria Island, Lagos" {...field} />
-              </div>
+              <PlacesAutocomplete
+                value={field.value || ''}
+                onChange={field.onChange}
+                onPlaceSelect={handlePlaceSelect}
+                placeholder="Search for an address..."
+                restrictToCities={['Lagos', 'Abuja']}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -46,7 +81,9 @@ export function Location({ form }: StepProps) {
             <FormItem>
               <FormLabel>City</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Lagos" {...field} />
+                <Input 
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -59,7 +96,7 @@ export function Location({ form }: StepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>State</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select state" />

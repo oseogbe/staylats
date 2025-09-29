@@ -46,6 +46,8 @@ export default function CreateRentalListing() {
       address: '',
       city: '',
       state: '',
+      latitude: undefined,
+      longitude: undefined,
       photos: [],
       amenities: [],
       price: 50000,

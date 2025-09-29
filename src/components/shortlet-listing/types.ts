@@ -29,6 +29,8 @@ export const shortletListingSchema = z.object({
   address: z.string().min(10, 'Please enter a valid address'),
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State is required'),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   bedrooms: z.number().min(1, 'At least 1 bedroom required'),
   bathrooms: z.number().min(1, 'At least 1 bathroom required'),
   maxGuests: z.number().min(1, 'At least 1 guest capacity required'),

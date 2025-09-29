@@ -81,7 +81,7 @@ export function PropertyBasics({ form }: StepProps) {
           name="maxGuests"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Max Guests</FormLabel>
+              <FormLabel>Max Occupants</FormLabel>
               <FormControl>
                 <div className="flex items-center space-x-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
