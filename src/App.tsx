@@ -15,6 +15,17 @@ import CreateShortletListing from "@/pages/host/CreateShortletListing";
 import HostDashboard from "@/pages/host/HostDashboard";
 import NotFound from "@/pages/NotFound";
 
+// MyAccount pages
+import ProfilePage from "@/pages/myaccount/ProfilePage";
+import IdentificationPage from "@/pages/myaccount/IdentificationPage";
+import BankAccountPage from "@/pages/myaccount/BankAccountPage";
+import CommunicationsPage from "@/pages/myaccount/CommunicationsPage";
+import ReferralsPage from "@/pages/myaccount/ReferralsPage";
+import RentalRequestPage from "@/pages/myaccount/RentalRequestPage";
+
+// Layout
+import MyAccountLayout from "@/components/layouts/MyAccountLayout";
+
 import Navbar from "@/components/Navbar";
 import ScrollToTop from "@/components/ScrollToTop";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -66,6 +77,68 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
                   <MyAccount />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* MyAccount sub-routes with shared layout */}
+            <Route
+              path="/my-account/profile"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <MyAccountLayout>
+                    <ProfilePage />
+                  </MyAccountLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-account/identification"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <MyAccountLayout>
+                    <IdentificationPage />
+                  </MyAccountLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-account/bank-account"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <MyAccountLayout>
+                    <BankAccountPage />
+                  </MyAccountLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-account/communications"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <MyAccountLayout>
+                    <CommunicationsPage />
+                  </MyAccountLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-account/referrals"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <MyAccountLayout>
+                    <ReferralsPage />
+                  </MyAccountLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-account/rental-request"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <MyAccountLayout>
+                    <RentalRequestPage />
+                  </MyAccountLayout>
                 </ProtectedRoute>
               }
             />
