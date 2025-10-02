@@ -158,7 +158,7 @@ const DashboardPage = () => {
             <QuickAction
               icon={<Users />}
               label="View Tenants"
-              onClick={() => handleTabChange("tenant")}
+              onClick={() => handleTabChange("tenant-management")}
               bgColor="bg-yellow-50"
               textColor="text-yellow-700"
               borderColor="border-yellow-200"
@@ -166,7 +166,7 @@ const DashboardPage = () => {
             <QuickAction
               icon={<DollarSign />}
               label="View Finances"
-              onClick={() => handleTabChange("finance")}
+              onClick={() => handleTabChange("finances")}
               bgColor="bg-green-50"
               textColor="text-green-700"
               borderColor="border-green-200"

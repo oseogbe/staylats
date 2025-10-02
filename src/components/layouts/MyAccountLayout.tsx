@@ -6,8 +6,7 @@ import {
   ShieldCheck, 
   Wallet, 
   Bell, 
-  Users, 
-  ClipboardList 
+  Users
 } from 'lucide-react';
 
 import { TabConfig } from '@/types/account';
@@ -29,7 +28,6 @@ const MyAccountLayout = ({ children }: MyAccountLayoutProps) => {
     { value: "bank-account", label: "Bank Account", icon: Wallet, component: null as any },
     { value: "communications", label: "Communications", icon: Bell, component: null as any },
     { value: "referrals", label: "Referrals", icon: Users, component: null as any },
-    { value: "rental-request", label: "Rental Request", icon: ClipboardList, component: null as any },
   ];
 
   const handleTabChange = (value: string) => {
@@ -48,7 +46,7 @@ const MyAccountLayout = ({ children }: MyAccountLayoutProps) => {
           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-1 bg-muted p-1">
             {mainTabs.map((tab) => (
               <TabsTrigger 
-                key={tab.value} 
+                key={tab.value}
                 value={tab.value}
                 className="flex items-center gap-2 text-xs lg:text-sm"
               >

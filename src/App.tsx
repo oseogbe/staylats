@@ -20,7 +20,6 @@ import IdentificationPage from "@/pages/myaccount/IdentificationPage";
 import BankAccountPage from "@/pages/myaccount/BankAccountPage";
 import CommunicationsPage from "@/pages/myaccount/CommunicationsPage";
 import ReferralsPage from "@/pages/myaccount/ReferralsPage";
-import RentalRequestPage from "@/pages/myaccount/RentalRequestPage";
 
 // Layouts
 import MyAccountLayout from "@/components/layouts/MyAccountLayout";
@@ -135,16 +134,6 @@ const App = () => (
                 <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
                   <MyAccountLayout>
                     <ReferralsPage />
-                  </MyAccountLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-account/rental-request"
-              element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
-                  <MyAccountLayout>
-                    <RentalRequestPage />
                   </MyAccountLayout>
                 </ProtectedRoute>
               }
