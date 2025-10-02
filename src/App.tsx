@@ -12,7 +12,6 @@ import ResendEmailVerification from "@/pages/ResendEmailVerification";
 import CreateListingPrompt from "@/pages/host/CreateListingPrompt";
 import CreateRentalListing from "@/pages/host/CreateRentalListing";
 import CreateShortletListing from "@/pages/host/CreateShortletListing";
-import HostDashboard from "@/pages/host/HostDashboard";
 import NotFound from "@/pages/NotFound";
 
 // MyAccount pages
@@ -23,8 +22,16 @@ import CommunicationsPage from "@/pages/myaccount/CommunicationsPage";
 import ReferralsPage from "@/pages/myaccount/ReferralsPage";
 import RentalRequestPage from "@/pages/myaccount/RentalRequestPage";
 
-// Layout
+// Layouts
 import MyAccountLayout from "@/components/layouts/MyAccountLayout";
+import HostDashboardLayout from "@/components/layouts/HostDashboardLayout";
+
+// Host Dashboard pages
+import DashboardPage from "@/pages/host/DashboardPage";
+import PropertyManagementPage from "@/pages/host/PropertyManagementPage";
+import FinancesPage from "@/pages/host/FinancesPage";
+import TenantManagementPage from "@/pages/host/TenantManagementPage";
+import RentalApplicationsPage from "@/pages/host/RentalApplicationsPage";
 
 import Navbar from "@/components/Navbar";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -168,11 +175,55 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            
+            {/* HostDashboard sub-routes with shared layout */}
             <Route
               path="/host/dashboard"
               element={
                 <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
-                  <HostDashboard />
+                  <HostDashboardLayout>
+                    <DashboardPage />
+                  </HostDashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/property-management"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <HostDashboardLayout>
+                    <PropertyManagementPage />
+                  </HostDashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/finances"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <HostDashboardLayout>
+                    <FinancesPage />
+                  </HostDashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/tenant-management"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <HostDashboardLayout>
+                    <TenantManagementPage />
+                  </HostDashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/rental-applications"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <HostDashboardLayout>
+                    <RentalApplicationsPage />
+                  </HostDashboardLayout>
                 </ProtectedRoute>
               }
             />
