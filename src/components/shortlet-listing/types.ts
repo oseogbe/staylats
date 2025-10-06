@@ -24,8 +24,12 @@ export const timeOptions = [
 
 export const shortletListingSchema = z.object({
   propertyType: z.string().min(1, 'Property type is required'),
-  title: z.string().min(5, 'Title must be at least 5 characters').max(60, 'Title must be less than 60 characters'),
-  description: z.string().min(50, 'Description must be at least 50 characters').max(500, 'Description must be less than 500 characters'),
+  title: z.string().min(5, 'Title must be at least 5 characters').max(80, 'Title must be less than 80 characters'),
+  description: z.string().refine((val) => !val || val === '' || val.length >= 200, {
+    message: 'Description must be at least 200 characters'
+  }).refine((val) => !val || val === '' || val.length <= 500, {
+    message: 'Description must be less than 500 characters'
+  }).optional(),
   address: z.string().min(10, 'Please enter a valid address'),
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State is required'),

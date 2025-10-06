@@ -52,22 +52,27 @@ export function Photos({ form, photoUploadHook }: StepProps) {
         name="description"
         render={({ field, fieldState }) => (
           <FormItem>
-            <FormLabel>Property Description</FormLabel>
+            <FormLabel>Property Description <span className="text-xs text-muted-foreground">(optional)</span></FormLabel>
             <FormControl>
               <RichTextEditor
                 value={field.value || ""}
-                onChange={field.onChange}
                 placeholder=""
                 maxLength={500}
                 className="min-h-[120px]"
-                onTextChange={(textLength) => {
-                  // Only validate if the field has been touched
-                  if (fieldState.isTouched) {
-                    form.setError('description', {
-                      type: 'manual',
-                      message: textLength < 50 ? 'Description must be at least 50 characters' : undefined
-                    });
+                onChange={(value) => {
+                  // Check if the value is just empty HTML tags
+                  const isEmptyHtml = value === '<p></p>' || value === '<p><br></p>' || value === '<p><br/></p>' || value === '';
+                  
+                  if (isEmptyHtml) {
+                    // Convert empty HTML to empty string for validation
+                    field.onChange('');
+                  } else {
+                    field.onChange(value);
                   }
+                }}
+                onTextChange={(textLength) => {
+                  // Trigger validation when text changes to get real-time feedback
+                  form.trigger('description');
                 }}
               />
             </FormControl>
