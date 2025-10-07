@@ -12,7 +12,7 @@ import listingsService, { type DraftSummary } from "@/services/listings";
 
 const PropertyManagementPage = () => {
   const navigate = useNavigate();
-  const [listingTab, setListingTab] = useState("drafts");
+  const [listingTab, setListingTab] = useState("published");
   const [publishedListings, setPublishedListings] = useState<PropertyListing[]>([]);
   const [draftListings, setDraftListings] = useState<PropertyListing[]>([]);
 

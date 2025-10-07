@@ -267,7 +267,7 @@ export default function CreateShortletListing() {
       });
 
       toast.success("Your shortlet listing has successfully submitted for review.");
-      navigate('/');
+      navigate('/host/property-management');
     } catch (error) {
       console.error('Failed to publish listing:', error);
       toast.error('Failed to publish listing. Please try again.');
@@ -344,7 +344,7 @@ export default function CreateShortletListing() {
                       onClick={() => {
                         // Leave without saving
                         setConfirmBackOpen(false);
-                        navigate('/host/create-listing');
+                        navigate('/host/property-management');
                       }}
                     >
                       Leave without saving
@@ -386,7 +386,7 @@ export default function CreateShortletListing() {
                           }
                           toast.success('Draft saved');
                           setConfirmBackOpen(false);
-                          navigate('/host/create-listing');
+                          navigate('/host/property-management');
                         } catch (error) {
                           toast.error('Failed to save draft');
                           setIsSavingDraft(false);

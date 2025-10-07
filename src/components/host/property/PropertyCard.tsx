@@ -57,10 +57,10 @@ export function PropertyCard({ listing, onContinue }: PropertyCardProps) {
           </div>
 
           {listing.status === "draft" && listing.stepsRemaining && (
-            <p className="text-sm text-neutral-600">{listing.stepsRemaining} steps remaining</p>
+            <p className="text-sm text-neutral-600">{listing.stepsRemaining} {listing.stepsRemaining === 1 ? 'step' : 'steps'} remaining</p>
           )}
 
-          <p className="text-xs text-neutral-500">Updated at {listing.lastUpdated}</p>
+          <p className="text-xs text-neutral-500">{listing.lastUpdated}</p>
 
           <div className="flex items-center justify-between pt-2">
             {listing.status !== "pending" && (
