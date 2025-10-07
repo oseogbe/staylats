@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Upload, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
@@ -12,18 +13,23 @@ import {
 } from '@/components/ui/form';
 import { RichTextEditor } from '@/components/RichTextEditor';
 
-import { usePhotoUpload } from './use-photo-upload';
-
 import type { StepProps } from './types';
 
-export function Photos({ form }: StepProps) {
+export function Photos({ form, photoUploadHook }: StepProps) {
   const {
     uploadedPhotos,
     handlePhotoUpload,
     removePhoto,
     fileInputRef,
     handleFileSelect,
-  } = usePhotoUpload(form.setValue, form.setError, form.clearErrors);
+    loadExistingPhotos
+  } = photoUploadHook;
+
+  useEffect(() => {
+    const photoUrls = form.getValues('photos') || [];
+    // Initializing Photos component with photoUrls
+    loadExistingPhotos(photoUrls);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -54,22 +60,27 @@ export function Photos({ form }: StepProps) {
         name="description"
         render={({ field, fieldState }) => (
           <FormItem>
-            <FormLabel>Property Description</FormLabel>
+            <FormLabel>Property Description <span className="text-xs text-muted-foreground">(optional)</span></FormLabel>
             <FormControl>
               <RichTextEditor
                 value={field.value || ''}
-                onChange={field.onChange}
                 placeholder=""
                 maxLength={500}
                 className="min-h-[120px]"
-                onTextChange={(textLength) => {
-                  // Only validate if the field has been touched
-                  if (fieldState.isTouched) {
-                    form.setError('description', {
-                      type: 'manual',
-                      message: textLength < 50 ? 'Description must be at least 50 characters' : undefined
-                    });
+                onChange={(value) => {
+                  // Check if the value is just empty HTML tags
+                  const isEmptyHtml = value === '<p></p>' || value === '<p><br></p>' || value === '<p><br/></p>' || value === '';
+                  
+                  if (isEmptyHtml) {
+                    // Convert empty HTML to empty string for validation
+                    field.onChange('');
+                  } else {
+                    field.onChange(value);
                   }
+                }}
+                onTextChange={(textLength) => {
+                  // Trigger validation when text changes to get real-time feedback
+                  form.trigger('description');
                 }}
               />
             </FormControl>
@@ -96,6 +107,8 @@ export function Photos({ form }: StepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Property Photos</FormLabel>
+            <FormDescription className="mb-4">Upload at least 5 photos of your property (max 2MB each)</FormDescription>
+
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -105,6 +118,7 @@ export function Photos({ form }: StepProps) {
               onChange={handleFileSelect}
               className="hidden"
             />
+
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
               {uploadedPhotos.map((photo: string, index: number) => (
                 <div key={index} className="relative group">
@@ -128,17 +142,13 @@ export function Photos({ form }: StepProps) {
               variant="outline"
               onClick={handlePhotoUpload}
               className="w-full"
-              disabled={uploadedPhotos.length >= 10}
+              disabled={uploadedPhotos.length >= 15}
             >
               <Upload className="h-4 w-4 mr-2" />
               {uploadedPhotos.length === 0
                 ? 'Select Photos'
-                : `Add More Photos (${uploadedPhotos.length}/10)`}
+                : `Add More Photos (${uploadedPhotos.length}/15)`}
             </Button>
-
-            <FormDescription className="mb-4">
-              Upload at least 5 photos of your property (max 2MB each)
-            </FormDescription>
 
             <FormMessage />
           </FormItem>

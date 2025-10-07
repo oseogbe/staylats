@@ -1,13 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle, Home } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
 
 import {
   PropertyBasics,
@@ -19,6 +31,8 @@ import {
   rentalListingSchema,
   type RentalListingFormData
 } from '@/components/rental-listing';
+import { usePhotoUpload } from '@/components/rental-listing/use-photo-upload';
+import listingsService from '@/services/listings';
 
 const steps = [
   { id: 1, title: 'Property Basics', description: 'Tell us about your property', Component: PropertyBasics },
@@ -32,6 +46,11 @@ const steps = [
 export default function CreateRentalListing() {
   const [currentStep, setCurrentStep] = useState(1);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [draftId, setDraftId] = useState<string | undefined>(undefined);
+  const [confirmBackOpen, setConfirmBackOpen] = useState(false);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const form = useForm<RentalListingFormData>({
     resolver: zodResolver(rentalListingSchema),
@@ -49,6 +68,7 @@ export default function CreateRentalListing() {
       latitude: undefined,
       longitude: undefined,
       photos: [],
+      photoFiles: [],
       amenities: [],
       price: 50000,
       contractTerms: [],
@@ -59,6 +79,73 @@ export default function CreateRentalListing() {
 
   // Watch form values to make validation reactive
   const watchedValues = form.watch();
+
+  // Get the photo upload hook for loading existing photos
+  const photoUploadHook = usePhotoUpload(
+    form.setValue
+  );
+
+  // Load draft data if draftId is provided
+  useEffect(() => {
+    const loadDraft = async () => {
+      const stateDraftId = location.state?.draftId;
+      if (stateDraftId) {
+        setIsLoadingDraft(true);
+        try {
+          const draftData = await listingsService.getDraftById(stateDraftId);
+          const draft = draftData.draft;
+
+          if (draft) {
+            setDraftId(draft.id);
+
+            // Set the current step based on draft data
+            if (draft.step) {
+              setCurrentStep(draft.step);
+            }
+
+            // Pre-fill form with draft data
+            if (draft.formData) {
+              const formData = draft.formData as any;
+
+              // Reset form with draft data (excluding photos for now)
+              form.reset({
+                propertyType: formData.propertyType || '',
+                title: formData.title || '',
+                description: formData.description || '',
+                address: formData.address || '',
+                city: formData.city || '',
+                state: formData.state || '',
+                latitude: formData.latitude || undefined,
+                longitude: formData.longitude || undefined,
+                bedrooms: formData.bedrooms || 1,
+                bathrooms: formData.bathrooms || 1,
+                maxGuests: formData.maxGuests || 2,
+                photos: [], // Will be set separately
+                photoFiles: [], // Will be empty for loaded drafts
+                amenities: formData.amenities || [],
+                price: formData.price || 50000,
+                contractTerms: formData.contractTerms || [],
+                securityDeposit: formData.securityDeposit || 100000,
+                agentFee: formData.agentFee || 10
+              });
+
+              // Load existing photos from S3 URLs
+              if (draft.images && draft.images.length > 0) {
+                photoUploadHook.loadExistingPhotos(draft.images);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load draft:', error);
+          toast.error('Failed to load listing draft');
+        } finally {
+          setIsLoadingDraft(false);
+        }
+      }
+    };
+
+    loadDraft();
+  }, [location.state?.draftId, form]);
   
   // Check if current step has validation errors or missing required fields
   const getCurrentStepErrors = () => {
@@ -146,24 +233,155 @@ export default function CreateRentalListing() {
     }
   };
 
-  const onSubmit = (data: RentalListingFormData) => {
-    console.log('Rental listing data:', data);
-    toast.success("Your rental listing has successfully submitted for review.");
-    navigate('/');
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const onSubmit = async (data: RentalListingFormData) => {
+    try {
+      setIsPublishing(true);
+
+      // Remove photos and photoFiles from formData since they're handled separately
+      const { photos, photoFiles, ...cleanFormData } = data;
+
+      await listingsService.publishListing({
+        draftId: draftId, // Will be undefined for new listings
+        formData: cleanFormData,
+        photoItems: photoUploadHook.uploadedPhotos.map(url => ({ url, isNew: false })),
+        photoFiles: photoUploadHook.uploadedFiles
+      });
+
+      toast.success("Your rental listing has successfully submitted for review.");
+      navigate('/host/property-management');
+    } catch (error) {
+      console.error('Failed to publish listing:', error);
+      toast.error('Failed to publish listing. Please try again.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const CurrentStepComponent = steps[currentStep - 1].Component;
 
+  if (isLoadingDraft) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading draft...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-4 relative">
+      <LoadingOverlay 
+        isLoading={isPublishing || isSavingDraft}
+        message={isPublishing ? 'Publishing your listing...' : 'Saving draft...'}
+      />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/host/create-listing')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
+            {currentStep <= 2 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/host/create-listing')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            ) : (
+              <AlertDialog open={confirmBackOpen} onOpenChange={setConfirmBackOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmBackOpen(true)}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Save this listing as a draft?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You have unsaved progress. Choose whether to save your current form data as a draft before leaving.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel 
+                      disabled={isSavingDraft}
+                      onClick={() => setConfirmBackOpen(false)}
+                    >
+                      Stay
+                    </AlertDialogCancel>
+                    <Button
+                      variant="secondary"
+                      disabled={isSavingDraft}
+                      onClick={() => {
+                        // Leave without saving
+                        setConfirmBackOpen(false);
+                        navigate('/host/property-management');
+                      }}
+                    >
+                      Leave without saving
+                    </Button>
+                    <AlertDialogAction
+                      disabled={isSavingDraft}
+                      onClick={async () => {
+                        try {
+                          setIsSavingDraft(true);
+                          const formData = form.getValues();
+
+                          // Remove photos and photoFiles from formData since they're handled separately
+                          const { photos, photoFiles, ...cleanFormData } = formData;
+
+                          if (draftId) {
+                            // Update existing draft
+                            await listingsService.updateDraft(draftId, {
+                              type: 'rental',
+                              title: formData.title,
+                              step: currentStep,
+                              totalSteps: steps.length,
+                              formData: cleanFormData,
+                              photoItems: photoUploadHook.photos,
+                              photoFiles: photoUploadHook.uploadedFiles
+                            });
+                          } else {
+                            // Create new draft
+                            const response = await listingsService.saveDraft({
+                              type: 'rental',
+                              title: formData.title,
+                              step: currentStep,
+                              totalSteps: steps.length,
+                              formData: cleanFormData,
+                              images: formData.photoFiles || []
+                            });
+                            if (response?.data?.draftId) {
+                              setDraftId(response.data.draftId);
+                            }
+                          }
+                          toast.success('Draft saved');
+                          setConfirmBackOpen(false);
+                          navigate('/host/property-management');
+                        } catch (error) {
+                          toast.error('Failed to save draft');
+                          setIsSavingDraft(false);
+                        }
+                      }}
+                    >
+                      Save draft and leave
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
             <div>
               <h1 className="text-2xl font-bold">Create Rental Listing</h1>
               <p className="text-muted-foreground">Step {currentStep} of {steps.length}</p>
@@ -210,6 +428,7 @@ export default function CreateRentalListing() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <CurrentStepComponent
                   form={form}
+                  photoUploadHook={photoUploadHook}
                   onNext={nextStep}
                   onPrev={prevStep}
                   isLastStep={currentStep === steps.length}
@@ -228,9 +447,21 @@ export default function CreateRentalListing() {
                   </Button>
 
                   {currentStep === steps.length ? (
-                    <Button type="submit">
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Publish Listing
+                    <Button 
+                      type="submit" 
+                      disabled={isPublishing}
+                    >
+                      {isPublishing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                          Publishing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Publish Listing
+                        </>
+                      )}
                     </Button>
                   ) : (
                     <Button

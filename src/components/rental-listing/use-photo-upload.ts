@@ -1,15 +1,32 @@
 import { useState, useRef } from 'react';
-import { UseFormSetValue, UseFormSetError, UseFormClearErrors } from 'react-hook-form';
+import { UseFormSetValue } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
 import { RentalListingFormData } from './types';
+
+interface PhotoItem {
+  url: string;
+  fileName?: string; // Only for new photos
+  isNew: boolean; // true for new photos, false for existing photos
+}
 
 export const usePhotoUpload = (
   setValue: UseFormSetValue<RentalListingFormData>,
-  setError: UseFormSetError<RentalListingFormData>,
-  clearErrors: UseFormClearErrors<RentalListingFormData>
 ) => {
-  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
-  const [uploadedFileNames, setUploadedFileNames] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Function to load existing photos (for draft loading)
+  const loadExistingPhotos = (photoUrls: string[]) => {
+    const existingPhotoItems = photoUrls.map(url => ({
+      url,
+      isNew: false
+    }));
+    setPhotos(existingPhotoItems);
+    setValue('photos', photoUrls);
+    // Don't set photoFiles for existing photos since we don't have the File objects
+  };
 
   const validateImageFile = (file: File): string | null => {
     // Check file type
@@ -23,8 +40,12 @@ export const usePhotoUpload = (
       return 'Image size must be less than 2MB';
     }
 
-    // Check for duplicate file name
-    if (uploadedFileNames.includes(file.name)) {
+    // Check for duplicate file name among new photos only
+    const newPhotoFileNames = photos
+      .filter(photo => photo.isNew && photo.fileName)
+      .map(photo => photo.fileName!);
+    
+    if (newPhotoFileNames.includes(file.name)) {
       return 'This image has already been selected';
     }
 
@@ -35,41 +56,46 @@ export const usePhotoUpload = (
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    // Clear any existing errors first
-    clearErrors('photos');
-
-    const newPhotos: string[] = [];
-    const newFileNames: string[] = [];
+    const newPhotoItems: PhotoItem[] = [];
+    const newFiles: File[] = [];
     const errors: string[] = [];
 
     Array.from(files).forEach((file) => {
       const validationError = validateImageFile(file);
       if (validationError) {
-        errors.push(`${file.name}: ${validationError}`);
+        // errors.push(`${file.name}: ${validationError}`);
+        errors.push(validationError);
         return;
       }
 
       // Create object URL for preview
       const objectUrl = URL.createObjectURL(file);
-      newPhotos.push(objectUrl);
-      newFileNames.push(file.name);
+      newPhotoItems.push({
+        url: objectUrl,
+        fileName: file.name,
+        isNew: true
+      });
+      newFiles.push(file);
     });
 
     if (errors.length > 0) {
-      // Set form error instead of showing alert
-      setError('photos', {
-        type: 'manual',
-        message: errors.join('; ')
+      // Show toast notification for validation errors
+      errors.forEach(error => {
+        toast.error(error);
       });
       return;
     }
 
-    if (newPhotos.length > 0) {
-      const updatedPhotos = [...uploadedPhotos, ...newPhotos];
-      const updatedFileNames = [...uploadedFileNames, ...newFileNames];
-      setUploadedPhotos(updatedPhotos);
-      setUploadedFileNames(updatedFileNames);
-      setValue('photos', updatedPhotos);
+    if (newPhotoItems.length > 0) {
+      const updatedPhotos = [...photos, ...newPhotoItems];
+      const updatedFiles = [...uploadedFiles, ...newFiles];
+      setPhotos(updatedPhotos);
+      setUploadedFiles(updatedFiles);
+      
+      // Update form values
+      const photoUrls = updatedPhotos.map(photo => photo.url);
+      setValue('photos', photoUrls);
+      setValue('photoFiles', updatedFiles);
     }
 
     // Reset file input
@@ -83,23 +109,38 @@ export const usePhotoUpload = (
   };
 
   const removePhoto = (index: number) => {
-    const photoToRemove = uploadedPhotos[index];
+    const photoToRemove = photos[index];
     
-    // Revoke object URL to free memory
-    URL.revokeObjectURL(photoToRemove);
+    // Revoke object URL to free memory only for new photos
+    if (photoToRemove.isNew) {
+      URL.revokeObjectURL(photoToRemove.url);
+    }
     
-    const newPhotos = uploadedPhotos.filter((_, i) => i !== index);
-    const newFileNames = uploadedFileNames.filter((_, i) => i !== index);
-    setUploadedPhotos(newPhotos);
-    setUploadedFileNames(newFileNames);
-    setValue('photos', newPhotos);
+    const newPhotos = photos.filter((_, i) => i !== index);
+    const newFiles = uploadedFiles.filter((_, i) => i !== index);
+    
+    setPhotos(newPhotos);
+    setUploadedFiles(newFiles);
+    
+    // Update form values
+    const photoUrls = newPhotos.map(photo => photo.url);
+    setValue('photos', photoUrls);
+    setValue('photoFiles', newFiles);
   };
+
+  // Computed properties for backward compatibility
+  const uploadedPhotos = photos.map(photo => photo.url);
+  const existingPhotos = photos.filter(photo => !photo.isNew).map(photo => photo.url);
 
   return {
     uploadedPhotos,
+    uploadedFiles,
+    existingPhotos,
+    photos, // Return the PhotoItems array
     handlePhotoUpload,
     removePhoto,
     fileInputRef,
-    handleFileSelect
+    handleFileSelect,
+    loadExistingPhotos
   };
 };

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const propertyTypes = [
-  'Apartment', 'Semi-Detached Duplex', 'Detached Duplex', 'Studio', 'Duplex', 
-  'Mansion', 'Bungalow', 'Penthouse', 'Room'
+  'Self-Contain', 'Apartment', 'Bungalow', 'Terrace Duplex', 'Semi-Detached Duplex', 'Fully-Detached Duplex', 
+  'Penthouse', 'Mansion'
 ] as const;
 
 export const states = [
@@ -10,11 +10,11 @@ export const states = [
 ] as const;
 
 export const amenitiesList = [
-  'WiFi', 'Air Conditioning', 'Kitchen', 'Washing Machine', 'TV', 'Parking Area',
-  'Walk-in Closet', 'All Rooms En-Suite', 'Gated Community', 'CCTV', 'BBQ Area',
-  'Swimming Pool', 'Gym', 'Security', 'Generator', 'Garden', 'Balcony',
-  'Supermarket', 'Spa', 'Smart Home', '24/7 Electricity', 'Furnished', 
-  'Accessible Road', 'Green Space', 'Constant Water Supply', 'Serene Environment'
+  'Living Room', 'Dining Area', 'Pantry', 'Kitchen', 'Guest Toilet', 'Walk-in Closet', 'All Rooms En-Suite', 
+  'TV', 'WiFi', 'CCTV', 'Air Conditioning', 'Washing Machine', 'Smart Home', 'Generator', 
+  'Garden', 'Balcony', 'Parking Area', 'Backyard', 'Frontyard', 'Green Space',
+  'BBQ Area', 'Swimming Pool', 'Gym', 'Cinema', 'Supermarket', 'Spa', 'Security',
+  '24/7 Electricity', 'Accessible Road', 'Constant Water Supply', 'Serene Environment'
 ] as const;
 
 export const contractTerms = [
@@ -27,8 +27,12 @@ export const contractTerms = [
 
 export const rentalListingSchema = z.object({
   propertyType: z.string().min(1, 'Property type is required'),
-  title: z.string().min(5, 'Title must be at least 5 characters').max(60, 'Title must be less than 60 characters'),
-  description: z.string().min(50, 'Description must be at least 50 characters').max(500, 'Description must be less than 500 characters'),
+  title: z.string().min(5, 'Title must be at least 5 characters').max(80, 'Title must be less than 80 characters'),
+  description: z.string().refine((val) => !val || val === '' || val.length >= 200, {
+    message: 'Description must be at least 200 characters'
+  }).refine((val) => !val || val === '' || val.length <= 500, {
+    message: 'Description must be less than 500 characters'
+  }).optional(),
   address: z.string().min(10, 'Please enter a valid address'),
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State is required'),
@@ -38,6 +42,7 @@ export const rentalListingSchema = z.object({
   bathrooms: z.number().min(1, 'At least 1 bathroom required'),
   maxGuests: z.number().min(1, 'At least 1 guest capacity required'),
   photos: z.array(z.string()).min(5, 'At least 5 photos are required'),
+  photoFiles: z.array(z.instanceof(File)).optional(),
   amenities: z.array(z.string()).min(1, 'Select at least one amenity'),
   price: z.number().min(1000, 'Minimum price is ₦1,000'),
   contractTerms: z.array(z.string()).min(1, 'Select at least one contract term'),
@@ -49,6 +54,7 @@ export type RentalListingFormData = z.infer<typeof rentalListingSchema>;
 
 export interface StepProps {
   form: any; // We'll replace this with the proper type from react-hook-form
+  photoUploadHook?: any; // Photo upload hook for steps that need it
   onNext?: () => void;
   onPrev?: () => void;
   isLastStep?: boolean;
