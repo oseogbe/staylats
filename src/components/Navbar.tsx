@@ -118,7 +118,7 @@ const Navbar = () => {
                         <Home className="h-4 w-4 mr-3 text-neutral-600" />
                         <div>
                           <p className="text-sm font-medium">
-                            Switch to hosting
+                            Hosting
                           </p>
                           <p className="text-xs text-neutral-500">
                             Manage your properties and earnings.
