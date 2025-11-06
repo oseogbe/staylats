@@ -147,6 +147,29 @@ export function Pricing({ form }: StepProps) {
         )}
       />
 
+      {/* Service Charge */}
+      <FormField
+        control={form.control}
+        name="serviceCharge"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Service Charge (₦) <span className="text-xs text-muted-foreground">(optional)</span></FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min="0"
+                step="1000"
+                placeholder="50000"
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(e.target.value === '' ? undefined : (parseInt(e.target.value) || 0))}
+              />
+            </FormControl>
+            <FormDescription>Optional annual service charge for maintenance and utilities</FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {/* Tenancy Agreement (PDF) */}
       <FormField
         control={form.control}
@@ -237,7 +260,7 @@ export function Pricing({ form }: StepProps) {
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
               />
             </FormControl>
-            <FormDescription>One-time security deposit amount</FormDescription>
+            <FormDescription>One-time security deposit (caution fee) amount</FormDescription>
             <FormMessage />
           </FormItem>
         )}
