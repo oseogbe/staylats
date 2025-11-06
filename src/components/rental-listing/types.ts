@@ -10,9 +10,9 @@ export const states = [
 ] as const;
 
 export const amenitiesList = [
-  'Living Room', 'Dining Area', 'Pantry', 'Kitchen', 'Guest Toilet', 'Walk-in Closet', 'All Rooms En-Suite', 
-  'TV', 'WiFi', 'CCTV', 'Air Conditioning', 'Washing Machine', 'Smart Home', 'Generator', 
-  'Garden', 'Balcony', 'Parking Area', 'Backyard', 'Frontyard', 'Green Space',
+  'Living Room', 'Dining Area', 'Pantry', 'Kitchen', 'Guest Toilet', 'Walk-in Closet', 'Walk-in Showers', 
+  'All Rooms En-Suite', 'TV', 'WiFi', 'CCTV', 'Air Conditioning', 'Washing Machine', 'Smart Home', 
+  'Bluetooth Speakers', 'Generator', 'Garden', 'Balcony', 'Parking Area', 'Backyard', 'Frontyard', 'Green Space',
   'BBQ Area', 'Swimming Pool', 'Gym', 'Cinema', 'Supermarket', 'Spa', 'Security',
   '24/7 Electricity', 'Accessible Road', 'Constant Water Supply', 'Serene Environment'
 ] as const;
@@ -41,13 +41,36 @@ export const rentalListingSchema = z.object({
   bedrooms: z.number().min(1, 'At least 1 bedroom required'),
   bathrooms: z.number().min(1, 'At least 1 bathroom required'),
   maxGuests: z.number().min(1, 'At least 1 guest capacity required'),
-  photos: z.array(z.string()).min(5, 'At least 5 photos are required'),
+  photos: z.array(z.string()).min(5, 'At least 5 photos are required').max(15, 'Maximum 15 photos allowed'),
   photoFiles: z.array(z.instanceof(File)).optional(),
   amenities: z.array(z.string()).min(1, 'Select at least one amenity'),
-  price: z.number().min(1000, 'Minimum price is ₦1,000'),
+  pricing: z.record(z.string(), z.number()).refine(
+    (pricing) => {
+      // Check that at least one pricing term exists
+      if (Object.keys(pricing).length === 0) {
+        return false;
+      }
+      // Check that all pricing values are at least 1000
+      return Object.values(pricing).every(price => price >= 1000);
+    },
+    {
+      message: 'Each rental price must be at least ₦1,000'
+    }
+  ).refine(
+    (pricing) => Object.keys(pricing).length > 0,
+    {
+      message: 'At least one pricing term is required'
+    }
+  ),
+  inspectionFee: z.number().min(0, 'Inspection fee must be positive').optional(),
+  tenancyAgreement: z.string().url('Invalid tenancy agreement URL').optional(),
+  tenancyAgreementFile: z.instanceof(File)
+    .refine((file) => file.type === 'application/pdf', 'Only PDF is allowed')
+    .optional(),
+  requiredDocuments: z.array(z.string().min(1, 'Document name required')).min(1, 'Add at least one required document').optional(),
   contractTerms: z.array(z.string()).min(1, 'Select at least one contract term'),
   securityDeposit: z.number().min(0, 'Security deposit must be positive'),
-  agentFee: z.number().min(0, 'Agent fee must be positive')
+  agentPercentage: z.number().min(0, 'Agent percentage must be positive')
 });
 
 export type RentalListingFormData = z.infer<typeof rentalListingSchema>;

@@ -9,11 +9,11 @@ export const states = [
 ] as const;
 
 export const amenitiesList = [
-  'WiFi', 'Air Conditioning', 'Kitchen', 'Washing Machine', 'TV', 'Parking Area',
+  'WiFi', 'Air Conditioning', 'Water Heater', 'Kitchen', 'Washing Machine', 'TV', 'Parking Area',
   'Swimming Pool', 'Hot Tub', 'Gym', 'Security', 'CCTV', 'Generator', 'Garden',
   'Balcony', 'Terrace', 'Beach Access', 'City View', 'Mountain View', 'Serene Environment',
-  'Fireplace', 'BBQ Area', 'Game Room', 'PS5', 'Pool Table', 'Netflix', 'Self Check-in', 
-  'Concierge', 'Self Check-out', 'Free Breakfast', '24/7 Electricity', 'Cleaning Service', 
+  'Fireplace', 'BBQ Area', 'Game Room', 'Bluetooth Speakers', 'PS5', 'Pool Table', 'Netflix', 
+  'Self Check-in', 'Concierge', 'Self Check-out', 'Free Breakfast', '24/7 Electricity', 'Cleaning Service', 
   'Laundry Service', 'Housekeeping', 'BQ', 'Pet Friendly', 'Smoking Allowed', 'Accessible Road'
 ] as const;
 
@@ -38,7 +38,7 @@ export const shortletListingSchema = z.object({
   bedrooms: z.number().min(1, 'At least 1 bedroom required'),
   bathrooms: z.number().min(1, 'At least 1 bathroom required'),
   maxGuests: z.number().min(1, 'At least 1 guest capacity required'),
-  photos: z.array(z.string()).min(5, 'At least 5 photos are required'),
+  photos: z.array(z.string()).min(5, 'At least 5 photos are required').max(15, 'Maximum 15 photos allowed'),
   photoFiles: z.array(z.instanceof(File)).optional(),
   amenities: z.array(z.string()).min(1, 'Select at least one amenity'),
   pricePerNight: z.number().min(5000, 'Minimum price is ₦5,000 per night'),
