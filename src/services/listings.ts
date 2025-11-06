@@ -9,7 +9,7 @@ export interface DraftSummary {
     status: 'draft'
     stepsRemaining?: number
     lastUpdated: string
-    image?: string
+    images?: string[]
 }
 
 export interface UserListing {
@@ -40,6 +40,7 @@ export default {
         totalSteps?: number
         formData: Record<string, any>
         images?: File[]
+        tenancyAgreementFile?: File
     }) => {
         const formData = new FormData()
         
@@ -55,6 +56,9 @@ export default {
             payload.images.forEach((file) => {
                 formData.append('images', file)
             })
+        }
+        if (payload.tenancyAgreementFile) {
+            formData.append('tenancyAgreement', payload.tenancyAgreementFile)
         }
         
         const res = await api.post('/listing/drafts', formData, {
@@ -87,6 +91,7 @@ export default {
             isNew: boolean
         }>
         photoFiles?: File[]
+        tenancyAgreementFile?: File
     }) => {
         const formData = new FormData()
         
@@ -107,6 +112,9 @@ export default {
             payload.photoFiles.forEach((file) => {
                 formData.append('images', file)
             })
+        }
+        if (payload.tenancyAgreementFile) {
+            formData.append('tenancyAgreement', payload.tenancyAgreementFile)
         }
         
         const res = await api.patch(`/listing/drafts/${id}`, formData, {
@@ -131,6 +139,7 @@ export default {
             isNew: boolean
         }>
         photoFiles?: File[]
+        tenancyAgreementFile?: File
     }) => {
         const formData = new FormData()
         
@@ -148,6 +157,11 @@ export default {
             payload.photoFiles.forEach((file) => {
                 formData.append('images', file)
             })
+        }
+
+        // Add tenancy agreement file (PDF)
+        if (payload.tenancyAgreementFile) {
+            formData.append('tenancyAgreement', payload.tenancyAgreementFile)
         }
         
         const res = await api.post('/listing/publish', formData, {

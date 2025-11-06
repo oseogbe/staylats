@@ -35,8 +35,43 @@ export function Review({ form }: StepProps) {
             }
           </div>
           <div>
-            <span className="font-medium">Monthly Rent:</span> ₦{formData.price?.toLocaleString()}
+            <span className="font-medium">Rental Charges:</span>
+            {formData.pricing && Object.keys(formData.pricing).length > 0 ? (
+              <div className="mt-1 space-y-1">
+                {Object.entries(formData.pricing).map(([term, price]) => {
+                  const termLabel = contractTerms.find(t => t.value === term)?.label || term;
+                  return (
+                    <div key={term} className="text-sm">
+                      {termLabel}: ₦{typeof price === 'number' ? price.toLocaleString() : '0'}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <span className="text-muted-foreground">No pricing set</span>
+            )}
           </div>
+          {formData.inspectionFee !== undefined && (
+            <div>
+              <span className="font-medium">Inspection Fee:</span> ₦{Number(formData.inspectionFee).toLocaleString()}
+            </div>
+          )}
+          {formData.tenancyAgreement && (
+            <div>
+              <span className="font-medium">Tenancy Agreement:</span> Uploaded
+            </div>
+          )}
+          {formData.requiredDocuments && formData.requiredDocuments.length > 0 && (
+            <div>
+              <span className="font-medium">Required Documents:</span>
+              <div className="mt-1 text-sm">{formData.requiredDocuments.join(', ')}</div>
+            </div>
+          )}
+          {formData.agentPercentage !== undefined && (
+            <div>
+              <span className="font-medium">Agent Percentage:</span> {formData.agentPercentage}%
+            </div>
+          )}
           <div>
             <span className="font-medium">Photos:</span> {formData.photos?.length} uploaded
           </div>

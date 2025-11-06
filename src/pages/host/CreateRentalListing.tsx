@@ -54,7 +54,8 @@ export default function CreateRentalListing() {
 
   const form = useForm<RentalListingFormData>({
     resolver: zodResolver(rentalListingSchema),
-    mode: 'onChange', // Trigger validation on change
+    mode: 'onSubmit', // Only validate on submit/Next button click
+    reValidateMode: 'onSubmit',
     defaultValues: {
       propertyType: '',
       title: '',
@@ -70,10 +71,14 @@ export default function CreateRentalListing() {
       photos: [],
       photoFiles: [],
       amenities: [],
-      price: 50000,
+      pricing: {},
+      inspectionFee: undefined,
+      tenancyAgreement: undefined,
+      tenancyAgreementFile: undefined,
+      requiredDocuments: [''],
       contractTerms: [],
       securityDeposit: 100000,
-      agentFee: 10
+      agentPercentage: 10
     }
   });
 
@@ -123,10 +128,14 @@ export default function CreateRentalListing() {
                 photos: [], // Will be set separately
                 photoFiles: [], // Will be empty for loaded drafts
                 amenities: formData.amenities || [],
-                price: formData.price || 50000,
+                pricing: formData.pricing || (formData.price ? { monthly: formData.price } : {}),
+                inspectionFee: formData.inspectionFee || undefined,
+                tenancyAgreement: formData.tenancyAgreement || undefined,
+                tenancyAgreementFile: undefined,
+                requiredDocuments: formData.requiredDocuments || [''],
                 contractTerms: formData.contractTerms || [],
                 securityDeposit: formData.securityDeposit || 100000,
-                agentFee: formData.agentFee || 10
+                agentPercentage: formData.agentPercentage || formData.agentFee || 10
               });
 
               // Load existing photos from S3 URLs
@@ -154,7 +163,7 @@ export default function CreateRentalListing() {
       2: ['address', 'city', 'state'],
       3: ['title', 'description', 'photos'],
       4: ['amenities'],
-      5: ['price', 'contractTerms', 'securityDeposit', 'agentFee'],
+      5: ['pricing', 'contractTerms', 'securityDeposit', 'agentPercentage'],
       6: [] // Review step - no validation needed
     };
 
@@ -181,7 +190,17 @@ export default function CreateRentalListing() {
         case 4:
           return !watchedValues.amenities || watchedValues.amenities.length === 0;
         case 5:
-          return !watchedValues.contractTerms || watchedValues.contractTerms.length === 0;
+          {
+            const selectedTerms = watchedValues.contractTerms || [];
+            const pricing = watchedValues.pricing || {};
+            const hasMissingPriceForSelectedTerms = selectedTerms.some((term: string) => {
+              const value = pricing[term];
+              return value === undefined || value === null || Number(value) < 1000;
+            });
+            return selectedTerms.length === 0 ||
+                   !pricing || Object.keys(pricing).length === 0 ||
+                   hasMissingPriceForSelectedTerms;
+          }
         case 6:
           return false; // Review step - no validation needed
         default:
@@ -204,7 +223,7 @@ export default function CreateRentalListing() {
         2: ['address', 'city', 'state'],
         3: ['title', 'description', 'photos'],
         4: ['amenities'],
-        5: ['price', 'contractTerms', 'securityDeposit', 'agentFee'],
+        5: ['pricing', 'contractTerms', 'securityDeposit', 'agentPercentage'],
         6: [] // Review step - no validation needed
       };
 
@@ -246,7 +265,8 @@ export default function CreateRentalListing() {
         draftId: draftId, // Will be undefined for new listings
         formData: cleanFormData,
         photoItems: photoUploadHook.uploadedPhotos.map(url => ({ url, isNew: false })),
-        photoFiles: photoUploadHook.uploadedFiles
+        photoFiles: photoUploadHook.uploadedFiles,
+        tenancyAgreementFile: data.tenancyAgreementFile
       });
 
       toast.success("Your rental listing has successfully submitted for review.");
@@ -340,7 +360,7 @@ export default function CreateRentalListing() {
                           const formData = form.getValues();
 
                           // Remove photos and photoFiles from formData since they're handled separately
-                          const { photos, photoFiles, ...cleanFormData } = formData;
+                          const { photos, photoFiles, tenancyAgreementFile, ...cleanFormData } = formData;
 
                           if (draftId) {
                             // Update existing draft
@@ -351,7 +371,8 @@ export default function CreateRentalListing() {
                               totalSteps: steps.length,
                               formData: cleanFormData,
                               photoItems: photoUploadHook.photos,
-                              photoFiles: photoUploadHook.uploadedFiles
+                              photoFiles: photoUploadHook.uploadedFiles,
+                              tenancyAgreementFile
                             });
                           } else {
                             // Create new draft
@@ -361,7 +382,8 @@ export default function CreateRentalListing() {
                               step: currentStep,
                               totalSteps: steps.length,
                               formData: cleanFormData,
-                              images: formData.photoFiles || []
+                              images: formData.photoFiles || [],
+                              tenancyAgreementFile
                             });
                             if (response?.data?.draftId) {
                               setDraftId(response.data.draftId);
