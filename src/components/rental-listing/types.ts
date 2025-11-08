@@ -64,6 +64,7 @@ export const rentalListingSchema = z.object({
   ),
   inspectionFee: z.number().min(0, 'Inspection fee must be positive').optional(),
   serviceCharge: z.number().min(0, 'Service charge must be positive').optional(),
+  cautionFee: z.number().min(0, 'Caution fee must be positive').optional(),
   tenancyAgreement: z.string().url('Invalid tenancy agreement URL').optional(),
   tenancyAgreementFile: z.instanceof(File)
     .refine((file) => file.type === 'application/pdf', 'Only PDF is allowed')

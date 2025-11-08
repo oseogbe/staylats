@@ -56,6 +56,21 @@ export function Review({ form }: StepProps) {
               <span className="font-medium">Inspection Fee:</span> ₦{Number(formData.inspectionFee).toLocaleString()}
             </div>
           )}
+          {formData.serviceCharge !== undefined && (
+            <div>
+              <span className="font-medium">Service Charge:</span> ₦{Number(formData.serviceCharge).toLocaleString()}
+            </div>
+          )}
+          {formData.securityDeposit !== undefined && (
+            <div>
+              <span className="font-medium">Security Deposit:</span> ₦{Number(formData.securityDeposit).toLocaleString()}
+            </div>
+          )}
+          {formData.cautionFee !== undefined && (
+            <div>
+              <span className="font-medium">Caution Fee:</span> ₦{Number(formData.cautionFee).toLocaleString()}
+            </div>
+          )}
           {formData.tenancyAgreement && (
             <div>
               <span className="font-medium">Tenancy Agreement:</span> Uploaded

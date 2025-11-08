@@ -170,6 +170,52 @@ export function Pricing({ form }: StepProps) {
         )}
       />
 
+      {/* Security Deposit */}
+      <FormField
+        control={form.control}
+        name="securityDeposit"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Security Deposit (₦)</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min="0"
+                step="1000"
+                placeholder="100000"
+                {...field}
+                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+              />
+            </FormControl>
+            <FormDescription>Paid upfront to cover potential property damage or breach of lease (e.g. unpaid rent, early termination); typically fully refundable if the tenant complies with all lease terms and doesn't damage the property</FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Caution Fee */}
+      <FormField
+        control={form.control}
+        name="cautionFee"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Caution Fee (₦) <span className="text-xs text-muted-foreground">(optional)</span></FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min="0"
+                step="1000"
+                placeholder="30000"
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(e.target.value === '' ? undefined : (parseInt(e.target.value) || 0))}
+              />
+            </FormControl>
+            <FormDescription>Optional non-refundable fee for insurance against property damage or lease breach</FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {/* Tenancy Agreement (PDF) */}
       <FormField
         control={form.control}
@@ -240,28 +286,6 @@ export function Pricing({ form }: StepProps) {
             {fieldState.error && (
               <p className="text-sm font-medium text-destructive mt-1">{fieldState.error.message}</p>
             )}
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="securityDeposit"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Security Deposit (₦)</FormLabel>
-            <FormControl>
-              <Input
-                type="number"
-                min="0"
-                step="1000"
-                placeholder="100000"
-                {...field}
-                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-              />
-            </FormControl>
-            <FormDescription>One-time security deposit (caution fee) amount</FormDescription>
-            <FormMessage />
           </FormItem>
         )}
       />
