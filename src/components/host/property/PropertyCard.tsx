@@ -105,14 +105,10 @@ export function PropertyCard({
         )}
       </div>
 
-      <CardContent className="p-4">
+      <CardContent className="p-4 border-t-[3px] border-primary">
         <div className="space-y-3">
-          <div>
-            <h3 className="font-medium text-neutral-900">{listing.title}</h3>
-            <p className="text-sm text-neutral-600 capitalize">
-              {listing.type}
-            </p>
-          </div>
+          <h3 className="font-medium text-neutral-900">{listing.title}</h3>
+          <p className="text-sm text-primary capitalize">{listing.type}</p>
 
           {listing.status === 'draft' && listing.stepsRemaining > 0 && (
             <Badge variant="outline">
