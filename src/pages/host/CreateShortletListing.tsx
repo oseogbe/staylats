@@ -261,7 +261,10 @@ export default function CreateShortletListing() {
 
       await listingsService.publishListing({
         draftId: draftId, // Will be undefined for new listings
-        formData: cleanFormData,
+        formData: {
+          ...cleanFormData,
+          type: 'shortlet'
+        },
         photoItems: photoUploadHook.photos,
         photoFiles: photoUploadHook.uploadedFiles
       });

@@ -18,6 +18,8 @@ export interface UserListing {
     type: DraftType
     description: string
     address: string
+    city: string
+    state: string
     propertyType: string
     images: string[]
     amenities: string[]

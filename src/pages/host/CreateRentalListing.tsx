@@ -79,7 +79,7 @@ export default function CreateRentalListing() {
       tenancyAgreementFile: undefined,
       requiredDocuments: [''],
       contractTerms: [],
-      securityDeposit: 100000,
+      securityDeposit: 0,
       agentPercentage: 10
     }
   });
@@ -267,8 +267,11 @@ export default function CreateRentalListing() {
 
       await listingsService.publishListing({
         draftId: draftId, // Will be undefined for new listings
-        formData: cleanFormData,
-        photoItems: photoUploadHook.uploadedPhotos.map(url => ({ url, isNew: false })),
+        formData: {
+          ...cleanFormData,
+          type: 'rental'
+        },
+        photoItems: photoUploadHook.photos, // Use the full PhotoItem array with isNew flags
         photoFiles: photoUploadHook.uploadedFiles,
         tenancyAgreementFile: data.tenancyAgreementFile
       });
