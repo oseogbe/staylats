@@ -19,6 +19,7 @@ import { useNotifications } from '@/hooks/use-notifications';
 export interface Notification {
   id: string;
   type: string;
+  title: string;
   message: string;
   read: boolean;
   createdAt: string;
@@ -168,7 +169,7 @@ const NotificationBell = () => {
             >
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{notification.type}</span>
+                  <span className="text-sm font-medium">{notification.title}</span>
                   <span className="text-xs text-neutral-500">
                     {formatDate(notification.createdAt)}
                   </span>

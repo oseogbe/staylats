@@ -82,14 +82,18 @@ export function PropertyCard({
             Pending Approval
           </Badge>
         )}
-        {listing.status === 'approved' && (
-          <Badge className="absolute top-3 left-3 bg-green-100 text-green-800 hover:bg-green-100">
-            Approved
+        {(listing.status === 'active') && (
+          <Badge className="absolute top-3 left-3 bg-green-50 text-green-700 hover:bg-green-50 border-green-200 flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            Live
           </Badge>
         )}
-        {listing.status === 'rejected' && (
+        {(listing.status === 'declined') && (
           <Badge className="absolute top-3 left-3 bg-red-100 text-red-800 hover:bg-red-100">
-            Rejected
+            Declined
           </Badge>
         )}
         {listing.images && listing.images.length > 0 ? (
@@ -169,11 +173,6 @@ export function PropertyCard({
                 className="bg-primary hover:bg-primary-hover"
               >
                 Continue
-              </Button>
-            )}
-            {['approved', 'rejected'].includes(listing.status) && (
-              <Button variant="outline" size="sm">
-                Edit
               </Button>
             )}
           </div>

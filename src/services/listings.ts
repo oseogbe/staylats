@@ -23,7 +23,7 @@ export interface UserListing {
     propertyType: string
     images: string[]
     amenities: string[]
-    status: "draft" | "pending" | "approved" | "rejected"
+    status: "draft" | "pending" | "active" | "declined"
     createdAt: string
     updatedAt: string
 }

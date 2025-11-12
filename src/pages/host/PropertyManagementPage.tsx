@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, FileText } from "lucide-react";
 
@@ -7,14 +7,78 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertyCard } from "@/components/host/property/PropertyCard";
 
-import type { PropertyListing } from "@/components/host/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/use-notifications";
+
 import listingsService, { type DraftSummary } from "@/services/listings";
+import type { PropertyListing } from "@/components/host/types";
 
 const PropertyManagementPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [listingTab, setListingTab] = useState("published");
   const [publishedListings, setPublishedListings] = useState<PropertyListing[]>([]);
   const [draftListings, setDraftListings] = useState<PropertyListing[]>([]);
+
+  // Fetch listings function that can be reused
+  const fetchListings = useCallback(async () => {
+    try {
+      // Fetch drafts
+      const draftsData = await listingsService.getDrafts();
+      const mappedDrafts: PropertyListing[] = draftsData.drafts.map((d: DraftSummary) => ({
+        id: d.id,
+        title: d.title,
+        type: d.type,
+        status: 'draft',
+        stepsRemaining: d.stepsRemaining,
+        lastUpdated: new Date(d.lastUpdated).toLocaleString()
+      }));
+      setDraftListings(mappedDrafts);
+
+      // Fetch published listings
+      const publishedData = await listingsService.getUserListings();
+      const mappedPublished: PropertyListing[] = publishedData.listings
+        .map(listing => ({
+          id: listing.id,
+          title: listing.title,
+          type: listing.type,
+          status: listing.status,
+          description: listing.description,
+          address: listing.address,
+          propertyType: listing.propertyType,
+          images: listing.images,
+          amenities: listing.amenities,
+          lastUpdated: new Date(listing.updatedAt).toLocaleString()
+        }));
+      setPublishedListings(mappedPublished);
+    } catch (err) {
+      // silently ignore or add toast later
+      console.error('Failed to fetch listings:', err);
+    }
+  }, []);
+
+  // Handle real-time notification updates
+  const handleNotification = useCallback((notification: any) => {
+    // Update listing status immediately when approved/declined notification arrives
+    if (notification.type === 'listing_approved' || notification.type === 'listing_declined') {
+      const listingId = notification.metadata?.listingId;
+      if (listingId) {
+        // Update the specific listing's status
+        setPublishedListings(prev => 
+          prev.map(listing => 
+            listing.id === listingId 
+              ? { ...listing, status: notification.type === 'listing_approved' ? 'active' : 'declined' }
+              : listing
+          )
+        );
+      }
+    }
+  }, []);
+
+  // Initialize WebSocket with notification callback
+  useNotifications(user?.id || '', {
+    onNotification: handleNotification
+  });
 
   const handleCreateListing = () => {
     navigate("/host/create-listing");
@@ -29,41 +93,8 @@ const PropertyManagementPage = () => {
   };
 
   useEffect(() => {
-    (async () => {
-      try {
-        // Fetch drafts
-        const draftsData = await listingsService.getDrafts();
-        const mappedDrafts: PropertyListing[] = draftsData.drafts.map((d: DraftSummary) => ({
-          id: d.id,
-          title: d.title,
-          type: d.type,
-          status: 'draft',
-          stepsRemaining: d.stepsRemaining,
-          lastUpdated: new Date(d.lastUpdated).toLocaleString()
-        }));
-        setDraftListings(mappedDrafts);
-
-        // Fetch published listings
-        const publishedData = await listingsService.getUserListings();
-        const mappedPublished: PropertyListing[] = publishedData.listings
-          .map(listing => ({
-            id: listing.id,
-            title: listing.title,
-            type: listing.type,
-            status: listing.status,
-            description: listing.description,
-            address: listing.address,
-            propertyType: listing.propertyType,
-            images: listing.images,
-            amenities: listing.amenities,
-            lastUpdated: new Date(listing.updatedAt).toLocaleString()
-          }));
-        setPublishedListings(mappedPublished);
-      } catch (err) {
-        // silently ignore or add toast later
-      }
-    })();
-  }, []);
+    fetchListings();
+  }, [fetchListings]);
 
   return (
     <div className="space-y-6">

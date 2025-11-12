@@ -6,14 +6,20 @@ import { useAuth } from '@/contexts/AuthContext';
 interface Notification {
   id: string;
   type: string;
+  title: string;
   message: string;
   read: boolean;
   createdAt: string;
+  metadata?: Record<string, any>;
+}
+
+interface UseNotificationsOptions {
+  onNotification?: (notification: Notification) => void;
 }
 
 let socket: Socket | null = null;
 
-export function useNotifications(userId: string) {
+export function useNotifications(userId: string, options?: UseNotificationsOptions) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +85,11 @@ export function useNotifications(userId: string) {
           if (exists) return prev;
           return [notification, ...prev];
         });
+        
+        // Call the callback if provided
+        if (options?.onNotification) {
+          options.onNotification(notification);
+        }
       });
 
       // Handle read status updates
@@ -93,7 +104,7 @@ export function useNotifications(userId: string) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize socket connection');
     }
-  }, [userId]);
+  }, [userId, options]);
 
   useEffect(() => {
     initializeSocket();
