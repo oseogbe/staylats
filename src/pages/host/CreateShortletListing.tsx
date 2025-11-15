@@ -69,7 +69,10 @@ export default function CreateShortletListing() {
       description: '',
       bedrooms: 1,
       bathrooms: 1,
-      maxGuests: 2,
+      maxAdults: 2,
+      maxKids: 0,
+      maxInfants: 0,
+      allowPets: true,
       address: '',
       city: '',
       state: '',
@@ -130,7 +133,10 @@ export default function CreateShortletListing() {
                 longitude: formData.longitude || undefined,
                 bedrooms: formData.bedrooms || 1,
                 bathrooms: formData.bathrooms || 1,
-                maxGuests: formData.maxGuests || 2,
+                maxAdults: formData.maxAdults || 2,
+                maxKids: formData.maxKids || 0,
+                maxInfants: formData.maxInfants || 0,
+                allowPets: formData.allowPets || true,
                 photos: draft.images || [],
                 photoFiles: [], // Will be empty for loaded drafts
                 amenities: formData.amenities || [],
@@ -166,7 +172,7 @@ export default function CreateShortletListing() {
   // Check if current step has validation errors or missing required fields
   const getCurrentStepErrors = () => {
     const stepFields: Record<number, (keyof ShortletListingFormData)[]> = {
-      1: ['propertyType', 'bedrooms', 'bathrooms', 'maxGuests'],
+      1: ['propertyType', 'bedrooms', 'bathrooms', 'maxAdults', 'maxKids', 'maxInfants', 'allowPets'],
       2: ['address', 'city', 'state'],
       3: ['title', 'description', 'photos'],
       4: ['amenities'],
@@ -216,7 +222,7 @@ export default function CreateShortletListing() {
     if (currentStep < steps.length) {
       // Define the fields to validate for each step
       const stepFields: Record<number, (keyof ShortletListingFormData)[]> = {
-        1: ['propertyType', 'bedrooms', 'bathrooms', 'maxGuests'],
+        1: ['propertyType', 'bedrooms', 'bathrooms', 'maxAdults', 'maxKids', 'maxInfants', 'allowPets'],
         2: ['address', 'city', 'state'],
         3: ['title', 'description', 'photos'],
         4: ['amenities'],

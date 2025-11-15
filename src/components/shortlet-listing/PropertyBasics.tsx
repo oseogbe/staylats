@@ -31,7 +31,7 @@ export function PropertyBasics({ form }: StepProps) {
         )}
       />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="bedrooms"
@@ -75,28 +75,96 @@ export function PropertyBasics({ form }: StepProps) {
             </FormItem>
           )}
         />
+      </div>
 
-        <FormField
-          control={form.control}
-          name="maxGuests"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Max Guests</FormLabel>
-              <FormControl>
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium">Maximum Occupants</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <FormField
+            control={form.control}
+            name="maxAdults"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Adults</FormLabel>
+                <FormControl>
                   <Input
                     type="number"
                     min="1"
+                    placeholder="2"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                   />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="maxKids"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Kids</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="maxInfants"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Infants</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="allowPets"
+            render={({ field }) => (
+              <FormItem className="flex flex-col justify-end">
+                <FormLabel>Pets Allowed</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value ? "yes" : "no"}
+                    onValueChange={(val) => field.onChange(val === "yes")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </div>
     </div>
   );
