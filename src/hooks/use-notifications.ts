@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,20 +18,37 @@ interface UseNotificationsOptions {
 }
 
 let socket: Socket | null = null;
+let notificationCallbacks: Set<(notification: Notification) => void> = new Set();
+let connectionStateCallbacks: Set<(connected: boolean) => void> = new Set();
+let errorStateCallbacks: Set<(error: string | null) => void> = new Set();
 
 export function useNotifications(userId: string, options?: UseNotificationsOptions) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(socket?.connected || false);
   const [error, setError] = useState<string | null>(null);
   const { getAccessToken, refreshAccessToken } = useAuth();
+  const callbackRef = useRef(options?.onNotification);
+
+  // Update callback ref when it changes
+  useEffect(() => {
+    callbackRef.current = options?.onNotification;
+  }, [options?.onNotification]);
 
   const initializeSocket = useCallback(() => {
     if (!userId) return;
 
     try {
-      // Always create a new socket instance
+      // Only create socket if it doesn't exist or is disconnected
+      if (socket && socket.connected) {
+        // Socket already exists and is connected, just update state
+        connectionStateCallbacks.forEach(cb => cb(true));
+        return;
+      }
+      
+      // Clean up existing socket if disconnected
       if (socket) {
         socket.disconnect();
+        socket = null;
       }
 
       // Ensure we connect to the root namespace
@@ -50,13 +67,14 @@ export function useNotifications(userId: string, options?: UseNotificationsOptio
       });
 
       socket.on('connect', () => {
-        setIsConnected(true);
-        setError(null);
+        // Notify all instances
+        connectionStateCallbacks.forEach(cb => cb(true));
+        errorStateCallbacks.forEach(cb => cb(null));
         socket?.emit('join', userId);
       });
 
       socket.on('connect_error', async (err) => {
-        setIsConnected(false);
+        connectionStateCallbacks.forEach(cb => cb(false));
         
         if (err.message === 'Token expired') {
           // Token expired, attempt to refresh
@@ -66,16 +84,16 @@ export function useNotifications(userId: string, options?: UseNotificationsOptio
             initializeSocket();
             return;
           } catch (refreshError) {
-            setError('Session expired. Please log in again.');
+            errorStateCallbacks.forEach(cb => cb('Session expired. Please log in again.'));
             return;
           }
         }
         
-        setError(`Connection error: ${err.message}`);
+        errorStateCallbacks.forEach(cb => cb(`Connection error: ${err.message}`));
       });
 
       socket.on('disconnect', () => {
-        setIsConnected(false);
+        connectionStateCallbacks.forEach(cb => cb(false));
       });
 
       socket.on('new_notification', (notification: Notification) => {
@@ -86,10 +104,8 @@ export function useNotifications(userId: string, options?: UseNotificationsOptio
           return [notification, ...prev];
         });
         
-        // Call the callback if provided
-        if (options?.onNotification) {
-          options.onNotification(notification);
-        }
+        // Call all registered callbacks
+        notificationCallbacks.forEach(callback => callback(notification));
       });
 
       // Handle read status updates
@@ -104,13 +120,34 @@ export function useNotifications(userId: string, options?: UseNotificationsOptio
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize socket connection');
     }
-  }, [userId, options]);
+  }, [userId, getAccessToken, refreshAccessToken]);
 
   useEffect(() => {
+    // Register state update callbacks
+    const connectionCallback = (connected: boolean) => setIsConnected(connected);
+    const errorCallback = (err: string | null) => setError(err);
+    
+    connectionStateCallbacks.add(connectionCallback);
+    errorStateCallbacks.add(errorCallback);
+    
     initializeSocket();
+    
+    // Register notification callback
+    if (callbackRef.current) {
+      notificationCallbacks.add(callbackRef.current);
+    }
 
     return () => {
-      if (socket) {
+      // Unregister callbacks on unmount
+      connectionStateCallbacks.delete(connectionCallback);
+      errorStateCallbacks.delete(errorCallback);
+      
+      if (callbackRef.current) {
+        notificationCallbacks.delete(callbackRef.current);
+      }
+      
+      // Only disconnect socket if no more instances are using it
+      if (connectionStateCallbacks.size === 0 && socket) {
         socket.emit('leave', userId);
         socket.off('connect');
         socket.off('disconnect');
