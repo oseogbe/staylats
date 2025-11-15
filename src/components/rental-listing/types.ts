@@ -1,8 +1,7 @@
 import { z } from 'zod';
 
 export const propertyTypes = [
-  'Self-Contain', 'Apartment', 'Bungalow', 'Terrace Duplex', 'Semi-Detached Duplex', 'Fully-Detached Duplex', 
-  'Penthouse', 'Mansion'
+  'Room', 'Self-Contain', 'Apartment', 'Bungalow', 'Terrace Duplex', 'Semi-Detached Duplex', 'Duplex', 'Mansion', 'Villa', 'Penthouse'
 ] as const;
 
 export const states = [

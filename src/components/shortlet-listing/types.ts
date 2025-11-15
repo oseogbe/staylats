@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const propertyTypes = [
-  'Studio Apartment', 'Shared Apartment', 'Bungalow', 'Duplex', 'Semi-Detached Duplex', 'Penthouse', 'Room'
+  'Room', 'Studio Apartment', 'Shared Apartment', 'Bungalow', 'Duplex', 'Semi-Detached Duplex', 'Terraced Duplex', 'Penthouse'
 ] as const;
 
 export const states = [
@@ -10,7 +10,7 @@ export const states = [
 
 export const amenitiesList = [
   'WiFi', 'Air Conditioning', 'Water Heater', 'Kitchen', 'Washing Machine', 'TV', 'Parking Area',
-  'Swimming Pool', 'Hot Tub', 'Gym', 'Security', 'CCTV', 'Generator', 'Garden',
+  'Swimming Pool', 'Hot Tub', 'Gym', 'Security', 'CCTV', 'Smart Home', 'Generator', 'Garden',
   'Balcony', 'Terrace', 'Beach Access', 'City View', 'Mountain View', 'Serene Environment',
   'Fireplace', 'BBQ Area', 'Game Room', 'Bluetooth Speakers', 'PS5', 'Pool Table', 'Netflix', 
   'Self Check-in', 'Concierge', 'Self Check-out', 'Free Breakfast', '24/7 Electricity', 'Cleaning Service', 
@@ -37,7 +37,10 @@ export const shortletListingSchema = z.object({
   longitude: z.number().optional(),
   bedrooms: z.number().min(1, 'At least 1 bedroom required'),
   bathrooms: z.number().min(1, 'At least 1 bathroom required'),
-  maxGuests: z.number().min(1, 'At least 1 guest capacity required'),
+  maxAdults: z.number().min(1, 'At least 1 adult required'),
+  maxKids: z.number().min(0, 'Kids must be 0 or more'),
+  maxInfants: z.number().min(0, 'Infants must be 0 or more'),
+  allowPets: z.boolean(),
   photos: z.array(z.string()).min(5, 'At least 5 photos are required').max(15, 'Maximum 15 photos allowed'),
   photoFiles: z.array(z.instanceof(File)).optional(),
   amenities: z.array(z.string()).min(1, 'Select at least one amenity'),
