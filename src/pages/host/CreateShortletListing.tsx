@@ -3,10 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ArrowRight, CheckCircle, BedDouble } from 'lucide-react';
 
-import { LoadingOverlay } from '@/components/LoadingOverlay';
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,16 +22,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-
 import {
   PropertyBasics,
   Location,
@@ -38,9 +34,12 @@ import {
   shortletListingSchema,
   type ShortletListingFormData
 } from '@/components/shortlet-listing';
-import { usePhotoUpload } from '@/components/shortlet-listing/use-photo-upload';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
 
 import listingsService from '@/services/listings';
+import { usePhotoUpload } from '@/components/shortlet-listing/use-photo-upload';
+
+import { ArrowLeft, ArrowRight, CheckCircle, BedDouble } from 'lucide-react';
 
 const steps = [
   { id: 1, title: 'Property Basics', description: 'Tell us about your property', Component: PropertyBasics },
@@ -67,6 +66,7 @@ export default function CreateShortletListing() {
       propertyType: '',
       title: '',
       description: '',
+      houseRules: '',
       bedrooms: 1,
       bathrooms: 1,
       maxAdults: 2,
@@ -126,6 +126,7 @@ export default function CreateShortletListing() {
                 propertyType: formData.propertyType || '',
                 title: formData.title || '',
                 description: formData.description || '',
+                houseRules: formData.houseRules || '',
                 address: formData.address || '',
                 city: formData.city || '',
                 state: formData.state || '',
@@ -174,7 +175,7 @@ export default function CreateShortletListing() {
     const stepFields: Record<number, (keyof ShortletListingFormData)[]> = {
       1: ['propertyType', 'bedrooms', 'bathrooms', 'maxAdults', 'maxKids', 'maxInfants', 'allowPets'],
       2: ['address', 'city', 'state'],
-      3: ['title', 'description', 'photos'],
+      3: ['title', 'description', 'houseRules', 'photos'],
       4: ['amenities'],
       5: ['pricePerNight', 'cleaningFee', 'securityDeposit', 'minimumStay', 'maximumStay', 'checkInTime', 'checkOutTime'],
       6: [] // Review step - no validation needed
@@ -224,7 +225,7 @@ export default function CreateShortletListing() {
       const stepFields: Record<number, (keyof ShortletListingFormData)[]> = {
         1: ['propertyType', 'bedrooms', 'bathrooms', 'maxAdults', 'maxKids', 'maxInfants', 'allowPets'],
         2: ['address', 'city', 'state'],
-        3: ['title', 'description', 'photos'],
+        3: ['title', 'description', 'houseRules', 'photos'],
         4: ['amenities'],
         5: ['pricePerNight', 'cleaningFee', 'securityDeposit', 'minimumStay', 'maximumStay', 'checkInTime', 'checkOutTime'],
         6: [] // Review step - no validation needed

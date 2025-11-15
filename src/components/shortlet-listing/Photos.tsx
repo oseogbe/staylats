@@ -91,6 +91,43 @@ export function Photos({ form, photoUploadHook }: StepProps) {
 
       <FormField
         control={form.control}
+        name="houseRules"
+        render={({ field, fieldState }) => (
+          <FormItem>
+            <FormLabel>House Rules <span className="text-xs text-muted-foreground">(optional)</span></FormLabel>
+            <FormControl>
+              <RichTextEditor
+                value={field.value || ""}
+                placeholder="e.g., No smoking indoors, No parties or events, Quiet hours from 10 PM to 8 AM..."
+                maxLength={500}
+                className="min-h-[120px]"
+                onChange={(value) => {
+                  // Check if the value is just empty HTML tags
+                  const isEmptyHtml = value === '<p></p>' || value === '<p><br></p>' || value === '<p><br/></p>' || value === '';
+                  
+                  if (isEmptyHtml) {
+                    // Convert empty HTML to empty string for validation
+                    field.onChange('');
+                  } else {
+                    field.onChange(value);
+                  }
+                }}
+                onTextChange={(textLength) => {
+                  // Trigger validation when text changes to get real-time feedback
+                  form.trigger('houseRules');
+                }}
+              />
+            </FormControl>
+            <FormDescription>
+              Set clear expectations for guests by listing your property rules and guidelines.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="photos"
         render={({ field }) => (
           <FormItem>

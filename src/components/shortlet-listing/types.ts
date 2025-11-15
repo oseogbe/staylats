@@ -30,6 +30,7 @@ export const shortletListingSchema = z.object({
   }).refine((val) => !val || val === '' || val.length <= 500, {
     message: 'Description must be less than 500 characters'
   }).optional(),
+  houseRules: z.string().optional(),
   address: z.string().min(10, 'Please enter a valid address'),
   city: z.string().min(2, 'City is required'),
   state: z.string().min(2, 'State is required'),
