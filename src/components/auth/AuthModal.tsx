@@ -167,7 +167,7 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-sm:w-[92%] max-sm:rounded-2xl sm:max-w-md">
         {currentStep === "phone" && (
           <PhoneLoginStep
             onPhoneSubmit={handlePhoneSubmit}

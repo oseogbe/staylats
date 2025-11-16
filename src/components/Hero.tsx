@@ -8,11 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { Search, MapPin, Users, CalendarIcon } from "lucide-react";
+import { Search, MapPin, CalendarIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 
 import heroImage from "@/assets/serviced-apartment.png";
+import { GuestPicker, GuestCounts } from "@/components/GuestPicker";
+
+const cities = [
+  { value: 'abuja', label: 'Abuja' },
+  { value: 'lagos', label: 'Lagos' }
+];
 
 const contractTerms = [
   { value: 'monthly', label: 'Monthly' },
@@ -41,8 +47,15 @@ const Hero = () => {
   // Stepper logic
   const [step, setStep] = React.useState(0);
   const [where, setWhere] = React.useState("");
-  const [guests, setGuests] = React.useState("");
+  const [guests, setGuests] = React.useState<GuestCounts>({
+    adults: 1,
+    children: 0,
+    infants: 0,
+    pets: 0
+  });
   const [contractTerm, setContractTerm] = React.useState("");
+
+  const totalGuests = guests.adults + guests.children;
 
   const isMobileView = windowWidth < 768;
   const shortletSteps = [
@@ -51,19 +64,21 @@ const Hero = () => {
       content: (
         <div className="relative">
           <label className="block text-sm font-medium text-neutral-600 mb-2">Where</label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
-            <Input
-              value={where}
-              onChange={e => setWhere(e.target.value)}
-              placeholder="Abuja, Lagos"
-              className="pl-10 h-12 border-neutral-300 focus:border-primary"
-              autoFocus
-            />
-          </div>
+          <Select value={where} onValueChange={setWhere}>
+            <SelectTrigger className="h-12 border-neutral-300 focus:border-primary">
+              <SelectValue placeholder="Select city" />
+            </SelectTrigger>
+            <SelectContent>
+              {cities.map((city) => (
+                <SelectItem key={city.value} value={city.value}>
+                  {city.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       ),
-      validate: () => where.trim() !== ""
+      validate: () => where !== ""
     },
     {
       label: "Check in",
@@ -128,18 +143,14 @@ const Hero = () => {
       content: (
         <div className="relative">
           <label className="block text-sm font-medium text-neutral-600 mb-2">Guests</label>
-          <div className="relative">
-            <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
-            <Input
-              value={guests}
-              onChange={e => setGuests(e.target.value)}
-              placeholder="Add guests"
-              className="pl-10 h-12 border-neutral-300 focus:border-primary"
-            />
-          </div>
+          <GuestPicker
+            guests={guests}
+            onGuestsChange={setGuests}
+            buttonClassName="w-full h-12 border-neutral-300"
+          />
         </div>
       ),
-      validate: () => guests.trim() !== ""
+      validate: () => totalGuests > 0
     }
   ];
   const rentalSteps = [
@@ -148,19 +159,21 @@ const Hero = () => {
       content: (
         <div className="relative">
           <label className="block text-sm font-medium text-neutral-600 mb-2">Where</label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
-            <Input
-              value={where}
-              onChange={e => setWhere(e.target.value)}
-              placeholder="Abuja, Lagos"
-              className="pl-10 h-12 border-neutral-300 focus:border-primary"
-              autoFocus
-            />
-          </div>
+          <Select value={where} onValueChange={setWhere}>
+            <SelectTrigger className="h-12 border-neutral-300 focus:border-primary">
+              <SelectValue placeholder="Select city" />
+            </SelectTrigger>
+            <SelectContent>
+              {cities.map((city) => (
+                <SelectItem key={city.value} value={city.value}>
+                  {city.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       ),
-      validate: () => where.trim() !== ""
+      validate: () => where !== ""
     },
     {
       label: "Move-in date",
@@ -321,13 +334,18 @@ const Hero = () => {
                   <label className="block text-sm font-medium text-neutral-600 mb-2">
                     Where
                   </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
-                    <Input
-                      placeholder="Abuja, Lagos"
-                      className="pl-10 h-12 border-neutral-300 focus:border-primary"
-                    />
-                  </div>
+                  <Select value={where} onValueChange={setWhere}>
+                    <SelectTrigger className="h-12 border-neutral-300 focus:border-primary">
+                      <SelectValue placeholder="Select city" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.map((city) => (
+                        <SelectItem key={city.value} value={city.value}>
+                          {city.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {propertyType === "shortlets" ? (
@@ -391,13 +409,11 @@ const Hero = () => {
                       <label className="block text-sm font-medium text-neutral-600 mb-2">
                         Guests
                       </label>
-                      <div className="relative">
-                        <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
-                        <Input
-                          placeholder="Add guests"
-                          className="pl-10 h-12 border-neutral-300 focus:border-primary"
-                        />
-                      </div>
+                      <GuestPicker
+                        guests={guests}
+                        onGuestsChange={setGuests}
+                        buttonClassName="w-full h-12 border-neutral-300"
+                      />
                     </div>
                   </>
                 ) : (
