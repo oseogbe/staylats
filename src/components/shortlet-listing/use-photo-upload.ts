@@ -122,9 +122,9 @@ export const usePhotoUpload = (
     setPhotos(newPhotos);
     setUploadedFiles(newFiles);
     
-    // Update form values
+    // Update form values and trigger validation
     const photoUrls = newPhotos.map(photo => photo.url);
-    setValue('photos', photoUrls);
+    setValue('photos', photoUrls, { shouldValidate: true });
     setValue('photoFiles', newFiles);
   };
 
