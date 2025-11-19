@@ -71,7 +71,7 @@ export default function CreateListingPrompt() {
             </Card>
           </div>
 
-          <div className="text-center pt-6 border-t">
+          {/* <div className="text-center pt-6 border-t">
             <p className="text-sm text-muted-foreground mb-4">
               Not ready to create a listing yet?
             </p>
@@ -79,7 +79,7 @@ export default function CreateListingPrompt() {
               Skip for now
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>

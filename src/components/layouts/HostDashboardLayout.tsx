@@ -35,8 +35,8 @@ const HostDashboardLayout = ({ children }: HostDashboardLayoutProps) => {
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-neutral-900">Host Dashboard</h1>
-              <p className="text-neutral-600 mt-1">Manage your properties and bookings</p>
+              <h1 className="text-xl sm:text-2xl font-semibold text-neutral-900">Host Dashboard</h1>
+              <p className="text-sm sm:text-base text-neutral-600 mt-1">Manage your properties and bookings</p>
             </div>
           </div>
         </div>
@@ -46,18 +46,21 @@ const HostDashboardLayout = ({ children }: HostDashboardLayoutProps) => {
       <div className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs value={currentTab} onValueChange={handleTabChange}>
-            <TabsList className="bg-transparent border-none h-auto p-0 space-x-8">
-              {mainTabs.map((tab) => (
-                <TabsTrigger 
-                  key={tab.value}
-                  value={tab.value}
-                  className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-4 px-0"
-                >
-                  <tab.icon className="w-4 h-4 mr-2" />
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="bg-transparent border-none h-auto p-0 inline-flex w-auto space-x-4 sm:space-x-6 lg:space-x-8">
+                {mainTabs.map((tab) => (
+                  <TabsTrigger 
+                    key={tab.value}
+                    value={tab.value}
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-4 px-0 whitespace-nowrap flex-shrink-0"
+                  >
+                    <tab.icon className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden text-xs">{tab.label.split(' ')[0]}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
           </Tabs>
         </div>
       </div>

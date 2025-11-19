@@ -412,6 +412,7 @@ const Hero = () => {
                       <GuestPicker
                         guests={guests}
                         onGuestsChange={setGuests}
+                        contentAlign="center"
                         buttonClassName="w-full h-12 border-neutral-300"
                       />
                     </div>
