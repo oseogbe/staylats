@@ -122,7 +122,7 @@ const PropertyListings = () => {
           `}>
             <Card className="flex-1 md:flex-none h-full md:h-auto rounded-none md:rounded-lg flex flex-col md:block overflow-hidden">
               {/* Header - Fixed at top on mobile */}
-              <div className="flex-shrink-0 p-6 pb-4 border-b md:border-b-0">
+              {/* <div className="flex-shrink-0 p-6 pb-4 border-b md:border-b-0">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg">Filters</h3>
                   <Button
@@ -134,7 +134,7 @@ const PropertyListings = () => {
                     <X className="h-5 w-5" />
                   </Button>
                 </div>
-              </div>
+              </div> */}
 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto md:overflow-visible p-6 pt-4 md:pt-0 pb-24 md:pb-0">
