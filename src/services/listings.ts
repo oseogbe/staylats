@@ -43,6 +43,8 @@ export default {
         formData: Record<string, any>
         images?: File[]
         tenancyAgreementFile?: File
+        proofOfVisitFile?: File
+        utilityBillFile?: File
     }) => {
         const formData = new FormData()
         
@@ -61,6 +63,12 @@ export default {
         }
         if (payload.tenancyAgreementFile) {
             formData.append('tenancyAgreement', payload.tenancyAgreementFile)
+        }
+        if (payload.proofOfVisitFile) {
+            formData.append('proofOfVisitFile', payload.proofOfVisitFile)
+        }
+        if (payload.utilityBillFile) {
+            formData.append('utilityBillFile', payload.utilityBillFile)
         }
         
         const res = await api.post('/listing/drafts', formData, {
@@ -94,6 +102,8 @@ export default {
         }>
         photoFiles?: File[]
         tenancyAgreementFile?: File
+        proofOfVisitFile?: File
+        utilityBillFile?: File
     }) => {
         const formData = new FormData()
         
@@ -117,6 +127,12 @@ export default {
         }
         if (payload.tenancyAgreementFile) {
             formData.append('tenancyAgreement', payload.tenancyAgreementFile)
+        }
+        if (payload.proofOfVisitFile) {
+            formData.append('proofOfVisitFile', payload.proofOfVisitFile)
+        }
+        if (payload.utilityBillFile) {
+            formData.append('utilityBillFile', payload.utilityBillFile)
         }
         
         const res = await api.patch(`/listing/drafts/${id}`, formData, {
@@ -142,6 +158,8 @@ export default {
         }>
         photoFiles?: File[]
         tenancyAgreementFile?: File
+        proofOfVisitFile?: File
+        utilityBillFile?: File
     }) => {
         const formData = new FormData()
         
@@ -164,6 +182,14 @@ export default {
         // Add tenancy agreement file (PDF)
         if (payload.tenancyAgreementFile) {
             formData.append('tenancyAgreement', payload.tenancyAgreementFile)
+        }
+        
+        // Add verification documents
+        if (payload.proofOfVisitFile) {
+            formData.append('proofOfVisitFile', payload.proofOfVisitFile)
+        }
+        if (payload.utilityBillFile) {
+            formData.append('utilityBillFile', payload.utilityBillFile)
         }
         
         const res = await api.post('/listing/publish', formData, {

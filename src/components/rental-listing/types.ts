@@ -71,7 +71,16 @@ export const rentalListingSchema = z.object({
   requiredDocuments: z.array(z.string().min(1, 'Document name required')).min(1, 'Add at least one required document').optional(),
   contractTerms: z.array(z.string()).min(1, 'Select at least one contract term'),
   securityDeposit: z.number().min(0, 'Security deposit must be positive'),
-  agentPercentage: z.number().min(0, 'Agent percentage must be positive')
+  agentPercentage: z.number().min(0, 'Agent percentage must be positive'),
+  // Verification documents
+  proofOfVisit: z.string().optional(),
+  proofOfVisitFile: z.instanceof(File)
+    .refine((file) => !file || file.type.startsWith('image/'), 'Only images are allowed')
+    .optional(),
+  utilityBill: z.string().optional(),
+  utilityBillFile: z.instanceof(File)
+    .refine((file) => !file || file.type === 'application/pdf' || file.type.startsWith('image/'), 'Only PDF or images are allowed')
+    .optional()
 });
 
 export type RentalListingFormData = z.infer<typeof rentalListingSchema>;

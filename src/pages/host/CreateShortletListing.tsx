@@ -30,6 +30,7 @@ import {
   Photos,
   Amenities,
   Pricing,
+  PropertyVerification,
   Review,
   shortletListingSchema,
   type ShortletListingFormData
@@ -47,7 +48,8 @@ const steps = [
   { id: 3, title: 'Photos & Description', description: 'Show off your space', Component: Photos },
   { id: 4, title: 'Amenities & Features', description: 'What makes it special?', Component: Amenities },
   { id: 5, title: 'Pricing & Availability', description: 'Set your rates and availability', Component: Pricing },
-  { id: 6, title: 'Review & Publish', description: 'Final review before going live', Component: Review }
+  { id: 6, title: 'Verification', description: 'Verify property authenticity', Component: PropertyVerification },
+  { id: 7, title: 'Review & Publish', description: 'Final review before going live', Component: Review }
 ];
 
 export default function CreateShortletListing() {
@@ -81,13 +83,17 @@ export default function CreateShortletListing() {
       photos: [],
       photoFiles: [],
       amenities: [],
-      pricePerNight: 15000,
-      cleaningFee: 5000,
-      securityDeposit: 20000,
+      pricePerNight: 30000,
+      cleaningFee: 0,
+      securityDeposit: 0,
       minimumStay: 1,
       maximumStay: 30,
       checkInTime: '15:00',
-      checkOutTime: '11:00'
+      checkOutTime: '11:00',
+      proofOfVisit: undefined,
+      proofOfVisitFile: undefined,
+      utilityBill: undefined,
+      utilityBillFile: undefined
     }
   });
 
@@ -178,7 +184,8 @@ export default function CreateShortletListing() {
       3: ['title', 'description', 'houseRules', 'photos'],
       4: ['amenities'],
       5: ['pricePerNight', 'cleaningFee', 'securityDeposit', 'minimumStay', 'maximumStay', 'checkInTime', 'checkOutTime'],
-      6: [] // Review step - no validation needed
+      6: ['proofOfVisitFile'], // Verification step
+      7: [] // Review step - no validation needed
     };
 
     const fieldsToCheck = stepFields[currentStep];
@@ -206,6 +213,8 @@ export default function CreateShortletListing() {
         case 5:
           return !watchedValues.pricePerNight || watchedValues.pricePerNight < 5000;
         case 6:
+          return !watchedValues.proofOfVisitFile; // Verification step - proof of visit is required
+        case 7:
           return false; // Review step - no validation needed
         default:
           return false;
@@ -228,7 +237,8 @@ export default function CreateShortletListing() {
         3: ['title', 'description', 'houseRules', 'photos'],
         4: ['amenities'],
         5: ['pricePerNight', 'cleaningFee', 'securityDeposit', 'minimumStay', 'maximumStay', 'checkInTime', 'checkOutTime'],
-        6: [] // Review step - no validation needed
+        6: ['proofOfVisitFile'], // Verification step
+        7: [] // Review step - no validation needed
       };
 
       const fieldsToValidate = stepFields[currentStep];
@@ -264,7 +274,7 @@ export default function CreateShortletListing() {
       setIsPublishing(true);
 
       // Remove photos and photoFiles from formData since they're handled separately
-      const { photos, photoFiles, ...cleanFormData } = data;
+      const { photos, photoFiles, proofOfVisitFile, utilityBillFile, ...cleanFormData } = data;
 
       await listingsService.publishListing({
         draftId: draftId, // Will be undefined for new listings
@@ -273,7 +283,9 @@ export default function CreateShortletListing() {
           type: 'shortlet'
         },
         photoItems: photoUploadHook.photos,
-        photoFiles: photoUploadHook.uploadedFiles
+        photoFiles: photoUploadHook.uploadedFiles,
+        proofOfVisitFile: data.proofOfVisitFile,
+        utilityBillFile: data.utilityBillFile
       });
 
       toast.success("Your shortlet listing has successfully submitted for review.");
@@ -367,7 +379,7 @@ export default function CreateShortletListing() {
                           const formData = form.getValues();
 
                           // Remove photos and photoFiles from formData since they're handled separately
-                          const { photos, photoFiles, ...cleanFormData } = formData;
+                          const { photos, photoFiles, proofOfVisitFile, utilityBillFile, ...cleanFormData } = formData;
 
                           if (draftId) {
                             // Update existing draft - send PhotoItems array and File objects
@@ -378,7 +390,9 @@ export default function CreateShortletListing() {
                               totalSteps: steps.length,
                               formData: cleanFormData,
                               photoItems: photoUploadHook.photos,
-                              photoFiles: photoUploadHook.uploadedFiles
+                              photoFiles: photoUploadHook.uploadedFiles,
+                              proofOfVisitFile,
+                              utilityBillFile
                             });
                           } else {
                             // Create new draft
@@ -388,7 +402,9 @@ export default function CreateShortletListing() {
                               step: currentStep,
                               totalSteps: steps.length,
                               formData: cleanFormData,
-                              images: formData.photoFiles || []
+                              images: formData.photoFiles || [],
+                              proofOfVisitFile,
+                              utilityBillFile
                             });
                             if (response?.data?.draftId) {
                               setDraftId(response.data.draftId);
@@ -422,20 +438,20 @@ export default function CreateShortletListing() {
 
         {/* Progress Steps */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-1 md:gap-2">
             {steps.map((step) => (
               <div key={step.id} className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= step.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-medium ${currentStep >= step.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   }`}>
                   {step.id}
                 </div>
-                <div className="text-xs text-center mt-2 max-w-20">
+                <div className="hidden md:block text-xs text-center mt-2 max-w-20">
                   <div className="font-medium">{step.title}</div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-4 bg-muted rounded-full h-2">
+          <div className="mt-2 md:mt-4 bg-muted rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${(currentStep / steps.length) * 100}%` }}

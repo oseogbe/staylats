@@ -53,7 +53,16 @@ export const shortletListingSchema = z.object({
   checkInTime: z.string().min(1, 'Check-in time is required'),
   checkOutTime: z.string().min(1, 'Check-out time is required'),
   availableFrom: z.date().optional(),
-  availableUntil: z.date().optional()
+  availableUntil: z.date().optional(),
+  // Verification documents
+  proofOfVisit: z.string().optional(),
+  proofOfVisitFile: z.instanceof(File)
+    .refine((file) => !file || file.type.startsWith('image/'), 'Only images are allowed')
+    .optional(),
+  utilityBill: z.string().optional(),
+  utilityBillFile: z.instanceof(File)
+    .refine((file) => !file || file.type === 'application/pdf' || file.type.startsWith('image/'), 'Only PDF or images are allowed')
+    .optional()
 });
 
 export type ShortletListingFormData = z.infer<typeof shortletListingSchema>;

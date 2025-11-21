@@ -4,5 +4,6 @@ export * from './Location';
 export * from './Photos';
 export * from './Amenities';
 export * from './Pricing';
+export * from './PropertyVerification';
 export * from './Review';
 export * from './use-photo-upload';
