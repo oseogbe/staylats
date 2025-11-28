@@ -65,7 +65,7 @@ export function Photos({ form, photoUploadHook }: StepProps) {
               <RichTextEditor
                 value={field.value || ''}
                 placeholder=""
-                maxLength={500}
+                maxLength={1000}
                 className="min-h-[120px]"
                 onChange={(value) => {
                   // Check if the value is just empty HTML tags
