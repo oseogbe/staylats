@@ -128,6 +128,37 @@ export const usePhotoUpload = (
     setValue('photoFiles', newFiles);
   };
 
+  const reorderPhotos = (activeIndex: number, overIndex: number) => {
+    if (activeIndex === overIndex) return;
+
+    const newPhotos = [...photos];
+    const newFiles: File[] = [];
+
+    // Reorder photos array
+    const [movedPhoto] = newPhotos.splice(activeIndex, 1);
+    newPhotos.splice(overIndex, 0, movedPhoto);
+
+    // Rebuild files array to match the new photo order
+    // Only include files for photos that are new
+    newPhotos.forEach((photo) => {
+      if (photo.isNew) {
+        // Find the corresponding file from the original uploadedFiles array
+        const originalPhotoIndex = photos.findIndex(p => p.url === photo.url);
+        if (originalPhotoIndex >= 0 && originalPhotoIndex < uploadedFiles.length) {
+          newFiles.push(uploadedFiles[originalPhotoIndex]);
+        }
+      }
+    });
+
+    setPhotos(newPhotos);
+    setUploadedFiles(newFiles);
+
+    // Update form values
+    const photoUrls = newPhotos.map(photo => photo.url);
+    setValue('photos', photoUrls, { shouldValidate: true });
+    setValue('photoFiles', newFiles);
+  };
+
   // Computed properties for backward compatibility
   const uploadedPhotos = photos.map(photo => photo.url);
   const existingPhotos = photos.filter(photo => !photo.isNew).map(photo => photo.url);
@@ -139,6 +170,7 @@ export const usePhotoUpload = (
     photos, // Return the PhotoItems array
     handlePhotoUpload,
     removePhoto,
+    reorderPhotos,
     fileInputRef,
     handleFileSelect,
     loadExistingPhotos
