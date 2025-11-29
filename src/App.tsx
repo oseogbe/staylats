@@ -39,7 +39,17 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes default
+      gcTime: 10 * 60 * 1000, // 10 minutes default (formerly cacheTime)
+      retry: 1,
+      refetchOnWindowFocus: false, // Don't refetch on window focus to reduce unnecessary calls
+      refetchOnMount: true, // Refetch on mount if data is stale
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

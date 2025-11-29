@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,54 +8,54 @@ import PasswordForm from '@/components/myaccount/account/PasswordForm';
 
 import profileAPI from '@/services/profile';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { UserData, PersonalInfoFormData } from '@/types/account';
 
 const ProfilePage = () => {
   const [activeSubTab, setActiveSubTab] = useState("personal-info");
-  const [isLoading, setIsLoading] = useState(true);
   const { user, setUser } = useAuth();
+  const queryClient = useQueryClient();
   
-  const [userData, setUserData] = useState<UserData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    dateOfBirth: new Date(),
-    gender: '',
-    image: '',
-    role: '',
-    emailVerified: null,
-    kycVerified: false
-  });
+  // Fetch user profile with React Query (cached automatically)
+  const { data: profileUser, isLoading, error } = useUserProfile();
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await profileAPI.getCurrentUser();
-        const { user } = response.data;
-        
-        setUserData({
-          firstName: user.firstName || '',
-          lastName: user.lastName || '',
-          email: user.email || '',
-          phoneNumber: user.phoneNumber || '',
-          dateOfBirth: new Date(user.dateOfBirth),
-          gender: user.gender || '',
-          image: user.image || '',
-          role: user.role || '',
-          emailVerified: user.emailVerified || null,
-          kycVerified: user.kycVerified || false
-        });
-      } catch (error) {
-        toast.error('Failed to load user data');
-        console.error('Error fetching user data:', error);
-      } finally {
-        setIsLoading(false);
-      }
+  // Transform profile data to UserData format using useMemo
+  const userData = useMemo<UserData>(() => {
+    if (!profileUser) {
+      return {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+        dateOfBirth: new Date(),
+        gender: '',
+        image: '',
+        role: '',
+        emailVerified: null,
+        kycVerified: false
+      };
+    }
+
+    return {
+      firstName: profileUser.firstName || '',
+      lastName: profileUser.lastName || '',
+      email: profileUser.email || '',
+      phoneNumber: profileUser.phoneNumber || '',
+      dateOfBirth: profileUser.dateOfBirth ? new Date(profileUser.dateOfBirth) : new Date(),
+      gender: profileUser.gender || '',
+      image: profileUser.image || '',
+      role: profileUser.role || '',
+      emailVerified: profileUser.emailVerified || null,
+      kycVerified: profileUser.kycVerified || false
     };
+  }, [profileUser]);
 
-    fetchUserData();
-  }, []);
+  // Show error toast if fetch fails
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load user data');
+    }
+  }, [error]);
 
   const handleUpdateUserData = async (data: PersonalInfoFormData) => {
     try {
@@ -65,10 +66,10 @@ const ProfilePage = () => {
         gender: data.gender,
       });
 
-      // Update local state
-      setUserData(prev => ({ ...prev, ...data }));
+      // Invalidate user profile cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
       
-      // Update auth context if needed
+      // Update auth context immediately for better UX
       if (user) {
         setUser({ ...user, firstName: data.firstName, lastName: data.lastName });
       }
@@ -82,10 +83,10 @@ const ProfilePage = () => {
   };
 
   const handleImageUpdate = (imageUrl: string) => {
-    // Update local state
-    setUserData(prev => ({ ...prev, image: imageUrl }));
+    // Invalidate user profile cache to refresh data
+    queryClient.invalidateQueries({ queryKey: ['userProfile'] });
     
-    // Update auth context if needed
+    // Update auth context immediately for better UX
     if (user) {
       setUser({ ...user, image: imageUrl });
     }

@@ -1,16 +1,58 @@
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, FileText, DollarSign, Users } from "lucide-react";
+import { Home, FileText, DollarSign, Users, Info } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/host/dashboard/MetricCard";
 import { QuickAction } from "@/components/host/dashboard/QuickAction";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserListings, useUserDrafts } from "@/hooks/use-listings";
+import { useHostVerification } from "@/hooks/use-host-verification";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Get user from context (already cached)
+  const [showVerificationAlert, setShowVerificationAlert] = useState(false);
+  const { needsVerification, isLoading: verificationLoading } = useHostVerification();
+  
+  // Fetch listings with React Query (cached automatically)
+  const { data: publishedListings = [], isLoading: listingsLoading } = useUserListings();
+  const { data: drafts = [], isLoading: draftsLoading } = useUserDrafts();
   
   const currentTime = new Date();
   const greeting = currentTime.getHours() < 12 ? 'morning' : currentTime.getHours() < 18 ? 'afternoon' : 'evening';
+  const userName = user?.firstName || 'Host';
+
+  // Calculate property statistics using useMemo for performance
+  const propertyStats = useMemo(() => {
+    const total = publishedListings.length + drafts.length;
+    const rentals = publishedListings.filter((l: any) => l.type === 'rental').length + 
+                    drafts.filter((d: any) => d.type === 'rental').length;
+    const shortlets = publishedListings.filter((l: any) => l.type === 'shortlet').length + 
+                      drafts.filter((d: any) => d.type === 'shortlet').length;
+    
+    return {
+      total,
+      rentals,
+      shortlets,
+      subtitle: total === 0 
+        ? 'No properties yet' 
+        : `${rentals} ${rentals === 1 ? 'rental' : 'rentals'}, ${shortlets} ${shortlets === 1 ? 'shortlet' : 'shortlets'}`
+    };
+  }, [publishedListings, drafts]);
+
+  // Show alert when data is loaded and user needs verification
+  useEffect(() => {
+    if (!listingsLoading && !draftsLoading && !verificationLoading) {
+      const hasListings = publishedListings.length > 0 || drafts.length > 0;
+      if (hasListings && needsVerification) {
+        setShowVerificationAlert(true);
+      }
+    }
+  }, [publishedListings.length, drafts.length, needsVerification, listingsLoading, draftsLoading, verificationLoading]);
 
   const handleCreateListing = () => {
     navigate("/host/create-listing");
@@ -18,6 +60,11 @@ const DashboardPage = () => {
 
   const handleTabChange = (tab: string) => {
     navigate(`/host/${tab}`);
+  };
+
+  const handleVerifyHost = () => {
+    // TODO: Replace with actual host verification route when provided
+    navigate("/host/verification");
   };
 
   return (
@@ -30,17 +77,47 @@ const DashboardPage = () => {
           <span>{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
         </div>
         <h2 className="text-2xl font-semibold text-neutral-900">
-          Good {greeting}, Host
+          Good {greeting}, {userName}
         </h2>
       </div>
+
+      {/* Host Verification Alert */}
+      {showVerificationAlert && (
+        <Alert className="bg-primary/10 border-primary/20 dark:bg-primary/5 dark:border-primary/30">
+          <div className="flex items-start gap-3">
+            <div className="h-8 w-8 rounded-full bg-primary/20 dark:bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Info className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <AlertDescription className="text-foreground">
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-base mb-1 text-foreground">Ready for Host Verification</h3>
+                    <p className="text-sm text-muted-foreground">
+                      You have listed properties! Complete your host verification to unlock all features and ensure your listings can go live.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleVerifyHost}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    size="sm"
+                  >
+                    Verify Host Profile
+                  </Button>
+                </div>
+              </AlertDescription>
+            </div>
+          </div>
+        </Alert>
+      )}
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           icon={<Home />}
           title="Total Properties"
-          value="3"
-          subtitle="2 rentals, 1 shortlet"
+          value={propertyStats.total.toString()}
+          subtitle={propertyStats.subtitle}
           bgColor="bg-blue-100"
           iconColor="text-blue-600"
         />
