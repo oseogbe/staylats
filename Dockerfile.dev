@@ -1,0 +1,19 @@
+# Development Dockerfile for Client with hot-reload
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code (will be mounted as volume in docker-compose)
+COPY . .
+
+EXPOSE 8080
+
+# Use Vite dev server with host binding for hot-reload
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
