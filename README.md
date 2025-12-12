@@ -1,73 +1,67 @@
-# Welcome to your Lovable project
+# StayLats Client
 
-## Project info
+## Description
 
-**URL**: https://lovable.dev/projects/1e6a008d-3ce7-4615-a59b-9bcc4f2a7b62
+The StayLats Client is a modern, responsive web application built with React that serves as the primary user-facing interface for the StayLats platform. It provides an intuitive experience for users to interact with the platform's services, featuring real-time updates, dynamic routing, and a component-based architecture.
 
-## How can I edit this code?
+## Technical Architecture
 
-There are several ways of editing your application.
+### Frontend Stack
 
-**Use Lovable**
+- **React 18** - Modern UI library with hooks and concurrent features
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool and development server
+- **React Router DOM** - Client-side routing
+- **TanStack Query (React Query)** - Server state management and data fetching
+- **Socket.io Client** - Real-time bidirectional communication
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn-ui** - Accessible component library built on Radix UI
+- **React Hook Form** - Form state management with validation
+- **Zod** - Schema validation
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1e6a008d-3ce7-4615-a59b-9bcc4f2a7b62) and start prompting.
+### Infrastructure
 
-Changes made via Lovable will be committed automatically to this repo.
+#### Development Environment
 
-**Use your preferred IDE**
+- **Container**: Node.js 20 Alpine-based Docker container
+- **Dev Server**: Vite development server running on port 8080
+- **Hot Module Replacement**: Enabled for instant development feedback
+- **Network**: Connected to `staylats-network` Docker network
+- **Volume Mounting**: Source code mounted for live reloading
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+#### Production Environment
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Multi-Stage Docker Build**:
+  1. **Dependencies Stage**: Installs npm packages
+  2. **Builder Stage**: Compiles TypeScript and builds static assets
+  3. **Runner Stage**: Nginx Alpine container serving static files
 
-Follow these steps:
+- **Web Server**: Nginx serving pre-built static assets
+- **Port**: 80 (internal container port)
+- **Health Checks**: Configured with wget-based health endpoint
+- **Scaling**: Supports horizontal scaling with multiple replicas (load balancing via Nginx upstream)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+#### Reverse Proxy Configuration
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- **Nginx Reverse Proxy**: Routes traffic to client service
+- **Development**: Proxies to Vite dev server on port 8080
+- **Production**: Proxies to Nginx container on port 80
+- **Load Balancing**: Least-connection algorithm for multiple instances
+- **WebSocket Support**: Configured for Socket.io real-time connections
+- **Gzip Compression**: Enabled for optimized asset delivery
+- **Static Asset Caching**: Long-term caching for immutable assets (1 year)
+- **Security Headers**: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection
 
-# Step 3: Install the necessary dependencies.
-npm i
+#### Network Architecture
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+- **Service Discovery**: Docker Compose service networking
+- **API Communication**: RESTful API calls to `/api` endpoint
+- **Real-time Communication**: WebSocket connections via `/socket.io` endpoint
+- **Service Dependencies**: Depends on API service for backend functionality
 
-**Edit a file directly in GitHub**
+#### Build & Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1e6a008d-3ce7-4615-a59b-9bcc4f2a7b62) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- **Build Process**: Production builds generate optimized static assets in `/dist`
+- **Asset Optimization**: Vite handles code splitting, tree shaking, and minification
+- **Container Registry**: Ready for deployment to container orchestration platforms
+- **Resource Limits**: Configured CPU and memory limits for production containers
