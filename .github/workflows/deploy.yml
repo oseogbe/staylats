@@ -24,15 +24,24 @@ jobs:
           overwrite: true
           rm: true
 
-      - name: Build and reload on VPS
+      - name: Rebuild and restart Client container
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/staylats/client
-            cp .env.production .env
-            npm ci
-            npm run build
-            sudo systemctl reload nginx
+            cd /var/www/staylats
+            # Ensure docker-compose files exist
+            if [ ! -f "docker-compose.prod.yml" ]; then
+              echo "Error: docker-compose.prod.yml not found at /var/www/staylats/"
+              echo "Please ensure docker-compose.yml and docker-compose.prod.yml are present"
+              exit 1
+            fi
+            # Rebuild and restart only the Client service
+            docker compose -f docker-compose.prod.yml build client
+            docker compose -f docker-compose.prod.yml up -d client
+            # Restart nginx to pick up changes
+            docker compose -f docker-compose.prod.yml restart nginx
+            # Prune old images to save space
+            docker image prune -f
