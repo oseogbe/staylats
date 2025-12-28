@@ -22,7 +22,7 @@ jobs:
           source: ./*
           target: /var/www/staylats/client
           overwrite: true
-          rm: true
+          # rm: true
 
       - name: Rebuild and restart Client container
         uses: appleboy/ssh-action@v1.1.0
