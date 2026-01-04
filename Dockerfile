@@ -19,12 +19,15 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Pass environment variables explicitly during build
+# Declare build args
 ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_GOOGLE_MAPS_API_KEY
 
-# Build the application
+# Export them so Vite can read them
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
 ENV NODE_ENV=production
+
 RUN npm run build
 
 # Production stage with nginx
