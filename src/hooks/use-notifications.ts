@@ -18,12 +18,14 @@ interface UseNotificationsOptions {
 }
 
 let socket: Socket | null = null;
+let sharedNotifications: Notification[] = [];
+let notificationListeners: Set<(notifications: Notification[]) => void> = new Set();
 let notificationCallbacks: Set<(notification: Notification) => void> = new Set();
 let connectionStateCallbacks: Set<(connected: boolean) => void> = new Set();
 let errorStateCallbacks: Set<(error: string | null) => void> = new Set();
 
 export function useNotifications(userId: string, options?: UseNotificationsOptions) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>(sharedNotifications);
   const [isConnected, setIsConnected] = useState(socket?.connected || false);
   const [error, setError] = useState<string | null>(null);
   const { getAccessToken, refreshAccessToken } = useAuth();
@@ -97,12 +99,13 @@ export function useNotifications(userId: string, options?: UseNotificationsOptio
       });
 
       socket.on('new_notification', (notification: Notification) => {
-        setNotifications((prev) => {
-          // Prevent duplicate notifications
-          const exists = prev.some(n => n.id === notification.id);
-          if (exists) return prev;
-          return [notification, ...prev];
-        });
+        // Prevent duplicate notifications
+        const exists = sharedNotifications.some(n => n.id === notification.id);
+        if (!exists) {
+          sharedNotifications = [notification, ...sharedNotifications];
+          // Notify all hook instances
+          notificationListeners.forEach(listener => listener(sharedNotifications));
+        }
         
         // Call all registered callbacks
         notificationCallbacks.forEach(callback => callback(notification));
@@ -111,9 +114,9 @@ export function useNotifications(userId: string, options?: UseNotificationsOptio
       // Handle read status updates
       socket.on('notification_read', ({ userId: readUserId }) => {
         if (readUserId === userId) {
-          setNotifications(prev => 
-            prev.map(n => ({ ...n, read: true }))
-          );
+          sharedNotifications = sharedNotifications.map(n => ({ ...n, read: true }));
+          // Notify all hook instances
+          notificationListeners.forEach(listener => listener(sharedNotifications));
         }
       });
 
@@ -121,6 +124,18 @@ export function useNotifications(userId: string, options?: UseNotificationsOptio
       setError(err instanceof Error ? err.message : 'Failed to initialize socket connection');
     }
   }, [userId, getAccessToken, refreshAccessToken]);
+
+  useEffect(() => {
+    // Register listener for shared notification updates
+    const listener = (newNotifications: Notification[]) => {
+      setNotifications(newNotifications);
+    };
+    notificationListeners.add(listener);
+    
+    return () => {
+      notificationListeners.delete(listener);
+    };
+  }, []);
 
   useEffect(() => {
     // Register state update callbacks
@@ -162,9 +177,14 @@ export function useNotifications(userId: string, options?: UseNotificationsOptio
 
   const clearError = useCallback(() => setError(null), []);
 
+  const updateSharedNotifications = useCallback((newNotifications: Notification[]) => {
+    sharedNotifications = newNotifications;
+    notificationListeners.forEach(listener => listener(sharedNotifications));
+  }, []);
+
   return { 
     notifications, 
-    setNotifications, 
+    setNotifications: updateSharedNotifications, 
     isConnected, 
     error,
     clearError

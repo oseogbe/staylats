@@ -224,7 +224,7 @@ const CommunicationsPage = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <Badge variant="outline" className="text-xs">
-                          {notification.type}
+                          {notification.title}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {formatDate(notification.createdAt)}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Bell, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { Bell, AlertCircle, Wifi, WifiOff, ArrowRight } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ export interface Notification {
 const NotificationBell = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { 
     notifications: realtimeNotifications, 
     isConnected,
@@ -183,6 +185,25 @@ const NotificationBell = () => {
               </div>
             </DropdownMenuItem>
           ))
+        )}
+        
+        {allNotifications?.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="p-2">
+              <Button
+                variant="ghost"
+                className="w-full justify-between text-sm hover:bg-neutral-50"
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/my-account/communications');
+                }}
+              >
+                View all notifications
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
