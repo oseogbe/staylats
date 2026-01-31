@@ -32,6 +32,7 @@ const NotificationBell = () => {
   const navigate = useNavigate();
   const { 
     notifications: realtimeNotifications, 
+    setNotifications: setRealtimeNotifications,
     isConnected,
     error: socketError,
   } = useNotifications(user?.id);
@@ -67,17 +68,24 @@ const NotificationBell = () => {
     else setError(null);
   }, [socketError, queryError]);
 
-  const handleOpenChange = async () => {
+  const handleOpenChange = async (open: boolean) => {
     try {
-      setIsOpen(!isOpen);
-      if (!isOpen && unreadCount > 0) {
+      setIsOpen(open);
+      
+      // Only mark as read when opening (not when closing)
+      if (open && unreadCount > 0) {
         await notificationsAPI.markNotificationAsRead();
-        // Optimistically update UI
+        
+        // Update both persisted and realtime notifications
         queryClient.setQueryData(
           ["persistedNotification", user?.id],
           (old: Notification[] | undefined) => 
             old?.map(n => ({ ...n, read: true })) || []
         );
+        
+        // Also update realtime notifications
+        const updatedRealtime = realtimeNotifications.map(n => ({ ...n, read: true }));
+        setRealtimeNotifications(updatedRealtime);
       }
     } catch (err) {
       setError('Failed to mark notifications as read');
@@ -85,7 +93,15 @@ const NotificationBell = () => {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Unknown date';
+    
     const date = new Date(dateString);
+    
+    // Check if date is invalid
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
     const now = new Date();
     const diffInHours = Math.abs(now.getTime() - date.getTime()) / 36e5;
 
