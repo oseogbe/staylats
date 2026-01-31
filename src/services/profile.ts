@@ -23,5 +23,14 @@ export default {
             },
         });
         return response.data;
+    },
+
+    submitHostVerification: async (formData: FormData) => {
+        const response = await api.post('/profile/host-verification', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
     }
 };

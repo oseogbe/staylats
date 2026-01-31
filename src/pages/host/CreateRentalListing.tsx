@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, CheckCircle, Home } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -34,6 +35,8 @@ import {
 } from '@/components/rental-listing';
 import { usePhotoUpload } from '@/components/rental-listing/use-photo-upload';
 import listingsService from '@/services/listings';
+import { useHostVerification } from '@/hooks/use-host-verification';
+import { HostVerificationModal } from '@/components/host/HostVerificationModal';
 
 const steps = [
   { id: 1, title: 'Property Basics', description: 'Tell us about your property', Component: PropertyBasics },
@@ -49,6 +52,7 @@ export default function CreateRentalListing() {
   const [currentStep, setCurrentStep] = useState(1);
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [draftId, setDraftId] = useState<string | undefined>(undefined);
   const [confirmBackOpen, setConfirmBackOpen] = useState(false);
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
@@ -267,6 +271,8 @@ export default function CreateRentalListing() {
   };
 
   const [isPublishing, setIsPublishing] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const { needsVerification } = useHostVerification();
 
   const onSubmit = async (data: RentalListingFormData) => {
     try {
@@ -289,13 +295,28 @@ export default function CreateRentalListing() {
       });
 
       toast.success("Your rental listing has successfully submitted for review.");
+      
+      // Invalidate listings cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ['userListings'] });
+      queryClient.invalidateQueries({ queryKey: ['userDrafts'] });
+      
       navigate('/host/property-management');
+
+      // Check if host verification is needed and show modal
+      if (needsVerification) {
+        setShowVerificationModal(true);
+      }
     } catch (error) {
       console.error('Failed to publish listing:', error);
       toast.error('Failed to publish listing. Please try again.');
     } finally {
       setIsPublishing(false);
     }
+  };
+
+  const handleVerificationModalClose = () => {
+    setShowVerificationModal(false);
+    navigate('/host/property-management');
   };
 
   const CurrentStepComponent = steps[currentStep - 1].Component;
@@ -414,6 +435,10 @@ export default function CreateRentalListing() {
                           }
                           toast.success('Draft saved');
                           setConfirmBackOpen(false);
+                          
+                          // Invalidate listings draft cache to refresh data
+                          queryClient.invalidateQueries({ queryKey: ['userDrafts'] });
+
                           navigate('/host/property-management');
                         } catch (error) {
                           toast.error('Failed to save draft');
@@ -524,6 +549,12 @@ export default function CreateRentalListing() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Host Verification Modal */}
+      <HostVerificationModal 
+        open={showVerificationModal} 
+        onOpenChange={handleVerificationModalClose}
+      />
     </div>
   );
 }

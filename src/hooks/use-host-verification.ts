@@ -4,6 +4,8 @@ interface HostVerificationStatus {
   needsVerification: boolean;
   hasHostProfile: boolean;
   isVerified: boolean;
+  isRejected: boolean;
+  rejectionReason: string | null;
   isLoading: boolean;
 }
 
@@ -14,15 +16,20 @@ interface HostVerificationStatus {
  */
 export const useHostVerification = (): HostVerificationStatus => {
   const { data: user, isLoading } = useUserProfile();
-
+        
   const hasHostProfile = !!user?.hostProfile;
-  const isVerified = user?.hostProfile?.verified === true;
-  const needsVerification = !hasHostProfile || !isVerified;
-
+  const hostProfile = user?.hostProfile;
+  const isVerified = hostProfile?.status === 'approved' || hostProfile?.verified === true;
+  const isRejected = hostProfile?.status === 'rejected';
+  const rejectionReason = hostProfile?.rejectionReason || null;
+  const needsVerification = !hasHostProfile || (!isVerified && !isRejected);
+        
   return {
     needsVerification,
     hasHostProfile,
     isVerified,
+    isRejected,
+    rejectionReason,
     isLoading
   };
 };
