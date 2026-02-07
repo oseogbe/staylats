@@ -30,6 +30,7 @@ import DashboardPage from "@/pages/host/DashboardPage";
 import PropertyManagementPage from "@/pages/host/PropertyManagementPage";
 import FinancesPage from "@/pages/host/FinancesPage";
 import TenantManagementPage from "@/pages/host/TenantManagementPage";
+import BookingsPage from "@/pages/host/BookingsPage";
 import RentalApplicationsPage from "@/pages/host/RentalApplicationsPage";
 
 import Navbar from "@/components/Navbar";
@@ -192,6 +193,16 @@ const App = () => (
                 <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
                   <HostDashboardLayout>
                     <PropertyManagementPage />
+                  </HostDashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/host/bookings"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <HostDashboardLayout>
+                    <BookingsPage />
                   </HostDashboardLayout>
                 </ProtectedRoute>
               }
