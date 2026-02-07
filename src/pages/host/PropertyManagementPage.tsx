@@ -39,17 +39,17 @@ const PropertyManagementPage = () => {
   // Transform published listings data
   const publishedListings = useMemo<PropertyListing[]>(() => {
     return rawPublishedListings.map(listing => ({
-      id: listing.id,
-      title: listing.title,
-      type: listing.type,
-      status: listing.status,
-      description: listing.description,
-      address: listing.address,
-      propertyType: listing.propertyType,
-      images: listing.images,
-      amenities: listing.amenities,
-      lastUpdated: new Date(listing.updatedAt).toLocaleString()
-    }));
+          id: listing.id,
+          title: listing.title,
+          type: listing.type,
+          status: listing.status,
+          description: listing.description,
+          address: listing.address,
+          propertyType: listing.propertyType,
+          images: listing.images,
+          amenities: listing.amenities,
+          lastUpdated: new Date(listing.updatedAt).toLocaleString()
+        }));
   }, [rawPublishedListings]);
 
   // Transform drafts data
