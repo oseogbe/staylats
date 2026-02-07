@@ -10,9 +10,12 @@ import { Button } from "@/components/ui/button";
 interface PropertyCardProps {
   property: {
     id: string;
+    slug: string;
     title: string;
     location: string;
     price: number;
+    /** Custom label like "/ year". Falls back to "/ night" or "/ month" based on type. */
+    priceLabel?: string;
     rating: number;
     reviews: number;
     image: string;
@@ -29,7 +32,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
   return (
     <Card 
       className="group overflow-hidden border-0 shadow transition-all duration-300 cursor-pointer"
-      onClick={() => { navigate(`/property/${property.id}`); }}
+      onClick={() => { navigate(`/property/${property.slug}`); }}
     >
       {/* Image */}
       <div className="relative overflow-hidden">
@@ -100,7 +103,11 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
               ₦{property.price.toLocaleString()}
             </span>
             <span className="text-sm text-neutral-500 ml-1">
-              {property.type === "shortlet" ? "/ night" : "/ month"}
+              {property.priceLabel
+                ? property.priceLabel
+                : property.type === "shortlet"
+                  ? "/ night"
+                  : "/ month"}
             </span>
           </div>
         </div>

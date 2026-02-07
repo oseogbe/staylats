@@ -1,19 +1,33 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Hero from "@/components/Hero";
-import PropertyCard from "@/components/PropertyCard";
+import FeaturedProperties from "@/components/FeaturedProperties";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 import { MapPin, Shield, Users, CheckCircle, BedDouble, House } from "lucide-react";
 
-import { mockProperties } from "@/data/mockData";
+import { useActiveListings } from "@/hooks/use-listings";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { data: activeListings = [] } = useActiveListings(6);
 
-  const featuredProperties = mockProperties.slice(0, 3);
+  const lagosCount = useMemo(
+    () => activeListings.filter((l) => l.state?.toLowerCase().includes("lagos")).length,
+    [activeListings]
+  );
+  const abujaCount = useMemo(
+    () =>
+      activeListings.filter(
+        (l) =>
+          l.state?.toLowerCase().includes("abuja") ||
+          l.state?.toLowerCase().includes("fct")
+      ).length,
+    [activeListings]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,33 +96,7 @@ const Index = () => {
       </section>
 
       {/* Featured Properties */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-start md:items-center justify-between md:mb-12">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
-                Featured Properties
-              </h2>
-              <p className="text-xl text-neutral-600 hidden md:block">
-                Hand-picked properties with excellent reviews and great amenities
-              </p>
-            </div>
-            <Link to="/properties">
-              <Button variant="outline">View All Properties</Button>
-            </Link>
-          </div>
-
-          <p className="text-xl text-neutral-600 md:hidden mb-12">
-            Hand-picked properties with excellent reviews and great amenities
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <FeaturedProperties />
 
       {/* Cities Section */}
       <section className="py-16 bg-neutral-50">
@@ -136,7 +124,7 @@ const Index = () => {
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-neutral-500">
-                    {mockProperties.filter(p => p.location.includes('Lagos')).length} properties
+                    {lagosCount} {lagosCount === 1 ? "property" : "properties"}
                   </span>
                   <Button variant="outline" size="sm" onClick={() => {
                     navigate("/properties?city=lagos");
@@ -159,7 +147,7 @@ const Index = () => {
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-neutral-500">
-                    {mockProperties.filter(p => p.location.includes('Abuja')).length} properties
+                    {abujaCount} {abujaCount === 1 ? "property" : "properties"}
                   </span>
                     <Button variant="outline" size="sm" onClick={() => {
                       navigate("/properties?city=abuja");

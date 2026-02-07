@@ -28,7 +28,38 @@ export interface UserListing {
     updatedAt: string
 }
 
+export interface ActiveListing {
+    id: string
+    slug: string
+    type: DraftType
+    title: string
+    description: string
+    address: string
+    city: string
+    state: string
+    propertyType: string
+    images: string[]
+    amenities: string[]
+    bedrooms: number
+    bathrooms: number
+    maxOccupants: { adults: number; kids: number; infants: number; pets: boolean }
+    shortletInfo?: { pricePerNight: number; cleaningFee?: number; securityDeposit?: number } | null
+    rentalInfo?: { pricing: Record<string, number>; inspectionFee?: number; serviceCharge?: number; securityDeposit?: number } | null
+    createdAt: string
+}
+
 export default {
+    /**
+     * Public endpoint — fetches active listings (no auth needed).
+     */
+    getActiveListings: async (limit?: number, type?: DraftType): Promise<{ listings: ActiveListing[] }> => {
+        const params: Record<string, string> = {}
+        if (limit) params.limit = limit.toString()
+        if (type) params.type = type
+        const res = await api.get('/listing/active', { params })
+        return res.data.data
+    },
+
     getUserListings: async (): Promise<{ listings: UserListing[] }> => {
         const res = await api.get('/listing/published')
         return res.data.data

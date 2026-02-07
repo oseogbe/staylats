@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import listingsService from "@/services/listings";
+import type { DraftType } from "@/services/listings";
 
 /**
  * Hook to fetch user's published listings with React Query caching
@@ -29,6 +30,21 @@ export const useUserDrafts = () => {
     gcTime: 10 * 60 * 1000, // 10 minutes - cache persists for 10 min
     retry: 1,
     select: (data) => data.drafts || [], // Transform to return just the array
+  });
+};
+
+/**
+ * Hook to fetch publicly available active listings.
+ * No auth required — suitable for homepage, search pages, etc.
+ */
+export const useActiveListings = (limit?: number, type?: DraftType) => {
+  return useQuery({
+    queryKey: ['activeListings', limit, type],
+    queryFn: () => listingsService.getActiveListings(limit, type),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    select: (data) => data.listings || [],
   });
 };
 
