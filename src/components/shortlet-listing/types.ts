@@ -11,12 +11,12 @@ export const states = [
 ] as const;
 
 export const amenitiesList = [
-  'WiFi', 'Air Conditioning', 'Water Heater', 'Kitchen', 'Washing Machine', 'TV', 'Parking Area',
-  'Swimming Pool', 'Hot Tub', 'Gym', 'Security', 'CCTV', 'Smart Home', 'Generator', 'Garden',
+  'WiFi', 'Air Conditioning', 'Water Heater', 'Kitchen', 'Washing Machine', 'TV', 'Dishwasher', 'Parking Area',
+  'Swimming Pool', 'Hot Tub', 'Gym', 'Security', 'CCTV', 'Smart Home', 'Elevator', 'Generator', 'Garden',
   'Balcony', 'Terrace', 'Beach Access', 'City View', 'Mountain View', 'Serene Environment',
   'Fireplace', 'BBQ Area', 'Game Room', 'Bluetooth Speakers', 'PS5', 'Pool Table', 'Netflix', 
   'Self Check-in', 'Concierge', 'Self Check-out', 'Free Breakfast', '24/7 Electricity', 'Cleaning Service', 
-  'Laundry Service', 'Housekeeping', 'BQ', 'Pet Friendly', 'Smoking Allowed', 'Accessible Road'
+  'Laundry Service', 'Housekeeping', 'Pet Friendly', 'Smoking Allowed', 'Accessible Road'
 ] as const;
 
 export const timeOptions = [
