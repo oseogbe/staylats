@@ -1,148 +1,203 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, FileText, DollarSign, Users, Info, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Home,
+  FileText,
+  DollarSign,
+  Users,
+  Info,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  CalendarDays,
+  Trophy,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MetricCard } from "@/components/host/dashboard/MetricCard";
 import { QuickAction } from "@/components/host/dashboard/QuickAction";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { HostVerificationFormModal } from "@/components/host/HostVerificationFormModal";
+import { OverviewSection } from "@/components/host/dashboard/OverviewSection";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserListings, useUserDrafts } from "@/hooks/use-listings";
+import { useOverviewListings, type DashboardPeriod } from "@/hooks/use-overview-listings";
 import { useHostVerification } from "@/hooks/use-host-verification";
 import { useNotifications } from "@/hooks/use-notifications";
 
+const PERIOD_OPTIONS: { value: DashboardPeriod; label: string }[] = [
+  { value: "all-time", label: "All Time" },
+  { value: "yearly", label: "This Year" },
+  { value: "monthly", label: "This Month" },
+  { value: "daily", label: "Today" },
+];
+
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get user from context (already cached)
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
-  const { needsVerification, hasHostProfile, isVerified, isRejected, rejectionReason, isLoading: verificationLoading } = useHostVerification();
-  
-  // Fetch listings with React Query (cached automatically)
-  const { data: publishedListings = [], isLoading: listingsLoading } = useUserListings();
-  const { data: drafts = [], isLoading: draftsLoading } = useUserDrafts();
-  
+  const [period, setPeriod] = useState<DashboardPeriod>("all-time");
+
+  const {
+    needsVerification,
+    hasHostProfile,
+    isVerified,
+    isRejected,
+    rejectionReason,
+    isLoading: verificationLoading,
+  } = useHostVerification();
+
+  // Single hook provides everything the dashboard needs
+  const { items, totals, isLoading, isError } = useOverviewListings(period, 5);
+
   const currentTime = new Date();
-  const greeting = currentTime.getHours() < 12 ? 'morning' : currentTime.getHours() < 18 ? 'afternoon' : 'evening';
-  const userName = user?.firstName || 'Host';
+  const greeting =
+    currentTime.getHours() < 12
+      ? "morning"
+      : currentTime.getHours() < 18
+        ? "afternoon"
+        : "evening";
+  const userName = user?.firstName || "Host";
+
+  // Property stats subtitle
+  const propertySubtitle = useMemo(() => {
+    if (totals.totalProperties === 0) return "No properties yet";
+    return `${totals.rentals} ${totals.rentals === 1 ? "rental" : "rentals"}, ${totals.shortlets} ${totals.shortlets === 1 ? "shortlet" : "shortlets"}`;
+  }, [totals]);
 
   // Handle real-time notification updates for host verification
-  const handleNotification = useCallback((notification: any) => {
-    if (notification.type === 'host_verification_approved') {
-      queryClient.setQueryData(['userProfile'], (oldData: any) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          hostProfile: {
-            ...oldData.hostProfile,
-            verified: true,
-            status: 'approved'
-          }
-        };
-      });
-      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-    } else if (notification.type === 'host_verification_rejected') {
-      // Host profile status is already set to 'rejected' by backend
-      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-    }
-  }, [queryClient]);
+  const handleNotification = useCallback(
+    (notification: any) => {
+      if (notification.type === "host_verification_approved") {
+        queryClient.setQueryData(["userProfile"], (oldData: any) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            hostProfile: {
+              ...oldData.hostProfile,
+              verified: true,
+              status: "approved",
+            },
+          };
+        });
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      } else if (notification.type === "host_verification_rejected") {
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      }
+    },
+    [queryClient]
+  );
 
-  // Initialize WebSocket with notification callback
-  useNotifications(user?.id || '', {
-    onNotification: handleNotification
-  });
-
-  // Calculate property statistics using useMemo for performance
-  const propertyStats = useMemo(() => {
-    const total = publishedListings.length + drafts.length;
-    const rentals = publishedListings.filter((l: any) => l.type === 'rental').length + 
-                    drafts.filter((d: any) => d.type === 'rental').length;
-    const shortlets = publishedListings.filter((l: any) => l.type === 'shortlet').length + 
-                      drafts.filter((d: any) => d.type === 'shortlet').length;
-    
-    return {
-      total,
-      rentals,
-      shortlets,
-      subtitle: total === 0 
-        ? 'No properties yet' 
-        : `${rentals} ${rentals === 1 ? 'rental' : 'rentals'}, ${shortlets} ${shortlets === 1 ? 'shortlet' : 'shortlets'}`
-    };
-  }, [publishedListings, drafts]);
+  useNotifications(user?.id || "", { onNotification: handleNotification });
 
   // Clear verification alert when verified
   useEffect(() => {
-    if (isVerified) {
-      setShowVerificationAlert(false);
-    }
+    if (isVerified) setShowVerificationAlert(false);
   }, [isVerified]);
 
   // Show alert when data is loaded and user needs verification
   useEffect(() => {
-    if (!listingsLoading && !draftsLoading && !verificationLoading) {
-      const hasListings = publishedListings.length > 0 || drafts.length > 0;
-      // Show alert if: has listings AND (needs verification OR is rejected)
+    if (!isLoading && !verificationLoading) {
+      const hasListings = totals.totalProperties > 0;
       if (hasListings && !isVerified && (needsVerification || isRejected)) {
         setShowVerificationAlert(true);
       } else {
         setShowVerificationAlert(false);
       }
     }
-  }, [publishedListings.length, drafts.length, needsVerification, isVerified, isRejected, listingsLoading, draftsLoading, verificationLoading]);
+  }, [
+    totals.totalProperties,
+    needsVerification,
+    isVerified,
+    isRejected,
+    isLoading,
+    verificationLoading,
+  ]);
 
-  // Handle successful verification submission
   const handleVerificationSubmitted = useCallback(() => {
     setShowFormModal(false);
   }, []);
 
-  const handleCreateListing = () => {
-    navigate("/host/create-listing");
-  };
-
-  const handleTabChange = (tab: string) => {
-    navigate(`/host/${tab}`);
-  };
-
-  const handleVerifyHost = () => {
-    setShowFormModal(true);
-  };
+  const handleCreateListing = () => navigate("/host/create-listing");
+  const handleTabChange = (tab: string) => navigate(`/host/${tab}`);
+  const handleVerifyHost = () => setShowFormModal(true);
 
   return (
     <div className="space-y-6">
-      {/* Greeting Section */}
-      <div className="space-y-2">
-        <div className="flex items-center space-x-2 text-sm text-neutral-600">
-          <span>🕕 {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-          <span>•</span>
-          <span>{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+      {/* Greeting + Period Filter */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2 text-sm text-neutral-600">
+            <span>
+              🕕{" "}
+              {currentTime.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+            <span>•</span>
+            <span>
+              {currentTime.toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
+          </div>
+          <h2 className="text-2xl font-semibold text-neutral-900 flex items-center gap-2">
+            Good {greeting}, {userName}
+            {isVerified && <CheckCircle2 className="h-6 w-6 text-green-600" />}
+          </h2>
         </div>
-        <h2 className="text-2xl font-semibold text-neutral-900 flex items-center gap-2">
-          Good {greeting}, {userName}
-          {isVerified && (
-            <CheckCircle2 className="h-6 w-6 text-green-600" />
-          )}
-        </h2>
+
+        {/* Period Filter */}
+        <Select
+          value={period}
+          onValueChange={(v) => setPeriod(v as DashboardPeriod)}
+        >
+          <SelectTrigger className="w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PERIOD_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Host Verification Alert */}
       {showVerificationAlert && !isVerified && (
-        <Alert className={isRejected 
-          ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800" 
-          : hasHostProfile && !isVerified
-          ? "bg-primary/10 border-primary/20 dark:bg-primary/5 dark:border-primary/30"
-          : "bg-primary/10 border-primary/20 dark:bg-primary/5 dark:border-primary/30"
-        }>
+        <Alert
+          className={
+            isRejected
+              ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800"
+              : "bg-primary/10 border-primary/20 dark:bg-primary/5 dark:border-primary/30"
+          }
+        >
           <div className="flex items-start gap-3">
-            <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-              isRejected 
-                ? "bg-red-100 dark:bg-red-900/30" 
-                : "bg-primary/20 dark:bg-primary/10"
-            }`}>
+            <div
+              className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                isRejected
+                  ? "bg-red-100 dark:bg-red-900/30"
+                  : "bg-primary/20 dark:bg-primary/10"
+              }`}
+            >
               {isRejected ? (
                 <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
               ) : hasHostProfile && !isVerified ? (
@@ -155,39 +210,47 @@ const DashboardPage = () => {
               <AlertDescription className="text-foreground">
                 <div className="space-y-3">
                   <div>
-                    <h3 className={`font-semibold text-base mb-1 ${
-                      isRejected ? "text-red-900 dark:text-red-100" : "text-foreground"
-                    }`}>
+                    <h3
+                      className={`font-semibold text-base mb-1 ${
+                        isRejected
+                          ? "text-red-900 dark:text-red-100"
+                          : "text-foreground"
+                      }`}
+                    >
                       {isRejected
-                        ? 'Host Verification Rejected'
-                        : hasHostProfile && !isVerified 
-                        ? 'Host Verification In Progress' 
-                        : 'Ready for Host Verification'}
-                    </h3>
-                    <p className={`text-sm ${
-                      isRejected 
-                        ? "text-red-800 dark:text-red-200" 
-                        : "text-muted-foreground"
-                    }`}>
-                      {isRejected
-                        ? rejectionReason 
-                          ? rejectionReason
-                          : 'Your host verification request was rejected. Please resubmit with a clear and valid document.'
+                        ? "Host Verification Rejected"
                         : hasHostProfile && !isVerified
-                        ? 'Your host verification is currently under review. We will notify you once it\'s approved. This process typically takes 1-3 business days.'
-                        : 'You have listed properties! Complete your host verification to unlock all features and ensure your listings can go live.'}
+                          ? "Host Verification In Progress"
+                          : "Ready for Host Verification"}
+                    </h3>
+                    <p
+                      className={`text-sm ${
+                        isRejected
+                          ? "text-red-800 dark:text-red-200"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {isRejected
+                        ? rejectionReason ||
+                          "Your host verification request was rejected. Please resubmit with a clear and valid document."
+                        : hasHostProfile && !isVerified
+                          ? "Your host verification is currently under review. We will notify you once it's approved. This process typically takes 1-3 business days."
+                          : "You have listed properties! Complete your host verification to unlock all features and ensure your listings can go live."}
                     </p>
                   </div>
                   {(isRejected || !hasHostProfile) && (
                     <Button
                       onClick={handleVerifyHost}
-                      className={isRejected
-                        ? "bg-red-600 text-white hover:bg-red-700"
-                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      className={
+                        isRejected
+                          ? "bg-red-600 text-white hover:bg-red-700"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
                       }
                       size="sm"
                     >
-                      {isRejected ? 'Resubmit Verification' : 'Verify Host Profile'}
+                      {isRejected
+                        ? "Resubmit Verification"
+                        : "Verify Host Profile"}
                     </Button>
                   )}
                 </div>
@@ -198,76 +261,76 @@ const DashboardPage = () => {
       )}
 
       {/* Host Verification Form Modal */}
-      <HostVerificationFormModal 
-        open={showFormModal} 
+      <HostVerificationFormModal
+        open={showFormModal}
         onOpenChange={setShowFormModal}
         onSuccess={handleVerificationSubmitted}
       />
 
-      {/* Metrics Cards */}
+      {/* Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           icon={<Home />}
           title="Total Properties"
-          value={propertyStats.total.toString()}
-          subtitle={propertyStats.subtitle}
+          value={totals.totalProperties.toString()}
+          subtitle={propertySubtitle}
           bgColor="bg-blue-100"
           iconColor="text-blue-600"
         />
         <MetricCard
           icon={<DollarSign />}
-          title="Current Monthly Income"
-          value="₦0"
-          subtitle="From 0 active properties"
+          title="Total Earnings"
+          value={`₦${totals.totalEarnings.toLocaleString("en-NG", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`}
+          subtitle={`${totals.earningShortlets} ${totals.earningShortlets === 1 ? "shortlet" : "shortlets"} / ${totals.earningRentals} ${totals.earningRentals === 1 ? "rental" : "rentals"}`}
           bgColor="bg-green-100"
           iconColor="text-green-600"
         />
         <MetricCard
-          icon={<DollarSign />}
-          title="Potential Income"
-          value="₦0"
-          subtitle="From all 3 properties"
+          icon={<CalendarDays />}
+          title="Total Bookings"
+          value={totals.totalBookings.toString()}
+          subtitle={`${totals.bookedShortlets} ${totals.bookedShortlets === 1 ? "shortlet" : "shortlets"} / ${totals.bookedRentals} ${totals.bookedRentals === 1 ? "rental" : "rentals"}`}
           bgColor="bg-yellow-100"
           iconColor="text-yellow-600"
         />
         <MetricCard
-          icon={<Users />}
-          title="Occupancy Rate"
-          value="0%"
-          subtitle="No properties rented yet"
+          icon={<Trophy />}
+          title="Top Performing Listing"
+          value={totals.topPerformingListing || "—"}
+          subtitle={totals.topPerformingListing ? "Highest earnings" : "No bookings yet"}
           bgColor="bg-purple-100"
           iconColor="text-purple-600"
         />
       </div>
 
       {/* Overview Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Overview</CardTitle>
-          <CardDescription>A summary of your properties including current and potential earnings.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-neutral-600">No property data available</p>
-            <p className="text-sm text-neutral-500 mt-1">Add properties to view your financial overview</p>
-          </div>
-        </CardContent>
-      </Card>
+      <OverviewSection
+        items={items}
+        isLoading={isLoading}
+        isError={isError}
+      />
 
-      {/* Property Overview and Tenants/Guests Row */}
+      {/* Bookings Overview and Tenants/Guests Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Property Overview</CardTitle>
+              <CardTitle>Bookings</CardTitle>
             </div>
-            <Button variant="ghost" size="sm" className="text-primary hover:text-primary-hover">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary hover:text-primary-hover"
+              onClick={() => handleTabChange("bookings")}
+            >
               View all
             </Button>
           </CardHeader>
           <CardContent>
             <div className="text-center py-8">
-              <p className="text-neutral-600">No properties found. Add properties to get started!</p>
+              <p className="text-neutral-600">
+                Bookings will appear here once guests make shortlet reservations.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -277,7 +340,12 @@ const DashboardPage = () => {
             <div>
               <CardTitle>Tenants & Guests</CardTitle>
             </div>
-            <Button variant="ghost" size="sm" className="text-primary hover:text-primary-hover">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary hover:text-primary-hover"
+              onClick={() => handleTabChange("tenant-management")}
+            >
               View all
             </Button>
           </CardHeader>
@@ -293,7 +361,9 @@ const DashboardPage = () => {
       <Card>
         <CardHeader>
           <CardTitle>Recent Payouts</CardTitle>
-          <CardDescription>Latest rent and booking payouts received from your properties</CardDescription>
+          <CardDescription>
+            Latest rent and booking payouts received from your properties
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">

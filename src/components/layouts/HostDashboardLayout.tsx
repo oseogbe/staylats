@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, FileText, DollarSign, Users, MessageSquare } from 'lucide-react';
+import { Home, FileText, DollarSign, Users, MessageSquare, CalendarCheck } from 'lucide-react';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -18,6 +18,7 @@ const HostDashboardLayout = ({ children }: HostDashboardLayoutProps) => {
   const mainTabs = [
     { value: "dashboard", label: "Dashboard", icon: Home },
     { value: "property-management", label: "Property Management", icon: FileText },
+    { value: "bookings", label: "Bookings", icon: CalendarCheck },
     { value: "finances", label: "Finances", icon: DollarSign },
     { value: "tenant-management", label: "Tenant Management", icon: Users },
     { value: "rental-applications", label: "Rental Applications", icon: MessageSquare },
