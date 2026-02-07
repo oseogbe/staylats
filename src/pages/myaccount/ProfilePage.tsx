@@ -23,16 +23,16 @@ const ProfilePage = () => {
   const userData = useMemo<UserData>(() => {
     if (!profileUser) {
       return {
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-        dateOfBirth: new Date(),
-        gender: '',
-        image: '',
-        role: '',
-        emailVerified: null,
-        kycVerified: false
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    dateOfBirth: new Date(),
+    gender: '',
+    image: '',
+    role: '',
+    emailVerified: null,
+    kycVerified: false
       };
     }
 
@@ -53,8 +53,8 @@ const ProfilePage = () => {
   // Show error toast if fetch fails
   useEffect(() => {
     if (error) {
-      toast.error('Failed to load user data');
-    }
+        toast.error('Failed to load user data');
+      }
   }, [error]);
 
   const handleUpdateUserData = async (data: PersonalInfoFormData) => {
