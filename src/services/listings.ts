@@ -34,7 +34,6 @@ export interface ActiveListing {
     type: DraftType
     title: string
     description: string
-    address: string
     city: string
     state: string
     propertyType: string
@@ -48,7 +47,67 @@ export interface ActiveListing {
     createdAt: string
 }
 
+export interface ListingDetail {
+    id: string
+    slug: string
+    type: DraftType
+    title: string
+    description: string | null
+    city: string
+    state: string
+    location: { lat: number; lng: number }
+    propertyType: string
+    images: string[]
+    amenities: string[]
+    bedrooms: number
+    bathrooms: number
+    maxOccupants: { adults: number; kids: number; infants: number; pets: boolean }
+    shortletInfo?: {
+        houseRules?: string | null
+        pricePerNight: number
+        cleaningFee?: number | null
+        securityDeposit?: number | null
+        minStayNights?: number | null
+        maxStayNights?: number | null
+        checkInTime?: string | null
+        checkOutTime?: string | null
+        availableFrom?: string | null
+        availableUntil?: string | null
+        frontDeskContact?: string | null
+        isInstantBookable?: boolean | null
+    } | null
+    rentalInfo?: {
+        tenancyAgreement?: string | null
+        contractTerms?: string[]
+        inspectionFee?: number | null
+        pricing: Record<string, number>
+        serviceCharge?: number | null
+        cautionFee?: number | null
+        securityDeposit?: number | null
+        paymentFrequency?: string | null
+        availableFromDate?: string | null
+        requiredDocuments?: string[]
+        agentPercentage?: number | null
+    } | null
+    status: string
+    createdAt: string
+    user: {
+        firstName: string | null
+        lastName: string | null
+        image: string | null
+        createdAt: string
+    }
+}
+
 export default {
+    /**
+     * Public endpoint — fetches a single listing by slug (no auth needed).
+     */
+    getListingBySlug: async (slug: string): Promise<{ listing: ListingDetail }> => {
+        const res = await api.get(`/listing/slug/${slug}`)
+        return res.data.data
+    },
+
     /**
      * Public endpoint — fetches active listings (no auth needed).
      */

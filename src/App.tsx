@@ -75,7 +75,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/properties" element={<PropertyListings />} />
-            <Route path="/property/:id" element={<PropertyDetails />} />
+            <Route path="/property/:slug" element={<PropertyDetails />} />
             <Route path="/verify-email" element={<EmailVerification />} />
             <Route path="/resend-verification" element={<ResendEmailVerification />} />
             <Route path="*" element={<NotFound />} />

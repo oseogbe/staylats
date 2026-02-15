@@ -12,26 +12,40 @@ import { GuestPicker, GuestCounts } from "@/components/GuestPicker";
 
 interface ShortletBookingCardProps {
   price: number;
+  cleaningFee?: number;
+  securityDeposit?: number;
   rating: number;
   reviews: number;
   maxGuests: number;
 }
 
-export const ShortletBookingCard = ({ price, rating, reviews, maxGuests }: ShortletBookingCardProps) => {
+export const ShortletBookingCard = ({
+  price,
+  cleaningFee,
+  securityDeposit,
+  rating,
+  reviews,
+  maxGuests,
+}: ShortletBookingCardProps) => {
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
   const [guests, setGuests] = useState<GuestCounts>({
     adults: 1,
     children: 0,
     infants: 0,
-    pets: 0
+    pets: 0,
   });
 
   const totalGuests = guests.adults + guests.children;
-  const nights = checkIn && checkOut ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-  const totalPrice = nights * price;
-  const serviceFee = Math.round(totalPrice * 0.1);
-  const totalWithFees = totalPrice + serviceFee;
+  const nights =
+    checkIn && checkOut
+      ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
+      : 0;
+  const subtotal = nights * price;
+  const serviceFee = Math.round(subtotal * 0.1);
+  const cleaningTotal = cleaningFee ?? 0;
+  const depositTotal = securityDeposit ?? 0;
+  const totalWithFees = subtotal + serviceFee + cleaningTotal + depositTotal;
 
   return (
     <Card className="p-6 sticky top-24">
@@ -53,7 +67,9 @@ export const ShortletBookingCard = ({ price, rating, reviews, maxGuests }: Short
         {/* Date Selection */}
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground uppercase">CHECK-IN</label>
+            <label className="text-xs font-medium text-muted-foreground uppercase">
+              CHECK-IN
+            </label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -81,7 +97,9 @@ export const ShortletBookingCard = ({ price, rating, reviews, maxGuests }: Short
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground uppercase">CHECKOUT</label>
+            <label className="text-xs font-medium text-muted-foreground uppercase">
+              CHECKOUT
+            </label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -111,7 +129,9 @@ export const ShortletBookingCard = ({ price, rating, reviews, maxGuests }: Short
 
         {/* Guests Selection */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground uppercase">GUESTS</label>
+          <label className="text-xs font-medium text-muted-foreground uppercase">
+            GUESTS
+          </label>
           <GuestPicker
             guests={guests}
             onGuestsChange={setGuests}
@@ -121,7 +141,11 @@ export const ShortletBookingCard = ({ price, rating, reviews, maxGuests }: Short
         </div>
 
         <div className="space-y-3">
-          <Button className="w-full" size="lg" disabled={!checkIn || !checkOut || totalGuests === 0}>
+          <Button
+            className="w-full"
+            size="lg"
+            disabled={!checkIn || !checkOut || totalGuests === 0}
+          >
             Book Now
           </Button>
           <Button variant="outline" className="w-full" size="lg">
@@ -138,13 +162,27 @@ export const ShortletBookingCard = ({ price, rating, reviews, maxGuests }: Short
             <Separator />
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>₦{price.toLocaleString()} x {nights} night{nights !== 1 ? 's' : ''}</span>
-                <span>₦{totalPrice.toLocaleString()}</span>
+                <span>
+                  ₦{price.toLocaleString()} x {nights} night{nights !== 1 ? "s" : ""}
+                </span>
+                <span>₦{subtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span>Service fee</span>
                 <span>₦{serviceFee.toLocaleString()}</span>
               </div>
+              {cleaningTotal > 0 && (
+                <div className="flex justify-between">
+                  <span>Cleaning fee</span>
+                  <span>₦{cleaningTotal.toLocaleString()}</span>
+                </div>
+              )}
+              {depositTotal > 0 && (
+                <div className="flex justify-between">
+                  <span>Security deposit (refundable)</span>
+                  <span>₦{depositTotal.toLocaleString()}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>

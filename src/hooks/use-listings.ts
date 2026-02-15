@@ -34,6 +34,21 @@ export const useUserDrafts = () => {
 };
 
 /**
+ * Hook to fetch a single listing by slug (public, no auth).
+ */
+export const useListingBySlug = (slug: string | undefined) => {
+  return useQuery({
+    queryKey: ['listing', slug],
+    queryFn: () => listingsService.getListingBySlug(slug!),
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    select: (data) => data.listing,
+  });
+};
+
+/**
  * Hook to fetch publicly available active listings.
  * No auth required — suitable for homepage, search pages, etc.
  */

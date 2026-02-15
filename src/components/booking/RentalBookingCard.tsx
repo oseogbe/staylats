@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, Star, Info, User, Shield } from "lucide-react";
 
@@ -6,48 +6,78 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 interface RentalBookingCardProps {
-  price: number;
+  /** Object mapping pricing term keys to amounts, e.g. { monthly: 150000, yearly: 1500000 } */
+  pricing: Record<string, number>;
+  serviceCharge?: number;
+  cautionFee?: number;
+  securityDeposit?: number;
+  inspectionFee?: number;
   rating: number;
   reviews: number;
 }
 
-const durationOptions = [
-  { value: "1", label: "1 month", discount: 0 },
-  { value: "3", label: "3 months", discount: 0.074 },
-  { value: "6", label: "6 months", discount: 0.12 },
-  { value: "12", label: "1 year", discount: 0.15 },
-  { value: "24", label: "2 years", discount: 0.20 },
-];
+/** Human-readable labels for pricing term keys */
+const TERM_LABELS: Record<string, string> = {
+  daily: "Daily",
+  weekly: "Weekly",
+  monthly: "Monthly",
+  quarterly: "Quarterly",
+  biannual: "6 Months",
+  yearly: "Yearly",
+  biennial: "2 Years",
+};
 
-export const RentalBookingCard = ({ price, rating, reviews }: RentalBookingCardProps) => {
+export const RentalBookingCard = ({
+  pricing,
+  serviceCharge,
+  cautionFee,
+  securityDeposit,
+  inspectionFee,
+  rating,
+  reviews,
+}: RentalBookingCardProps) => {
   const [moveInDate, setMoveInDate] = useState<Date>();
-  const [duration, setDuration] = useState<string>();
-  const [isVerified, setIsVerified] = useState(false); // Mock verification state
+  const [selectedTerm, setSelectedTerm] = useState<string>();
+  const [isVerified, setIsVerified] = useState(false);
 
-  const selectedDuration = durationOptions.find(d => d.value === duration);
-  const months = selectedDuration ? parseInt(selectedDuration.value) : 0;
-  const discount = selectedDuration?.discount || 0;
-  const monthlyRate = price;
-  const totalMonthlyPayment = monthlyRate * months;
-  const discountAmount = totalMonthlyPayment * discount;
-  const discountedTotal = totalMonthlyPayment - discountAmount;
-  const serviceFee = 20000; // Fixed service fee for rental
-  const securityDeposit = 100000; // Fixed security deposit
-  const legalFees = 0; // No legal fees in this example
-  const totalAmount = discountedTotal + serviceFee + securityDeposit + legalFees;
+  // Build pricing options sorted by amount ascending
+  const pricingOptions = useMemo(() => {
+    return Object.entries(pricing)
+      .map(([term, amount]) => ({
+        term,
+        label: TERM_LABELS[term.toLowerCase()] ?? term,
+        amount: Number(amount),
+      }))
+      .sort((a, b) => a.amount - b.amount);
+  }, [pricing]);
+
+  // Lowest pricing for display at top
+  const lowestOption = pricingOptions[0];
+
+  const selected = pricingOptions.find((o) => o.term === selectedTerm);
+  const rent = selected?.amount ?? 0;
+  const serviceChargeAmount = serviceCharge ?? 0;
+  const cautionFeeAmount = cautionFee ?? 0;
+  const depositAmount = securityDeposit ?? 0;
+  const inspectionAmount = inspectionFee ?? 0;
+  const totalAmount = rent + serviceChargeAmount + cautionFeeAmount + depositAmount + inspectionAmount;
 
   const handleCompleteProfile = () => {
-    // Mock completing profile
     console.log("Complete profile clicked");
   };
 
   const handleVerifyIdentity = () => {
-    // Mock verifying identity
     console.log("Verify identity clicked");
     setIsVerified(true);
   };
@@ -57,8 +87,12 @@ export const RentalBookingCard = ({ price, rating, reviews }: RentalBookingCardP
       <div className="space-y-4">
         <div className="text-center">
           <div className="flex items-baseline justify-center gap-1">
-            <span className="text-2xl font-bold">₦{price.toLocaleString()}</span>
-            <span className="text-muted-foreground">/ month</span>
+            <span className="text-2xl font-bold">
+              ₦{(lowestOption?.amount ?? 0).toLocaleString()}
+            </span>
+            <span className="text-muted-foreground">
+              / {lowestOption?.label?.toLowerCase() ?? "month"}
+            </span>
           </div>
           <div className="flex items-center justify-center gap-1 mt-1">
             <Star className="h-4 w-4 fill-current text-primary" />
@@ -98,76 +132,66 @@ export const RentalBookingCard = ({ price, rating, reviews }: RentalBookingCardP
           </Popover>
         </div>
 
-        {/* Duration Selection */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">How long do you need the place for?</label>
-          <Select value={duration} onValueChange={setDuration}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select duration" />
-            </SelectTrigger>
-            <SelectContent>
-              {durationOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  <div className="flex items-center justify-between w-full">
-                    <span>{option.label}</span>
-                    {option.discount > 0 && (
-                      <span className="text-green-600 text-xs ml-2">
-                        {(option.discount * 100).toFixed(1)}% off
+        {/* Contract term selection */}
+        {pricingOptions.length > 0 && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Select rental period</label>
+            <Select value={selectedTerm} onValueChange={setSelectedTerm}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                {pricingOptions.map((option) => (
+                  <SelectItem key={option.term} value={option.term}>
+                    <div className="flex items-center justify-between w-full gap-4">
+                      <span>{option.label}</span>
+                      <span className="text-muted-foreground text-xs">
+                        ₦{option.amount.toLocaleString()}
                       </span>
-                    )}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Cost Breakdown */}
-        {duration && (
+        {selectedTerm && selected && (
           <div className="space-y-3">
             <h3 className="font-medium">Cost Breakdown</h3>
-            
-            {discount > 0 && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-green-700">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium">
-                    {(discount * 100).toFixed(1)}% Discount Applied
-                  </span>
-                </div>
-                <div className="text-xs text-green-600 mt-1">
-                  You save ₦{discountAmount.toLocaleString()} compared to monthly rates
-                </div>
-              </div>
-            )}
-
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>{months} months Rent</span>
-                <div className="text-right">
-                  {discount > 0 && (
-                    <div className="text-xs text-muted-foreground line-through">
-                      ₦{totalMonthlyPayment.toLocaleString()}
-                    </div>
-                  )}
-                  <div>₦{discountedTotal.toLocaleString()}</div>
+                <span>Rent ({selected.label})</span>
+                <span>₦{rent.toLocaleString()}</span>
+              </div>
+              {inspectionAmount > 0 && (
+                <div className="flex justify-between">
+                  <span>Inspection fee</span>
+                  <span>₦{inspectionAmount.toLocaleString()}</span>
                 </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>One-time Service charge</span>
-                <span>₦{serviceFee.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Legal and Agencies Fees</span>
-                <span>₦{legalFees.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Refundable Security Deposit</span>
-                <span>₦{securityDeposit.toLocaleString()}</span>
-              </div>
+              )}
+              {serviceChargeAmount > 0 && (
+                <div className="flex justify-between">
+                  <span>Service charge</span>
+                  <span>₦{serviceChargeAmount.toLocaleString()}</span>
+                </div>
+              )}
+              {cautionFeeAmount > 0 && (
+                <div className="flex justify-between">
+                  <span>Caution fee</span>
+                  <span>₦{cautionFeeAmount.toLocaleString()}</span>
+                </div>
+              )}
+              {depositAmount > 0 && (
+                <div className="flex justify-between">
+                  <span>Security deposit (refundable)</span>
+                  <span>₦{depositAmount.toLocaleString()}</span>
+                </div>
+              )}
               <Separator />
-              <div className="flex justify-between font-semibold text-lg">
-                <span>Total Amount</span>
+              <div className="flex justify-between font-semibold text-base">
+                <span>Total</span>
                 <span>₦{totalAmount.toLocaleString()}</span>
               </div>
             </div>
@@ -182,22 +206,19 @@ export const RentalBookingCard = ({ price, rating, reviews }: RentalBookingCardP
               <div>
                 <h4 className="font-medium text-primary">Verification Required</h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Complete your profile and verify your identity to proceed with the rental application.
+                  Complete your profile and verify your identity to proceed with the rental
+                  application.
                 </p>
               </div>
             </div>
             <div className="space-y-2">
-              <Button 
-                className="w-full" 
-                onClick={handleCompleteProfile}
-                size="sm"
-              >
+              <Button className="w-full" onClick={handleCompleteProfile} size="sm">
                 <User className="h-4 w-4 mr-2" />
                 Complete Profile
               </Button>
-              <Button 
-                variant="outline" 
-                className="w-full" 
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={handleVerifyIdentity}
                 size="sm"
               >
@@ -208,10 +229,10 @@ export const RentalBookingCard = ({ price, rating, reviews }: RentalBookingCardP
           </div>
         ) : (
           <div className="space-y-3">
-            <Button 
-              className="w-full" 
-              size="lg" 
-              disabled={!moveInDate || !duration}
+            <Button
+              className="w-full"
+              size="lg"
+              disabled={!moveInDate || !selectedTerm}
             >
               Apply for Rent
             </Button>
