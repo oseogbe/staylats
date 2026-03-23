@@ -16,8 +16,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ShortletBookingCard } from "@/components/booking/ShortletBookingCard";
+import {
+  PendingShortletBookingDraft,
+  ShortletBookingCard,
+} from "@/components/booking/ShortletBookingCard";
 import { RentalBookingCard } from "@/components/booking/RentalBookingCard";
+import AuthModal from "@/components/auth/AuthModal";
 import {
   ImageGallery,
   ImageLightbox,
@@ -28,6 +32,7 @@ import {
   getAmenityIcon,
 } from "@/components/property-details";
 import { useListingBySlug } from "@/hooks/use-listings";
+import { useAuth } from "@/contexts/AuthContext";
 import { PRICING_LABELS } from "@/lib/listingHelpers";
 import type { ListingDetail } from "@/services/listings";
 
@@ -53,9 +58,12 @@ function getRentalDisplayPrice(listing: ListingDetail) {
 const PropertyDetails = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [resumeTrigger, setResumeTrigger] = useState(0);
 
   const { data: listing, isLoading, isError } = useListingBySlug(slug);
 
@@ -89,6 +97,18 @@ const PropertyDetails = () => {
     if (!listing?.user?.createdAt) return "";
     return format(new Date(listing.user.createdAt), "MMMM yyyy");
   }, [listing]);
+
+  const handleRequireAuthForBooking = useCallback(
+    (draft: PendingShortletBookingDraft) => {
+      if (!listing) return;
+      localStorage.setItem(
+        `shortlet-booking-draft:${listing.id}`,
+        JSON.stringify(draft)
+      );
+      setIsAuthModalOpen(true);
+    },
+    [listing]
+  );
 
   // ----- Loading -----
   if (isLoading) return <PropertyDetailsSkeleton />;
@@ -324,12 +344,17 @@ const PropertyDetails = () => {
           <div className="lg:col-span-1">
             {listing.type === "shortlet" ? (
               <ShortletBookingCard
+                listingId={listing.id}
+                listingSlug={listing.slug}
                 price={listing.shortletInfo?.pricePerNight ?? 0}
                 cleaningFee={listing.shortletInfo?.cleaningFee ?? undefined}
                 securityDeposit={listing.shortletInfo?.securityDeposit ?? undefined}
                 rating={0}
                 reviews={0}
                 maxGuests={maxGuests}
+                isAuthenticated={isAuthenticated}
+                onRequireAuth={handleRequireAuthForBooking}
+                resumeTrigger={resumeTrigger}
               />
             ) : (
               <RentalBookingCard
@@ -353,6 +378,15 @@ const PropertyDetails = () => {
         initialIndex={lightboxIndex}
         onOpenChange={setLightboxOpen}
         title={listing.title}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={() => {
+          setIsAuthModalOpen(false);
+          setResumeTrigger(Date.now());
+        }}
       />
     </div>
   );

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Star } from "lucide-react";
+import { CalendarIcon, Loader2, Star } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,23 +10,44 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { GuestPicker, GuestCounts } from "@/components/GuestPicker";
+import {
+  useCheckShortletAvailability,
+  useInitializeShortletPayment,
+} from "@/hooks/use-shortlet-bookings";
+
+export interface PendingShortletBookingDraft {
+  checkInDate: string;
+  checkOutDate: string;
+  guests: GuestCounts;
+  idempotencyKey: string;
+}
 
 interface ShortletBookingCardProps {
+  listingId: string;
+  listingSlug: string;
   price: number;
   cleaningFee?: number;
   securityDeposit?: number;
   rating: number;
   reviews: number;
   maxGuests: number;
+  isAuthenticated: boolean;
+  onRequireAuth: (draft: PendingShortletBookingDraft) => void;
+  resumeTrigger?: number;
 }
 
 export const ShortletBookingCard = ({
+  listingId,
+  listingSlug,
   price,
   cleaningFee,
   securityDeposit,
   rating,
   reviews,
   maxGuests,
+  isAuthenticated,
+  onRequireAuth,
+  resumeTrigger,
 }: ShortletBookingCardProps) => {
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
@@ -46,6 +68,93 @@ export const ShortletBookingCard = ({
   const cleaningTotal = cleaningFee ?? 0;
   const depositTotal = securityDeposit ?? 0;
   const totalWithFees = subtotal + serviceFee + cleaningTotal + depositTotal;
+  const canBook = Boolean(checkIn && checkOut && totalGuests > 0);
+
+  const availabilityMutation = useCheckShortletAvailability();
+  const initializePaymentMutation = useInitializeShortletPayment();
+  const isSubmitting = availabilityMutation.isPending || initializePaymentMutation.isPending;
+
+  const draftStorageKey = useMemo(
+    () => `shortlet-booking-draft:${listingId}`,
+    [listingId]
+  );
+
+  const createIdempotencyKey = () => {
+    const randomPart =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID().replace(/-/g, "")
+        : `${Date.now()}${Math.random().toString(16).slice(2)}`;
+
+    return `${listingSlug.slice(0, 12)}${randomPart.slice(0, 20)}`;
+  };
+
+  const buildDraftPayload = (): PendingShortletBookingDraft | null => {
+    if (!checkIn || !checkOut) return null;
+    return {
+      checkInDate: checkIn.toISOString(),
+      checkOutDate: checkOut.toISOString(),
+      guests,
+      idempotencyKey: createIdempotencyKey(),
+    };
+  };
+
+  const startCheckout = async (draft: PendingShortletBookingDraft) => {
+    await availabilityMutation.mutateAsync({
+      listingId,
+      checkInDate: draft.checkInDate,
+      checkOutDate: draft.checkOutDate,
+      guests: draft.guests,
+    });
+
+    const callbackUrl = `${window.location.origin}/bookings/shortlet/confirmation?listingSlug=${encodeURIComponent(
+      listingSlug
+    )}`;
+    const paymentInit = await initializePaymentMutation.mutateAsync({
+      listingId,
+      checkInDate: draft.checkInDate,
+      checkOutDate: draft.checkOutDate,
+      guests: draft.guests,
+      callbackUrl,
+      idempotencyKey: draft.idempotencyKey,
+    });
+
+    localStorage.removeItem(draftStorageKey);
+    window.location.assign(paymentInit.checkoutUrl);
+  };
+
+  const handleBookNow = async () => {
+    const draft = buildDraftPayload();
+    if (!draft) return;
+
+    try {
+      if (!isAuthenticated) {
+        onRequireAuth(draft);
+        return;
+      }
+
+      await startCheckout(draft);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Unable to proceed with booking");
+    }
+  };
+
+  useEffect(() => {
+    if (!resumeTrigger || !isAuthenticated) return;
+
+    const raw = localStorage.getItem(draftStorageKey);
+    if (!raw) return;
+
+    try {
+      const draft = JSON.parse(raw) as PendingShortletBookingDraft;
+      if (!draft?.checkInDate || !draft?.checkOutDate || !draft?.idempotencyKey) return;
+      void startCheckout(draft).catch((error: any) => {
+        toast.error(error?.response?.data?.message || "Unable to resume booking");
+      });
+    } catch {
+      localStorage.removeItem(draftStorageKey);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeTrigger, isAuthenticated, draftStorageKey]);
 
   return (
     <Card className="p-6 sticky top-24">
@@ -144,9 +253,17 @@ export const ShortletBookingCard = ({
           <Button
             className="w-full"
             size="lg"
-            disabled={!checkIn || !checkOut || totalGuests === 0}
+            disabled={!canBook || isSubmitting}
+            onClick={handleBookNow}
           >
-            Book Now
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Book Now"
+            )}
           </Button>
           <Button variant="outline" className="w-full" size="lg">
             Send Inquiry

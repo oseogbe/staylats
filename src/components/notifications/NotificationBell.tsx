@@ -16,6 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useAuth } from '@/contexts/AuthContext';
 import notificationsAPI from '@/services/notifications';
 import { useNotifications } from '@/hooks/use-notifications';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 export interface Notification {
   id: string;
@@ -37,6 +38,8 @@ const NotificationBell = () => {
     error: socketError,
   } = useNotifications(user?.id);
 
+  usePushNotifications(user?.id);
+
   const { 
     data: persistedNotifications, 
     isLoading,
@@ -50,15 +53,18 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Merge notifications, removing duplicates
+  // Merge notifications, removing duplicates, sort by newest, limit to last 10
   const allNotifications = [
     ...(realtimeNotifications || []),
     ...(persistedNotifications || [])
-  ].reduce((unique, notification) => {
-    const exists = unique.some(n => n.id === notification.id);
-    if (!exists) unique.push(notification);
-    return unique;
-  }, [] as Notification[]);
+  ]
+    .reduce((unique, notification) => {
+      const exists = unique.some(n => n.id === notification.id);
+      if (!exists) unique.push(notification);
+      return unique;
+    }, [] as Notification[])
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 10);
 
   const unreadCount = allNotifications?.filter(n => !n.read).length || 0;
 
@@ -178,29 +184,31 @@ const NotificationBell = () => {
             <p className="text-sm">No notifications</p>
           </div>
         ) : (
-          allNotifications.map((notification) => (
-            <DropdownMenuItem
-              key={notification.id}
-              className={`p-4 hover:bg-neutral-50 cursor-pointer ${
-                !notification.read ? 'bg-neutral-50' : ''
-              }`}
-            >
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{notification.title}</span>
-                  <span className="text-xs text-neutral-500">
-                    {formatDate(notification.createdAt)}
-                  </span>
+          <div className="max-h-[360px] overflow-y-auto scrollbar-thin">
+            {allNotifications.map((notification) => (
+              <DropdownMenuItem
+                key={notification.id}
+                className={`p-4 hover:bg-neutral-50 cursor-pointer ${
+                  !notification.read ? 'bg-neutral-50' : ''
+                }`}
+              >
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{notification.title}</span>
+                    <span className="text-xs text-neutral-500">
+                      {formatDate(notification.createdAt)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-600 line-clamp-2">
+                    {notification.message}
+                  </p>
+                  {!notification.read && (
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
+                  )}
                 </div>
-                <p className="text-xs text-neutral-600 line-clamp-2">
-                  {notification.message}
-                </p>
-                {!notification.read && (
-                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
-                )}
-              </div>
-            </DropdownMenuItem>
-          ))
+              </DropdownMenuItem>
+            ))}
+          </div>
         )}
         
         {allNotifications?.length > 0 && (

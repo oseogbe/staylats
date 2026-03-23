@@ -10,8 +10,18 @@ import {
   Filter, 
   RefreshCw,
   Trash2,
-  X 
 } from 'lucide-react';
+
+const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
+  shortlet_booking_paid: 'New shortlet booking received',
+  shortlet_booking_confirmed: 'Payment confirmed',
+  listing_approved: 'Listing Approved',
+  listing_declined: 'Listing Declined',
+  new_pending_listing: 'New pending listing',
+  new_host_verification: 'New host verification',
+  host_verification_approved: 'Host verification approved',
+  host_verification_rejected: 'Host verification rejected',
+};
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,11 +47,15 @@ const messageSchema = z.object({
 
 type MessageFormData = z.infer<typeof messageSchema>;
 
+const formatNotificationType = (type: string) =>
+  NOTIFICATION_TYPE_LABELS[type] || type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
 const CommunicationsPage = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeSubTab, setActiveSubTab] = useState("notifications");
   const [notificationFilter, setNotificationFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [messageTypeFilter, setMessageTypeFilter] = useState('all');
   const [messageStatusFilter, setMessageStatusFilter] = useState('all');
   const [isCreateMessageOpen, setIsCreateMessageOpen] = useState(false);
@@ -60,9 +74,11 @@ const CommunicationsPage = () => {
     refetch: refetchNotifications 
   } = useQuery({
     queryKey: ["userNotifications", user?.id],
-    queryFn: () => notificationsAPI.getUserNotifications(),
+    queryFn: () => notificationsAPI.getUserNotifications({ limit: 50 }),
     enabled: !!user?.id && activeSubTab === 'notifications',
   });
+
+  const notificationTypes = [...new Set(notifications.map((n: Notification) => n.type as string))].sort() as string[];
 
   // Mock messages data - in real app this would come from API
   const messages = [
@@ -70,8 +86,9 @@ const CommunicationsPage = () => {
   ];
 
   const filteredNotifications = notifications.filter((notification: Notification) => {
-    if (notificationFilter === 'unread') return !notification.read;
-    if (notificationFilter === 'read') return notification.read;
+    if (notificationFilter === 'unread' && notification.read) return false;
+    if (notificationFilter === 'read' && !notification.read) return false;
+    if (typeFilter !== 'all' && notification.type !== typeFilter) return false;
     return true;
   });
 
@@ -155,35 +172,61 @@ const CommunicationsPage = () => {
               </Button>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="flex border rounded-lg overflow-hidden">
-                <Button
-                  variant={notificationFilter === 'unread' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setNotificationFilter('unread')}
-                  className="rounded-none border-0"
-                >
-                  Unread
-                </Button>
-                <Button
-                  variant={notificationFilter === 'read' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setNotificationFilter('read')}
-                  className="rounded-none border-0 border-l"
-                >
-                  Read
-                </Button>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex border rounded-lg overflow-hidden">
+                  <Button
+                    variant={notificationFilter === 'unread' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setNotificationFilter('unread')}
+                    className="rounded-none border-0"
+                  >
+                    Unread
+                  </Button>
+                  <Button
+                    variant={notificationFilter === 'read' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setNotificationFilter('read')}
+                    className="rounded-none border-0 border-l"
+                  >
+                    Read
+                  </Button>
+                </div>
+                {unreadCount > 0 && notificationFilter !== 'read' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleMarkAllAsRead}
+                    className="ml-auto"
+                  >
+                    Mark all as read
+                  </Button>
+                )}
               </div>
-              
-              {unreadCount > 0 && notificationFilter !== 'read' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleMarkAllAsRead}
-                  className="ml-auto"
-                >
-                  Mark all as read
-                </Button>
+
+              {notificationTypes.length > 0 && (
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Button
+                    variant={typeFilter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setTypeFilter('all')}
+                    className="shrink-0"
+                  >
+                    All
+                  </Button>
+                  {notificationTypes.map((type) => (
+                    <Button
+                      key={type}
+                      variant={typeFilter === type ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTypeFilter(type)}
+                      className="shrink-0"
+                    >
+                      {formatNotificationType(type)}
+                    </Button>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -196,12 +239,18 @@ const CommunicationsPage = () => {
                 <div className="text-center py-12">
                   <Bell className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h4 className="text-lg font-medium mb-2">
-                    {notificationFilter === 'unread' ? 'You have no unread notifications' : 'No notifications found!'}
+                    {notificationFilter === 'unread'
+                      ? 'You have no unread notifications'
+                      : typeFilter !== 'all'
+                        ? `No ${formatNotificationType(typeFilter)} notifications`
+                        : 'No notifications found!'}
                   </h4>
                   <p className="text-muted-foreground">
                     {notificationFilter === 'unread' 
                       ? 'All caught up! New notifications will appear here.' 
-                      : 'You have not sent any messages yet'}
+                      : typeFilter !== 'all'
+                        ? 'Try a different filter or view all notifications.'
+                        : 'Your notifications will appear here.'}
                   </p>
                 </div>
               ) : (

@@ -16,11 +16,12 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   redirectPath?: string;
+  onAuthSuccess?: () => void;
 }
 
 export type AuthStep = "phone" | "otp" | "registration";
 
-const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
+const AuthModal = ({ isOpen, onClose, redirectPath, onAuthSuccess }: AuthModalProps) => {
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const [currentStep, setCurrentStep] = useState<AuthStep>("phone");
@@ -149,6 +150,7 @@ const AuthModal = ({ isOpen, onClose, redirectPath }: AuthModalProps) => {
     if (redirectPath) {
       navigate(redirectPath);
     }
+    onAuthSuccess?.();
   };
 
   const handleSocialLogin = (provider: "google" | "facebook") => {

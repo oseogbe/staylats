@@ -97,7 +97,7 @@ export function OverviewSection({
       <CardContent>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-muted/50">
               <TableHead>Property</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Location</TableHead>

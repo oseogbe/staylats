@@ -99,6 +99,16 @@ export interface ListingDetail {
     }
 }
 
+export interface HostDashboardMetrics {
+    totalEarnings: number
+    earningShortlets: number
+    earningRentals: number
+    totalBookings: number
+    bookedShortlets: number
+    bookedRentals: number
+    topPerformingListing: string | null
+}
+
 export default {
     /**
      * Public endpoint — fetches a single listing by slug (no auth needed).
@@ -121,6 +131,11 @@ export default {
 
     getUserListings: async (): Promise<{ listings: UserListing[] }> => {
         const res = await api.get('/listing/published')
+        return res.data.data
+    },
+
+    getHostDashboardMetrics: async (period: string): Promise<HostDashboardMetrics> => {
+        const res = await api.get('/listing/host/dashboard-metrics', { params: { period } })
         return res.data.data
     },
 

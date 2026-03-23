@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+
+import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "react-hot-toast";
 
 import Index from "@/pages/Index";
@@ -20,6 +22,7 @@ import IdentificationPage from "@/pages/myaccount/IdentificationPage";
 import BankAccountPage from "@/pages/myaccount/BankAccountPage";
 import CommunicationsPage from "@/pages/myaccount/CommunicationsPage";
 import ReferralsPage from "@/pages/myaccount/ReferralsPage";
+import ReservationsPage from "@/pages/myaccount/ReservationsPage";
 
 // Layouts
 import MyAccountLayout from "@/components/layouts/MyAccountLayout";
@@ -32,6 +35,7 @@ import FinancesPage from "@/pages/host/FinancesPage";
 import TenantManagementPage from "@/pages/host/TenantManagementPage";
 import BookingsPage from "@/pages/host/BookingsPage";
 import RentalApplicationsPage from "@/pages/host/RentalApplicationsPage";
+import ShortletBookingConfirmation from "@/pages/shortlet/ShortletBookingConfirmation";
 
 import Navbar from "@/components/Navbar";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -39,18 +43,6 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AuthProvider } from "@/contexts/AuthContext";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes default
-      gcTime: 10 * 60 * 1000, // 10 minutes default (formerly cacheTime)
-      retry: 1,
-      refetchOnWindowFocus: false, // Don't refetch on window focus to reduce unnecessary calls
-      refetchOnMount: true, // Refetch on mount if data is stale
-    },
-  },
-});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -78,6 +70,14 @@ const App = () => (
             <Route path="/property/:slug" element={<PropertyDetails />} />
             <Route path="/verify-email" element={<EmailVerification />} />
             <Route path="/resend-verification" element={<ResendEmailVerification />} />
+            <Route
+              path="/bookings/shortlet/confirmation"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <ShortletBookingConfirmation />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
 
             {/* Protected routes for authenticated users */}
@@ -145,6 +145,16 @@ const App = () => (
                 <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
                   <MyAccountLayout>
                     <ReferralsPage />
+                  </MyAccountLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-account/reservations"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                  <MyAccountLayout>
+                    <ReservationsPage />
                   </MyAccountLayout>
                 </ProtectedRoute>
               }

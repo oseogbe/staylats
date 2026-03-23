@@ -137,7 +137,7 @@ const Navbar = () => {
 
                     <DropdownMenuItem
                       className="p-4 hover:bg-neutral-50 cursor-pointer"
-                      onClick={() => navigate('/#')}
+                      onClick={() => navigate('/my-account/reservations')}
                     >
                         <CalendarCheck className="h-4 w-4 mr-3 text-neutral-600" />
                         <span className="text-sm font-medium">Reservations</span>

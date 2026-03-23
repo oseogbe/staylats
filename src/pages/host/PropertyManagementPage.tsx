@@ -33,8 +33,8 @@ const PropertyManagementPage = () => {
   const itemsPerPage = 6;
 
   // Fetch listings with React Query (cached automatically)
-  const { data: rawPublishedListings = [], isLoading: publishedLoading } = useUserListings();
-  const { data: rawDrafts = [], isLoading: draftsLoading } = useUserDrafts();
+  const { data: rawPublishedListings = [], isLoading: publishedLoading } = useUserListings(user?.id);
+  const { data: rawDrafts = [], isLoading: draftsLoading } = useUserDrafts(user?.id);
 
   // Transform published listings data
   const publishedListings = useMemo<PropertyListing[]>(() => {
@@ -71,16 +71,16 @@ const PropertyManagementPage = () => {
       const listingId = notification.metadata?.listingId;
       if (listingId) {
         // Update the cache directly for immediate UI update
-        queryClient.setQueryData(['userListings'], (old: any[] = []) => 
-          old.map(listing => 
-            listing.id === listingId 
+        queryClient.setQueryData(['userListings', user?.id], (old: any[] = []) =>
+          old.map(listing =>
+            listing.id === listingId
               ? { ...listing, status: notification.type === 'listing_approved' ? 'active' : 'declined' }
               : listing
           )
         );
       }
     }
-  }, [queryClient]);
+  }, [queryClient, user?.id]);
 
   // Initialize WebSocket with notification callback
   useNotifications(user?.id || '', {

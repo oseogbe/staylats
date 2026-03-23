@@ -19,9 +19,9 @@ export function MetricCard({ icon, title, value, subtitle, bgColor = "bg-blue-10
               {icon}
             </div>
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-neutral-600">{title}</p>
-            <p className="text-2xl font-bold text-neutral-900">{value}</p>
+            <p className="text-2xl font-bold text-neutral-900 truncate" title={String(value)}>{value}</p>
             <p className="text-xs text-neutral-500">{subtitle}</p>
           </div>
         </div>

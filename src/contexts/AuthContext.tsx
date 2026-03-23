@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 import authAPI from '@/services/auth';
 import profileAPI from '@/services/profile';
+import { unsubscribeFromPush } from '@/lib/pushNotifications';
+import { queryClient } from '@/lib/queryClient';
 
 // Define user types
 type UserRole = 'visitor' | 'tenant' | 'host' | 'admin' | 'superadmin';
@@ -72,6 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               localStorage.removeItem('hadSession');
             }
             localStorage.removeItem('accessToken');
+            queryClient.clear();
             setUser(null);
           }
         } else {
@@ -84,6 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.removeItem('hadSession');
         }
         localStorage.removeItem('accessToken');
+        queryClient.clear();
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -102,6 +106,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('hadSession', 'true');
 
+      queryClient.clear();
+
       // Get user profile
       const profileResponse = await profileAPI.getCurrentUser();
       const { user } = profileResponse.data;
@@ -117,6 +123,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await authAPI.logout();
       localStorage.removeItem('accessToken');
       localStorage.removeItem('hadSession');
+      unsubscribeFromPush().catch(() => {});
+      queryClient.clear();
       setUser(null);
       navigate('/');
     } catch (error) {
@@ -151,6 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('hadSession');
+      queryClient.clear();
       setUser(null);
       throw error;
     }

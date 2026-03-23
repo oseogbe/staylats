@@ -7,10 +7,11 @@ import profileAPI from '@/services/profile';
  * User profile is cached with a long stale time (30 minutes) since it changes infrequently
  * Uses the same query key as use-host-verification for cache sharing
  */
-export const useUserProfile = () => {
+export const useUserProfile = (userId: string | undefined) => {
   return useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', userId],
     queryFn: () => profileAPI.getCurrentUser(),
+    enabled: Boolean(userId),
     staleTime: 30 * 60 * 1000, // 30 minutes - user profile changes infrequently
     gcTime: 60 * 60 * 1000, // 1 hour - cache persists for 1 hour
     retry: 1,

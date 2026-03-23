@@ -17,7 +17,7 @@ const ProfilePage = () => {
   const queryClient = useQueryClient();
   
   // Fetch user profile with React Query (cached automatically)
-  const { data: profileUser, isLoading, error } = useUserProfile();
+  const { data: profileUser, isLoading, error } = useUserProfile(user?.id);
 
   // Transform profile data to UserData format using useMemo
   const userData = useMemo<UserData>(() => {

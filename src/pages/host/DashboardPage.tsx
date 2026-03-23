@@ -33,6 +33,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOverviewListings, type DashboardPeriod } from "@/hooks/use-overview-listings";
 import { useHostVerification } from "@/hooks/use-host-verification";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useHostShortletBookings } from "@/hooks/use-shortlet-bookings";
 
 const PERIOD_OPTIONS: { value: DashboardPeriod; label: string }[] = [
   { value: "all-time", label: "All Time" },
@@ -60,7 +61,17 @@ const DashboardPage = () => {
   } = useHostVerification();
 
   // Single hook provides everything the dashboard needs
-  const { items, totals, isLoading, isError } = useOverviewListings(period, 5);
+  const { items, totals, isLoading, isError } = useOverviewListings(period, 5, user?.id);
+
+  const { data: hostBookingsData } = useHostShortletBookings(user?.id);
+  const recentBookings = useMemo(() => {
+    const bookings = hostBookingsData?.bookings || [];
+    const now = new Date();
+    return bookings
+      .filter((b) => new Date(b.checkOutDate) >= now || b.status === "confirmed")
+      .sort((a, b) => new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime())
+      .slice(0, 4);
+  }, [hostBookingsData]);
 
   const currentTime = new Date();
   const greeting =
@@ -81,7 +92,7 @@ const DashboardPage = () => {
   const handleNotification = useCallback(
     (notification: any) => {
       if (notification.type === "host_verification_approved") {
-        queryClient.setQueryData(["userProfile"], (oldData: any) => {
+        queryClient.setQueryData(["userProfile", user?.id], (oldData: any) => {
           if (!oldData) return oldData;
           return {
             ...oldData,
@@ -97,7 +108,7 @@ const DashboardPage = () => {
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       }
     },
-    [queryClient]
+    [queryClient, user?.id]
   );
 
   useNotifications(user?.id || "", { onNotification: handleNotification });
@@ -327,11 +338,54 @@ const DashboardPage = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <p className="text-neutral-600">
-                Bookings will appear here once guests make shortlet reservations.
-              </p>
-            </div>
+            {recentBookings.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-neutral-600">
+                  Shortlet reservations will appear here
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentBookings.map((booking) => (
+                    <div
+                      key={booking.id}
+                      className="flex items-center justify-between gap-3 p-3 rounded-lg border border-neutral-100 hover:bg-neutral-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {booking.listing.image ? (
+                          <img
+                            src={booking.listing.image}
+                            alt={booking.listing.title}
+                            className="w-10 h-10 rounded-md object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-md bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                            <CalendarDays className="w-5 h-5 text-neutral-400" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-neutral-900 truncate">
+                            {booking.guest.firstName} {booking.guest.lastName}
+                          </p>
+                          <p className="text-xs text-neutral-500 truncate">
+                            {booking.listing.title}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs text-neutral-600">
+                          {new Date(booking.checkInDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                          {" – "}
+                          {new Date(booking.checkOutDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        </p>
+                        <p className="text-xs font-medium text-neutral-900 mt-0.5">
+                          {booking.numberOfNights} {booking.numberOfNights === 1 ? "night" : "nights"}
+                        </p>
+                      </div>
+                    </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -1,3 +1,4 @@
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from './use-user-profile';
 
 interface HostVerificationStatus {
@@ -15,7 +16,8 @@ interface HostVerificationStatus {
  * Returns whether the user needs to complete host verification
  */
 export const useHostVerification = (): HostVerificationStatus => {
-  const { data: user, isLoading } = useUserProfile();
+  const { user: authUser } = useAuth();
+  const { data: user, isLoading } = useUserProfile(authUser?.id);
         
   const hasHostProfile = !!user?.hostProfile;
   const hostProfile = user?.hostProfile;
