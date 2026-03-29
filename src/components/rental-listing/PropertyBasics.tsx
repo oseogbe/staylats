@@ -31,19 +31,20 @@ export function PropertyBasics({ form }: StepProps) {
         )}
       />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end sm:gap-4">
         <FormField
           control={form.control}
           name="bedrooms"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="min-w-0">
               <FormLabel>Bedrooms</FormLabel>
               <FormControl>
-                <div className="flex items-center space-x-2">
-                  <Bed className="h-4 w-4 text-muted-foreground" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <Bed className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <Input
                     type="number"
                     min="1"
+                    className="min-w-0"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                   />
@@ -58,14 +59,15 @@ export function PropertyBasics({ form }: StepProps) {
           control={form.control}
           name="bathrooms"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="min-w-0">
               <FormLabel>Bathrooms</FormLabel>
               <FormControl>
-                <div className="flex items-center space-x-2">
-                  <Bath className="h-4 w-4 text-muted-foreground" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <Bath className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <Input
                     type="number"
                     min="1"
+                    className="min-w-0"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                   />
@@ -80,14 +82,15 @@ export function PropertyBasics({ form }: StepProps) {
           control={form.control}
           name="maxGuests"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Max Occupants</FormLabel>
+            <FormItem className="min-w-0">
+              <FormLabel className="leading-snug">Max occupants</FormLabel>
               <FormControl>
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <Input
                     type="number"
                     min="1"
+                    className="min-w-0"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                   />

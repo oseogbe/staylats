@@ -17,21 +17,21 @@ const FinancesPage = () => {
           <CardTitle className="text-base">Wallet Balance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-neutral-100 rounded-lg">
-                <DollarSign className="w-5 h-5 text-neutral-600" />
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="shrink-0 rounded-lg bg-neutral-100 p-2">
+                <DollarSign className="h-5 w-5 text-neutral-600" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-neutral-600">Available Balance</p>
                 <p className="text-2xl font-bold text-neutral-900">₦0.00</p>
               </div>
             </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
+            <div className="flex w-full shrink-0 flex-col gap-2 sm:flex-row sm:justify-end md:w-auto">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 View Wallet
               </Button>
-              <Button size="sm" className="bg-primary hover:bg-primary-hover">
+              <Button size="sm" className="w-full bg-primary hover:bg-primary-hover sm:w-auto">
                 Withdraw
               </Button>
             </div>
@@ -41,17 +41,17 @@ const FinancesPage = () => {
 
       {/* Bank Account Warning */}
       <Card className="border-yellow-200 bg-yellow-50">
-        <CardContent className="p-6">
-          <div className="flex items-start space-x-3">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <DollarSign className="w-5 h-5 text-yellow-600" />
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 rounded-lg bg-yellow-100 p-2">
+              <DollarSign className="h-5 w-5 text-yellow-600" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-yellow-800 mb-1">No Bank Account Connected</h3>
-              <p className="text-sm text-yellow-700 mb-3">
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-1 font-medium text-yellow-800">No Bank Account Connected</h3>
+              <p className="mb-3 text-sm text-yellow-700">
                 Add a bank account to receive payouts from your rental properties
               </p>
-              <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">
+              <Button size="sm" className="w-full bg-yellow-600 text-white hover:bg-yellow-700 sm:w-auto">
                 Add Bank Account
               </Button>
             </div>

@@ -31,19 +31,20 @@ export function PropertyBasics({ form }: StepProps) {
         )}
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end sm:gap-4">
         <FormField
           control={form.control}
           name="bedrooms"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="min-w-0">
               <FormLabel>Bedrooms</FormLabel>
               <FormControl>
-                <div className="flex items-center space-x-2">
-                  <Bed className="h-4 w-4 text-muted-foreground" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <Bed className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <Input
                     type="number"
                     min="1"
+                    className="min-w-0"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                   />
@@ -58,14 +59,15 @@ export function PropertyBasics({ form }: StepProps) {
           control={form.control}
           name="bathrooms"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="min-w-0">
               <FormLabel>Bathrooms</FormLabel>
               <FormControl>
-                <div className="flex items-center space-x-2">
-                  <Bath className="h-4 w-4 text-muted-foreground" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <Bath className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <Input
                     type="number"
                     min="1"
+                    className="min-w-0"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                   />
@@ -78,19 +80,20 @@ export function PropertyBasics({ form }: StepProps) {
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-sm font-medium">Maximum Occupants</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <h3 className="text-sm font-medium">Maximum occupants</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <FormField
             control={form.control}
             name="maxAdults"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0">
                 <FormLabel>Adults</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     min="1"
                     placeholder="2"
+                    className="min-w-0"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                   />
@@ -104,13 +107,14 @@ export function PropertyBasics({ form }: StepProps) {
             control={form.control}
             name="maxKids"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0">
                 <FormLabel>Kids</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     min="0"
                     placeholder="0"
+                    className="min-w-0"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                   />
@@ -124,13 +128,14 @@ export function PropertyBasics({ form }: StepProps) {
             control={form.control}
             name="maxInfants"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0">
                 <FormLabel>Infants</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     min="0"
                     placeholder="0"
+                    className="min-w-0"
                     {...field}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                   />
@@ -144,14 +149,14 @@ export function PropertyBasics({ form }: StepProps) {
             control={form.control}
             name="allowPets"
             render={({ field }) => (
-              <FormItem className="flex flex-col justify-end">
-                <FormLabel>Pets Allowed</FormLabel>
+              <FormItem className="flex min-w-0 flex-col justify-end">
+                <FormLabel>Pets allowed</FormLabel>
                 <FormControl>
                   <Select
                     value={field.value ? "yes" : "no"}
                     onValueChange={(val) => field.onChange(val === "yes")}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="min-w-0 w-full">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>

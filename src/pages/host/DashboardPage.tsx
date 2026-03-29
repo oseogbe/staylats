@@ -150,27 +150,22 @@ const DashboardPage = () => {
       {/* Greeting + Period Filter */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="space-y-2">
-          <div className="flex items-center space-x-2 text-sm text-neutral-600">
-            <span>
-              🕕{" "}
-              {currentTime.toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-            <span>•</span>
-            <span>
-              {currentTime.toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </span>
+          <div className="flex items-center text-sm text-neutral-600">
+            {currentTime.toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </div>
-          <h2 className="text-2xl font-semibold text-neutral-900 flex items-center gap-2">
-            Good {greeting}, {userName}
-            {isVerified && <CheckCircle2 className="h-6 w-6 text-green-600" />}
+          <h2 className="text-2xl font-semibold text-neutral-900">
+            Good {greeting},{" "}
+            <span className="inline-flex items-center gap-1.5">
+              {userName}
+              {isVerified && (
+                <CheckCircle2 className="h-6 w-6 shrink-0 text-green-600" aria-hidden />
+              )}
+            </span>
           </h2>
         </div>
 

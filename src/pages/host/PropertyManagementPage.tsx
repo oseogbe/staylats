@@ -129,12 +129,17 @@ const PropertyManagementPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold text-neutral-900">Property Management</h2>
-          <p className="text-neutral-600 mt-1">Manage your property listings, including published and draft properties.</p>
+          <p className="text-neutral-600 mt-1 text-sm sm:text-base">
+            Manage your property listings, including published and draft properties.
+          </p>
         </div>
-        <Button onClick={handleCreateListing} className="bg-primary hover:bg-primary-hover">
+        <Button
+          onClick={handleCreateListing}
+          className="w-full shrink-0 bg-primary hover:bg-primary-hover sm:w-auto"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add New Listing
         </Button>
@@ -142,11 +147,17 @@ const PropertyManagementPage = () => {
 
       {/* Property Listings Tabs */}
       <Tabs value={listingTab} onValueChange={handleTabChange}>
-        <TabsList className="bg-neutral-100">
-          <TabsTrigger value="published" className="data-[state=active]:bg-white">
+        <TabsList className="flex h-auto min-h-11 w-full gap-1 bg-neutral-100 p-1 sm:inline-flex sm:w-auto sm:min-h-10">
+          <TabsTrigger
+            value="published"
+            className="min-h-10 flex-1 px-2 py-2.5 text-sm sm:flex-none sm:px-3 sm:py-1.5 data-[state=active]:bg-white"
+          >
             Published ({publishedListings.length})
           </TabsTrigger>
-          <TabsTrigger value="drafts" className="data-[state=active]:bg-white">
+          <TabsTrigger
+            value="drafts"
+            className="min-h-10 flex-1 px-2 py-2.5 text-sm sm:flex-none sm:px-3 sm:py-1.5 data-[state=active]:bg-white"
+          >
             Drafts ({draftListings.length})
           </TabsTrigger>
         </TabsList>

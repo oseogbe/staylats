@@ -3,13 +3,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { 
-  Bell, 
-  MessageSquare, 
-  Plus, 
-  Filter, 
+import {
+  Bell,
+  MessageSquare,
+  Plus,
+  Filter,
   RefreshCw,
   Trash2,
+  Tag,
+  CircleDot,
+  X,
 } from 'lucide-react';
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
@@ -154,8 +157,8 @@ const CommunicationsPage = () => {
           </TabsList>
 
           <TabsContent value="notifications" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="min-w-0">
                 <h3 className="text-lg font-semibold">Notifications</h3>
                 <p className="text-sm text-muted-foreground">
                   Stay updated with your latest notifications and activity
@@ -165,7 +168,7 @@ const CommunicationsPage = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => refetchNotifications()}
-                className="flex items-center gap-2"
+                className="flex w-full shrink-0 items-center justify-center gap-2 sm:w-auto"
               >
                 <RefreshCw className="h-4 w-4" />
                 Refresh
@@ -293,8 +296,8 @@ const CommunicationsPage = () => {
           </TabsContent>
 
           <TabsContent value="customer-support" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="min-w-0">
                 <h3 className="text-lg font-semibold">Messages</h3>
                 <p className="text-sm text-muted-foreground">
                   Send messages to our team and track responses
@@ -302,7 +305,7 @@ const CommunicationsPage = () => {
               </div>
               <Dialog open={isCreateMessageOpen} onOpenChange={setIsCreateMessageOpen}>
                 <DialogTrigger asChild>
-                  <Button className="flex items-center gap-2">
+                  <Button className="flex w-full shrink-0 items-center justify-center gap-2 sm:w-auto">
                     <Plus className="h-4 w-4" />
                     New Message
                   </Button>
@@ -423,29 +426,39 @@ const CommunicationsPage = () => {
               </Dialog>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select value={messageTypeFilter} onValueChange={setMessageTypeFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Message Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any Type</SelectItem>
-                    <SelectItem value="support">Support</SelectItem>
-                    <SelectItem value="complaint">Complaint</SelectItem>
-                    <SelectItem value="inquiry">Inquiry</SelectItem>
-                    <SelectItem value="feedback">Feedback</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Select value={messageStatusFilter} onValueChange={setMessageStatusFilter}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Status" />
+            <div className="-mx-1 flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto px-1 py-1 scrollbar-hide sm:mx-0 sm:overflow-visible sm:gap-2 sm:px-0 sm:pb-0">
+              <Filter className="max-sm:hidden h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <Select value={messageTypeFilter} onValueChange={setMessageTypeFilter}>
+                <SelectTrigger
+                  className="h-9 min-w-0 flex-1 gap-1.5 px-2 text-xs sm:h-10 sm:w-36 sm:flex-initial sm:px-3 sm:text-sm"
+                  aria-label="Filter by message type"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                    <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" aria-hidden />
+                    <SelectValue placeholder="Type" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Any Status</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="support">Support</SelectItem>
+                  <SelectItem value="complaint">Complaint</SelectItem>
+                  <SelectItem value="inquiry">Inquiry</SelectItem>
+                  <SelectItem value="feedback">Feedback</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={messageStatusFilter} onValueChange={setMessageStatusFilter}>
+                <SelectTrigger
+                  className="h-9 min-w-0 flex-1 gap-1.5 px-2 text-xs sm:h-10 sm:w-36 sm:flex-initial sm:px-3 sm:text-sm"
+                  aria-label="Filter by status"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                    <CircleDot className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" aria-hidden />
+                    <SelectValue placeholder="Status" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="sent">Sent</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
                   <SelectItem value="read">Read</SelectItem>
@@ -453,15 +466,18 @@ const CommunicationsPage = () => {
               </Select>
 
               <Button
+                type="button"
                 variant="outline"
-                size="sm"
+                size="icon"
+                className="h-9 w-9 shrink-0 sm:h-10 sm:w-10"
                 onClick={() => {
                   setMessageTypeFilter('all');
                   setMessageStatusFilter('all');
                 }}
-                className="ml-auto"
+                aria-label="Clear filters"
+                title="Clear filters"
               >
-                Clear
+                <X className="h-4 w-4" />
               </Button>
             </div>
 

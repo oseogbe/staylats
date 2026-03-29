@@ -53,7 +53,7 @@ const HostDashboardLayout = ({ children }: HostDashboardLayoutProps) => {
                   <TabsTrigger 
                     key={tab.value}
                     value={tab.value}
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-4 px-0 whitespace-nowrap flex-shrink-0"
+                    className="rounded-none border-0 py-4 px-0 whitespace-nowrap flex-shrink-0 shadow-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:ring-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary"
                   >
                     <tab.icon className="w-4 h-4 mr-2" />
                     <span className="hidden sm:inline">{tab.label}</span>

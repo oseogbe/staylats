@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import type { HostBookingItem } from "@/services/shortlet-bookings";
 
 interface BookingDetailModalProps {
@@ -49,6 +50,14 @@ export function BookingDetailModal({ booking, open, onOpenChange }: BookingDetai
 
   const statusCfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
   const guestCount = booking.guest.adults + booking.guest.children + booking.guest.infants;
+  const listingAddress = `${booking.listing.address}, ${booking.listing.city}, ${booking.listing.state}`;
+
+  const addressInner = (
+    <>
+      <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+      <span className="min-w-0 break-words">{listingAddress}</span>
+    </>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -57,28 +66,30 @@ export function BookingDetailModal({ booking, open, onOpenChange }: BookingDetai
           <DialogTitle className="text-lg">Booking Details</DialogTitle>
         </DialogHeader>
 
-        {/* Listing Info */}
-        <div className="flex gap-3 items-start">
-          {booking.listing.image ? (
-            <img
-              src={booking.listing.image}
-              alt={booking.listing.title}
-              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0">
-              <CalendarDays className="w-6 h-6 text-neutral-400" />
+        {/* Listing Info: address full-width row on mobile; under title from sm */}
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-3 items-start">
+            {booking.listing.image ? (
+              <img
+                src={booking.listing.image}
+                alt={booking.listing.title}
+                className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                <CalendarDays className="w-6 h-6 text-neutral-400" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-neutral-900 break-words">{booking.listing.title}</h3>
+              <p className={cn("mt-0.5 hidden text-sm text-neutral-500 sm:flex sm:items-start sm:gap-1")}>
+                {addressInner}
+              </p>
             </div>
-          )}
-          <div className="min-w-0">
-            <h3 className="font-semibold text-neutral-900 break-words">
-              {booking.listing.title}
-            </h3>
-            <p className="text-sm text-neutral-500 flex items-center gap-1 mt-0.5">
-              <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="truncate">{booking.listing.address}, {booking.listing.city}, {booking.listing.state}</span>
-            </p>
           </div>
+          <p className={cn("flex w-full min-w-0 items-start gap-1 text-sm text-neutral-500 sm:hidden")}>
+            {addressInner}
+          </p>
         </div>
 
         <div className="flex gap-2 flex-wrap">
@@ -94,14 +105,14 @@ export function BookingDetailModal({ booking, open, onOpenChange }: BookingDetai
           <h4 className="text-sm font-semibold text-neutral-900 mb-2 flex items-center gap-1.5">
             <CalendarDays className="w-4 h-4" /> Stay Period
           </h4>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="bg-neutral-50 rounded-lg p-3">
+          <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            <div className="min-w-0 bg-neutral-50 rounded-lg p-3">
               <p className="text-neutral-500 text-xs mb-0.5">Check-in</p>
-              <p className="font-medium text-neutral-900">{formatDate(booking.checkInDate)}</p>
+              <p className="font-medium text-neutral-900 break-words">{formatDate(booking.checkInDate)}</p>
             </div>
-            <div className="bg-neutral-50 rounded-lg p-3">
+            <div className="min-w-0 bg-neutral-50 rounded-lg p-3">
               <p className="text-neutral-500 text-xs mb-0.5">Check-out</p>
-              <p className="font-medium text-neutral-900">{formatDate(booking.checkOutDate)}</p>
+              <p className="font-medium text-neutral-900 break-words">{formatDate(booking.checkOutDate)}</p>
             </div>
           </div>
           <p className="text-xs text-neutral-500 mt-1.5 flex items-center gap-1">
@@ -160,28 +171,31 @@ export function BookingDetailModal({ booking, open, onOpenChange }: BookingDetai
             <CreditCard className="w-4 h-4" /> Payment
           </h4>
           <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-neutral-600">
-                {formatCurrency(booking.pricePerNight)} × {booking.numberOfNights} {booking.numberOfNights === 1 ? "night" : "nights"}
+            <div className="flex justify-between gap-3">
+              <span className="min-w-0 text-neutral-600 break-words">
+                {formatCurrency(booking.pricePerNight)} × {booking.numberOfNights}{" "}
+                {booking.numberOfNights === 1 ? "night" : "nights"}
               </span>
-              <span className="text-neutral-900">{formatCurrency(booking.subtotal)}</span>
+              <span className="flex-shrink-0 text-right text-neutral-900 tabular-nums">
+                {formatCurrency(booking.subtotal)}
+              </span>
             </div>
             {booking.cleaningFee != null && booking.cleaningFee > 0 && (
-              <div className="flex justify-between">
-                <span className="text-neutral-600">Cleaning fee</span>
-                <span className="text-neutral-900">{formatCurrency(booking.cleaningFee)}</span>
+              <div className="flex justify-between gap-3">
+                <span className="min-w-0 text-neutral-600">Cleaning fee</span>
+                <span className="flex-shrink-0 text-neutral-900 tabular-nums">{formatCurrency(booking.cleaningFee)}</span>
               </div>
             )}
             {booking.serviceFee != null && booking.serviceFee > 0 && (
-              <div className="flex justify-between">
-                <span className="text-neutral-600">Service fee</span>
-                <span className="text-neutral-900">{formatCurrency(booking.serviceFee)}</span>
+              <div className="flex justify-between gap-3">
+                <span className="min-w-0 text-neutral-600">Service fee</span>
+                <span className="flex-shrink-0 text-neutral-900 tabular-nums">{formatCurrency(booking.serviceFee)}</span>
               </div>
             )}
             <Separator className="my-1" />
-            <div className="flex justify-between font-semibold">
+            <div className="flex justify-between gap-3 font-semibold">
               <span className="text-neutral-900">Total</span>
-              <span className="text-neutral-900">{formatCurrency(booking.totalPrice)}</span>
+              <span className="flex-shrink-0 text-neutral-900 tabular-nums">{formatCurrency(booking.totalPrice)}</span>
             </div>
           </div>
         </div>

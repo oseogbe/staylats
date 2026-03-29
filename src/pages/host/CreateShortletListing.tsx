@@ -321,6 +321,103 @@ export default function CreateShortletListing() {
 
   const CurrentStepComponent = steps[currentStep - 1].Component;
 
+  const renderBackButton = () =>
+    currentStep <= 2 ? (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-fit shrink-0 bg-accent sm:bg-transparent"
+        onClick={() => navigate('/host/create-listing')}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
+    ) : (
+      <AlertDialog open={confirmBackOpen} onOpenChange={setConfirmBackOpen}>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-fit shrink-0 bg-accent sm:bg-transparent"
+            onClick={() => setConfirmBackOpen(true)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save this listing as a draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved progress. Choose whether to save your current form data as a draft before leaving.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSavingDraft} onClick={() => setConfirmBackOpen(false)}>
+              Stay
+            </AlertDialogCancel>
+            <Button
+              variant="secondary"
+              disabled={isSavingDraft}
+              onClick={() => {
+                setConfirmBackOpen(false);
+                navigate('/host/property-management');
+              }}
+            >
+              Leave without saving
+            </Button>
+            <AlertDialogAction
+              disabled={isSavingDraft}
+              onClick={async () => {
+                try {
+                  setIsSavingDraft(true);
+                  const formData = form.getValues();
+                  const { photos, photoFiles, proofOfVisitFile, utilityBillFile, ...cleanFormData } = formData;
+
+                  if (draftId) {
+                    await listingsService.updateDraft(draftId, {
+                      type: 'shortlet',
+                      title: formData.title,
+                      step: currentStep,
+                      totalSteps: steps.length,
+                      formData: cleanFormData,
+                      photoItems: photoUploadHook.photos,
+                      photoFiles: photoUploadHook.uploadedFiles,
+                      proofOfVisitFile,
+                      utilityBillFile,
+                    });
+                  } else {
+                    const response = await listingsService.saveDraft({
+                      type: 'shortlet',
+                      title: formData.title,
+                      step: currentStep,
+                      totalSteps: steps.length,
+                      formData: cleanFormData,
+                      images: formData.photoFiles || [],
+                      proofOfVisitFile,
+                      utilityBillFile,
+                    });
+                    if (response?.data?.draftId) {
+                      setDraftId(response.data.draftId);
+                    }
+                  }
+                  toast.success('Draft saved');
+                  setConfirmBackOpen(false);
+                  queryClient.invalidateQueries({ queryKey: ['userDrafts'] });
+                  navigate('/host/property-management');
+                } catch (error) {
+                  toast.error('Failed to save draft');
+                  setIsSavingDraft(false);
+                }
+              }}
+            >
+              Save draft and leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+
   if (isLoadingDraft) {
     return (
       <div className="min-h-screen bg-background p-4">
@@ -344,130 +441,39 @@ export default function CreateShortletListing() {
       />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            {currentStep <= 2 ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/host/create-listing')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            ) : (
-              <AlertDialog open={confirmBackOpen} onOpenChange={setConfirmBackOpen}>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setConfirmBackOpen(true)}
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Save this listing as a draft?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      You have unsaved progress. Choose whether to save your current form data as a draft before leaving.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel 
-                      disabled={isSavingDraft}
-                      onClick={() => setConfirmBackOpen(false)}
-                    >
-                      Stay
-                    </AlertDialogCancel>
-                    <Button
-                      variant="secondary"
-                      disabled={isSavingDraft}
-                      onClick={() => {
-                        // Leave without saving
-                        setConfirmBackOpen(false);
-                        navigate('/host/property-management');
-                      }}
-                    >
-                      Leave without saving
-                    </Button>
-                    <AlertDialogAction
-                      disabled={isSavingDraft}
-                      onClick={async () => {
-                        try {
-                          setIsSavingDraft(true);
-                          const formData = form.getValues();
-
-                          // Remove photos and photoFiles from formData since they're handled separately
-                          const { photos, photoFiles, proofOfVisitFile, utilityBillFile, ...cleanFormData } = formData;
-
-                          if (draftId) {
-                            // Update existing draft - send PhotoItems array and File objects
-                            await listingsService.updateDraft(draftId, {
-                              type: 'shortlet',
-                              title: formData.title,
-                              step: currentStep,
-                              totalSteps: steps.length,
-                              formData: cleanFormData,
-                              photoItems: photoUploadHook.photos,
-                              photoFiles: photoUploadHook.uploadedFiles,
-                              proofOfVisitFile,
-                              utilityBillFile
-                            });
-                          } else {
-                            // Create new draft
-                            const response = await listingsService.saveDraft({
-                              type: 'shortlet',
-                              title: formData.title,
-                              step: currentStep,
-                              totalSteps: steps.length,
-                              formData: cleanFormData,
-                              images: formData.photoFiles || [],
-                              proofOfVisitFile,
-                              utilityBillFile
-                            });
-                            if (response?.data?.draftId) {
-                              setDraftId(response.data.draftId);
-                            }
-                          }
-                          toast.success('Draft saved');
-                          setConfirmBackOpen(false);
-
-                          // Invalidate listings draft cache to refresh data
-                          queryClient.invalidateQueries({ queryKey: ['userDrafts'] });
-
-                          navigate('/host/property-management');
-                        } catch (error) {
-                          toast.error('Failed to save draft');
-                          setIsSavingDraft(false);
-                        }
-                      }}
-                    >
-                      Save draft and leave
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            <div>
-              <h1 className="text-2xl font-bold">Create Shortlet Listing</h1>
-              <p className="text-muted-foreground">Step {currentStep} of {steps.length}</p>
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3 sm:hidden">
+              <h1 className="min-w-0 flex-1 pr-2 text-xl font-bold leading-tight">Create Shortlet Listing</h1>
+              {renderBackButton()}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground sm:hidden">
+              Step {currentStep} of {steps.length}
+            </p>
+            <div className="hidden sm:flex sm:items-center sm:gap-4">
+              <div className="shrink-0 sm:-ml-2">{renderBackButton()}</div>
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold">Create Shortlet Listing</h1>
+                <p className="text-base text-muted-foreground">Step {currentStep} of {steps.length}</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <BedDouble className="h-5 w-5 text-primary" />
+          <div className="flex shrink-0 items-center gap-2 self-start sm:self-center">
+            <BedDouble className="h-5 w-5 shrink-0 text-primary" />
             <span className="text-sm font-medium text-primary">Shortlet Property</span>
           </div>
         </div>
 
         {/* Progress Steps */}
         <div className="mb-8">
-          <div className="flex items-center justify-between gap-1 md:gap-2">
+          <div className="flex w-full items-center justify-between gap-0.5 overflow-x-auto pb-1 scrollbar-hide sm:gap-1 md:gap-2">
             {steps.map((step) => (
-              <div key={step.id} className="flex flex-col items-center">
-                <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-medium ${currentStep >= step.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                  }`}>
+              <div key={step.id} className="flex min-w-0 flex-1 flex-col items-center">
+                <div
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium md:h-8 md:w-8 md:text-sm ${
+                    currentStep >= step.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}
+                >
                   {step.id}
                 </div>
                 <div className="hidden md:block text-xs text-center mt-2 max-w-20">
@@ -502,12 +508,13 @@ export default function CreateShortletListing() {
                 />
 
                 {/* Navigation Buttons */}
-                <div className="flex justify-between pt-6 border-t">
+                <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={prevStep}
                     disabled={currentStep === 1}
+                    className="w-full sm:w-auto"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Previous
@@ -517,6 +524,7 @@ export default function CreateShortletListing() {
                     <Button 
                       type="submit" 
                       disabled={isPublishing}
+                      className="w-full sm:w-auto"
                     >
                       {isPublishing ? (
                         <>
@@ -535,6 +543,7 @@ export default function CreateShortletListing() {
                       type="button"
                       onClick={nextStep}
                       disabled={hasCurrentStepErrors}
+                      className="w-full sm:w-auto"
                     >
                       Next
                       <ArrowRight className="h-4 w-4 ml-2" />
