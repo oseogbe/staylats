@@ -211,50 +211,52 @@ function BookingsList({
         return (
           <button
             key={booking.id}
-            className="w-full flex items-center justify-between gap-4 p-4 rounded-lg border border-neutral-100 hover:bg-neutral-50 transition-colors text-left"
+            className="w-full flex items-start justify-between gap-3 sm:gap-4 p-4 rounded-lg border border-neutral-100 hover:bg-neutral-50 transition-colors text-left"
             onClick={() => onBookingClick(booking)}
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex min-w-0 flex-1 gap-3">
               {booking.listing.image ? (
                 <img
                   src={booking.listing.image}
                   alt={booking.listing.title}
-                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                  className="h-12 w-12 shrink-0 rounded-lg object-cover"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0">
-                  <CalendarDays className="w-5 h-5 text-neutral-400" />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-neutral-100">
+                  <CalendarDays className="h-5 w-5 text-neutral-400" />
                 </div>
               )}
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-neutral-900 truncate">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-neutral-900 break-words line-clamp-2">
                   {booking.guest.firstName} {booking.guest.lastName}
                 </p>
-                <p className="text-xs text-neutral-500 truncate">
+                <p className="mt-0.5 text-xs text-neutral-500 break-words line-clamp-3">
                   {booking.listing.title}
                 </p>
-                <p className="text-xs text-neutral-400 mt-0.5">
-                  {new Date(booking.checkInDate).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                  {" – "}
-                  {new Date(booking.checkOutDate).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
+                <p className="mt-1 text-xs text-neutral-400">
+                  <span className="whitespace-normal">
+                    {new Date(booking.checkInDate).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                    {" – "}
+                    {new Date(booking.checkOutDate).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
                   <span className="mx-1">·</span>
                   {booking.numberOfNights} {booking.numberOfNights === 1 ? "night" : "nights"}
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <Badge variant="secondary" className={`text-[11px] ${statusClass}`}>
-                booking {booking.status.replace("_", " ")}
+            <div className="flex shrink-0 flex-col items-end gap-1.5 pt-0.5">
+              <Badge variant="secondary" className={`whitespace-nowrap text-[11px] capitalize ${statusClass}`}>
+                {booking.status.replace(/_/g, " ")}
               </Badge>
-              <span className="text-sm font-semibold text-neutral-900">
+              <span className="text-sm font-semibold text-neutral-900 tabular-nums">
                 ₦{booking.totalPrice.toLocaleString("en-NG", { minimumFractionDigits: 0 })}
               </span>
             </div>
