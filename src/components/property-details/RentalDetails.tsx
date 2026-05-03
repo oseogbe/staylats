@@ -17,14 +17,16 @@ function FeeItem({
   refundable?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-neutral-50 border text-sm">
-      <div>
-        <span>{label}</span>
+    <div className="flex min-w-0 flex-col gap-2 p-3 rounded-lg bg-neutral-50 border text-sm text-left">
+      <div className="min-w-0 flex flex-col gap-0.5">
+        <span className="text-xs text-muted-foreground leading-snug">{label}</span>
         {refundable && (
-          <span className="ml-1.5 text-xs text-green-600">(Refundable)</span>
+          <span className="text-xs text-green-600">(Refundable)</span>
         )}
       </div>
-      <span className="font-medium">₦{amount.toLocaleString()}</span>
+      <p className="text-sm font-semibold tabular-nums leading-none">
+        ₦{amount.toLocaleString()}
+      </p>
     </div>
   );
 }
@@ -41,13 +43,18 @@ export function RentalDetails({ rentalInfo }: RentalDetailsProps) {
       {hasPricing && (
         <div className="space-y-2">
           <h3 className="text-base font-medium">Pricing options</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {Object.entries(pricing)
               .sort(([, a], [, b]) => Number(a) - Number(b))
               .map(([term, amount]) => (
-                <div key={term} className="p-3 rounded-lg bg-neutral-50 border text-center">
-                  <p className="text-xs text-muted-foreground capitalize">{term}</p>
-                  <p className="text-sm font-semibold mt-0.5">
+                <div
+                  key={term}
+                  className="flex min-w-0 flex-col gap-1 p-3 rounded-lg bg-neutral-50 border text-left"
+                >
+                  <span className="text-xs text-muted-foreground capitalize leading-snug">
+                    {term}
+                  </span>
+                  <p className="text-sm font-semibold tabular-nums leading-none">
                     ₦{Number(amount).toLocaleString()}
                   </p>
                 </div>
@@ -63,7 +70,7 @@ export function RentalDetails({ rentalInfo }: RentalDetailsProps) {
         rentalInfo.inspectionFee) && (
         <div className="space-y-2">
           <h3 className="text-base font-medium">Fees</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {rentalInfo.inspectionFee != null && rentalInfo.inspectionFee > 0 && (
               <FeeItem label="Inspection fee" amount={rentalInfo.inspectionFee} />
             )}
