@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useMemo, useCallback } from "react";
+import DOMPurify from "dompurify";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -249,9 +250,16 @@ const PropertyDetails = () => {
               {/* Description */}
               <div className="space-y-3">
                 <h2 className="text-xl font-semibold">About this place</h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {listing.description || "No description provided."}
-                </p>
+                {listing.description ? (
+                  <div
+                    className="text-muted-foreground leading-relaxed prose prose-neutral dark:prose-invert max-w-none [&_p]:mb-3 [&_p:last-child]:mb-0"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(listing.description),
+                    }}
+                  />
+                ) : (
+                  <p className="text-muted-foreground leading-relaxed">No description provided.</p>
+                )}
               </div>
 
               <Separator />
@@ -333,6 +341,7 @@ const PropertyDetails = () => {
                   latitude={listing.location?.lat ?? 0}
                   longitude={listing.location?.lng ?? 0}
                   locationLabel={location}
+                  interactive={false}
                 />
               </div>
             </div>

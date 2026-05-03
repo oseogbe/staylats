@@ -14,6 +14,8 @@ interface LocationMapProps {
   /** Zoom level — kept low since coordinates are approximate */
   zoom?: number;
   height?: string;
+  /** When false, disables pan, scroll zoom, keyboard shortcuts, and hides zoom controls. */
+  interactive?: boolean;
 }
 
 export function LocationMap({
@@ -23,40 +25,40 @@ export function LocationMap({
   className,
   zoom = 13,
   height = "320px",
+  interactive = true,
 }: LocationMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
 
   const hasCoords = latitude !== 0 && longitude !== 0;
 
   useEffect(() => {
     if (!mapContainer.current || !hasCoords) return;
-    if (map.current) return;
 
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
-    map.current = new mapboxgl.Map({
+    const mapInstance = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11",
       center: [longitude, latitude],
       zoom,
+      interactive,
       attributionControl: false,
     });
 
-    map.current.addControl(
-      new mapboxgl.NavigationControl({ showCompass: false }),
-      "top-right"
-    );
+    if (interactive) {
+      mapInstance.addControl(
+        new mapboxgl.NavigationControl({ showCompass: false }),
+        "top-right"
+      );
+    }
 
-    map.current.addControl(
+    mapInstance.addControl(
       new mapboxgl.AttributionControl({ compact: true }),
       "bottom-left"
     );
 
-    map.current.on("load", () => {
-      if (!map.current) return;
-
+    mapInstance.on("load", () => {
       // Theme-aware marker color
       const root = document.documentElement;
       const styles = getComputedStyle(root);
@@ -67,7 +69,7 @@ export function LocationMap({
 
       marker.current = new mapboxgl.Marker({ color: markerColor })
         .setLngLat([longitude, latitude])
-        .addTo(map.current!);
+        .addTo(mapInstance);
     });
 
     return () => {
@@ -75,12 +77,9 @@ export function LocationMap({
         marker.current.remove();
         marker.current = null;
       }
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
+      mapInstance.remove();
     };
-  }, [latitude, longitude, zoom, hasCoords]);
+  }, [latitude, longitude, zoom, hasCoords, interactive]);
 
   // Fallback when coordinates are missing / zero
   if (!hasCoords) {
