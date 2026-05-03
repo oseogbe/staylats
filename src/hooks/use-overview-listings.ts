@@ -42,8 +42,8 @@ export interface UseOverviewListingsResult {
  * Provides data for the host dashboard Overview section and metric cards.
  *
  * Property counts come from the user's listings cache (always "all-time").
- * Earnings / bookings / top-performing come from the dedicated metrics
- * endpoint, which respects the selected period filter.
+ * Earnings / bookings / top-performing and per-listing overview stats come from the
+ * dedicated metrics endpoint, which respects the selected period filter.
  */
 export function useOverviewListings(
   period: DashboardPeriod = "all-time",
@@ -65,17 +65,28 @@ export function useOverviewListings(
   const { items, totals } = useMemo(() => {
     const allPublished = publishedListings as UserListing[];
 
+    const perListing = new Map<string, { bookings: number; currentEarnings: number }>();
+    for (const row of metrics?.listingMetrics ?? []) {
+      perListing.set(row.listingId, {
+        bookings: row.bookings,
+        currentEarnings: row.currentEarnings,
+      });
+    }
+
     const overviewItems: OverviewListingItem[] = allPublished
       .slice(0, topN)
-      .map((listing) => ({
-        id: listing.id,
-        title: listing.title || "Untitled",
-        type: listing.type,
-        location: [listing.city, listing.state].filter(Boolean).join(", ") || "—",
-        status: listing.status,
-        bookings: 0,
-        currentEarnings: 0,
-      }));
+      .map((listing) => {
+        const m = perListing.get(listing.id);
+        return {
+          id: listing.id,
+          title: listing.title || "Untitled",
+          type: listing.type,
+          location: [listing.city, listing.state].filter(Boolean).join(", ") || "—",
+          status: listing.status,
+          bookings: m?.bookings ?? 0,
+          currentEarnings: m?.currentEarnings ?? 0,
+        };
+      });
 
     const rentals = allPublished.filter((l) => l.type === "rental").length;
     const shortlets = allPublished.filter((l) => l.type === "shortlet").length;

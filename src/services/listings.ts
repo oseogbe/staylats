@@ -99,6 +99,12 @@ export interface ListingDetail {
     }
 }
 
+export interface HostListingDashboardMetric {
+    listingId: string
+    bookings: number
+    currentEarnings: number
+}
+
 export interface HostDashboardMetrics {
     totalEarnings: number
     earningShortlets: number
@@ -107,6 +113,7 @@ export interface HostDashboardMetrics {
     bookedShortlets: number
     bookedRentals: number
     topPerformingListing: string | null
+    listingMetrics: HostListingDashboardMetric[]
 }
 
 export default {
