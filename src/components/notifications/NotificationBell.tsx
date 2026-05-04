@@ -27,6 +27,19 @@ export interface Notification {
   createdAt: string;
 }
 
+/** Merge two notification rows with the same id; prefer defined snapshot fields so socket payloads cannot wipe DB-backed dates. */
+function mergeDuplicateNotifications(existing: Notification, incoming: Notification): Notification {
+  return {
+    ...existing,
+    ...incoming,
+    createdAt: incoming.createdAt ?? existing.createdAt,
+    title: incoming.title ?? existing.title,
+    message: incoming.message ?? existing.message,
+    type: incoming.type ?? existing.type,
+    read: incoming.read ?? existing.read,
+  };
+}
+
 const NotificationBell = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -53,17 +66,28 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Merge notifications, removing duplicates, sort by newest, limit to last 10
+  // Persisted first so realtime overlays read/status without dropping fields missing on the wire.
+  // Merge duplicates by id so an incomplete socket payload cannot beat the REST row for createdAt.
   const allNotifications = [
+    ...(persistedNotifications || []),
     ...(realtimeNotifications || []),
-    ...(persistedNotifications || [])
   ]
     .reduce((unique, notification) => {
-      const exists = unique.some(n => n.id === notification.id);
-      if (!exists) unique.push(notification);
+      const idx = unique.findIndex((n) => n.id === notification.id);
+      if (idx === -1) {
+        unique.push(notification);
+        return unique;
+      }
+      unique[idx] = mergeDuplicateNotifications(unique[idx], notification);
       return unique;
     }, [] as Notification[])
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => {
+      const tb = new Date(b.createdAt).getTime();
+      const ta = new Date(a.createdAt).getTime();
+      const nb = Number.isNaN(tb) ? -Infinity : tb;
+      const na = Number.isNaN(ta) ? -Infinity : ta;
+      return nb - na;
+    })
     .slice(0, 10);
 
   const unreadCount = allNotifications?.filter(n => !n.read).length || 0;
@@ -98,9 +122,11 @@ const NotificationBell = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'Unknown date';
-    
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString?.trim()) {
+      return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(0, 'minute');
+    }
+
     const date = new Date(dateString);
     
     // Check if date is invalid
