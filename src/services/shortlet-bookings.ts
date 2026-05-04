@@ -26,7 +26,6 @@ export interface ShortletAvailabilityResponse {
   subtotal: number
   cleaningFee: number
   securityDeposit: number
-  serviceFee: number
   totalPrice: number
   hostShareAmount: number
   platformCommissionAmount: number
@@ -152,8 +151,10 @@ export interface HostBookingItem {
   numberOfNights: number
   pricePerNight: number
   subtotal: number
-  serviceFee: number | null
+  platformCommissionAmount: number | null
+  hostShareAmount: number | null
   cleaningFee: number | null
+  securityDeposit: number | null
   totalPrice: number
   status: string
   specialRequests: string | null

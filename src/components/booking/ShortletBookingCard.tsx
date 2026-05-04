@@ -63,11 +63,10 @@ export const ShortletBookingCard = ({
     checkIn && checkOut
       ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
-  const subtotal = nights * price;
-  const serviceFee = Math.round(subtotal * 0.1);
+  const subtotal = Math.round(nights * price);
   const cleaningTotal = cleaningFee ?? 0;
   const depositTotal = securityDeposit ?? 0;
-  const totalWithFees = subtotal + serviceFee + cleaningTotal + depositTotal;
+  const totalWithFees = subtotal + cleaningTotal + depositTotal;
   const canBook = Boolean(checkIn && checkOut && totalGuests > 0);
 
   const availabilityMutation = useCheckShortletAvailability();
@@ -283,10 +282,6 @@ export const ShortletBookingCard = ({
                   ₦{price.toLocaleString()} x {nights} night{nights !== 1 ? "s" : ""}
                 </span>
                 <span>₦{subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Service fee</span>
-                <span>₦{serviceFee.toLocaleString()}</span>
               </div>
               {cleaningTotal > 0 && (
                 <div className="flex justify-between">

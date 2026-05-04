@@ -50,7 +50,6 @@ export function ShortletDetails({ shortletInfo }: ShortletDetailsProps) {
       value: "Available",
     });
   }
-
   if (details.length === 0 && !shortletInfo.houseRules) return null;
 
   return (

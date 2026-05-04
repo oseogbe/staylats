@@ -48,6 +48,22 @@ function formatCurrency(amount: number) {
 export function BookingDetailModal({ booking, open, onOpenChange }: BookingDetailModalProps) {
   if (!booking) return null;
 
+  const platformCommission =
+    booking.platformCommissionAmount != null &&
+    !Number.isNaN(booking.platformCommissionAmount)
+      ? Math.round(booking.platformCommissionAmount)
+      : null;
+
+  const hostPayout =
+    booking.hostShareAmount != null && !Number.isNaN(booking.hostShareAmount)
+      ? Math.round(booking.hostShareAmount)
+      : null;
+
+  const securityDepositFee =
+    booking.securityDeposit != null && !Number.isNaN(booking.securityDeposit)
+      ? Math.round(booking.securityDeposit)
+      : 0;
+
   const statusCfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
   const guestCount = booking.guest.adults + booking.guest.children + booking.guest.infants;
   const listingAddress = `${booking.listing.address}, ${booking.listing.city}, ${booking.listing.state}`;
@@ -186,17 +202,41 @@ export function BookingDetailModal({ booking, open, onOpenChange }: BookingDetai
                 <span className="flex-shrink-0 text-neutral-900 tabular-nums">{formatCurrency(booking.cleaningFee)}</span>
               </div>
             )}
-            {booking.serviceFee != null && booking.serviceFee > 0 && (
+            {securityDepositFee > 0 && (
               <div className="flex justify-between gap-3">
-                <span className="min-w-0 text-neutral-600">Service fee</span>
-                <span className="flex-shrink-0 text-neutral-900 tabular-nums">{formatCurrency(booking.serviceFee)}</span>
+                <span className="min-w-0 text-neutral-600">
+                  Security deposit (refundable, held by platform)
+                </span>
+                <span className="flex-shrink-0 text-right text-neutral-900 tabular-nums">
+                  {formatCurrency(securityDepositFee)}
+                </span>
               </div>
             )}
             <Separator className="my-1" />
             <div className="flex justify-between gap-3 font-semibold">
-              <span className="text-neutral-900">Total</span>
-              <span className="flex-shrink-0 text-neutral-900 tabular-nums">{formatCurrency(booking.totalPrice)}</span>
+              <span className="text-neutral-900">Guest total charged</span>
+              <span className="flex-shrink-0 text-neutral-900 tabular-nums">
+                {formatCurrency(booking.totalPrice)}
+              </span>
             </div>
+            {platformCommission != null && hostPayout != null && (
+              <>
+                <Separator className="my-2" />
+                <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+                  Host settlement
+                </p>
+                <div className="flex justify-between gap-3">
+                  <span className="min-w-0 text-neutral-600">Platform commission (10%)</span>
+                  <span className="flex-shrink-0 text-right text-neutral-900 tabular-nums">
+                    {formatCurrency(platformCommission)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-3 font-semibold text-green-900">
+                  <span>Your payout (estimated)</span>
+                  <span className="flex-shrink-0 tabular-nums">{formatCurrency(hostPayout)}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
