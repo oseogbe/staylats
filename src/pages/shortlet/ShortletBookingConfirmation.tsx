@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ const ShortletBookingConfirmation = () => {
 
   const skipVerification = isGatewayCancelled;
 
-  const { data, isLoading, isError, error, refetch } = useVerifyShortletPayment({
+  const { data, isLoading, isError, error } = useVerifyShortletPayment({
     txRef: skipVerification ? undefined : txRef,
     transactionId: skipVerification ? undefined : transactionId,
     gatewayStatus: skipVerification ? undefined : status || undefined,
@@ -157,23 +157,29 @@ const ShortletBookingConfirmation = () => {
           </>
         )}
 
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={() => refetch()} disabled={isLoading}>
-            Re-check status
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/my-account/reservations')}>
-            View reservations
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleDownloadReceipt}
-            disabled={!receipt}
-          >
-            Download receipt
-          </Button>
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/my-account/reservations")}
+            >
+              View reservations
+            </Button>
+            <Button
+              className="w-full"
+              onClick={handleDownloadReceipt}
+              disabled={!receipt}
+            >
+              Download receipt
+            </Button>
+          </div>
           {redirectSlug ? (
-            <Button variant="ghost" asChild>
-              <Link to={`/property/${redirectSlug}`}>Back to listing</Link>
+            <Button variant="ghost" className="w-full" asChild>
+              <Link to={`/property/${redirectSlug}`}>
+                <ArrowLeft />
+                Back to listing
+              </Link>
             </Button>
           ) : (
             <Button variant="ghost" onClick={() => navigate("/properties")}>
