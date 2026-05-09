@@ -16,12 +16,14 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   redirectPath?: string;
+  /** Passed to `navigate(redirectPath, { state })` when auth completes */
+  redirectState?: unknown;
   onAuthSuccess?: () => void;
 }
 
 export type AuthStep = "phone" | "otp" | "registration";
 
-const AuthModal = ({ isOpen, onClose, redirectPath, onAuthSuccess }: AuthModalProps) => {
+const AuthModal = ({ isOpen, onClose, redirectPath, redirectState, onAuthSuccess }: AuthModalProps) => {
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const [currentStep, setCurrentStep] = useState<AuthStep>("phone");
@@ -148,7 +150,7 @@ const AuthModal = ({ isOpen, onClose, redirectPath, onAuthSuccess }: AuthModalPr
     
     // Navigate to redirect path if provided
     if (redirectPath) {
-      navigate(redirectPath);
+      navigate(redirectPath, redirectState !== undefined ? { state: redirectState } : undefined);
     }
     onAuthSuccess?.();
   };

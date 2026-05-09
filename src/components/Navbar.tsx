@@ -13,6 +13,7 @@ import AuthModal from '@/components/auth/AuthModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useCreateListingPrompt } from '@/contexts/CreateListingPromptContext';
 
 import {
   Menu,
@@ -28,12 +29,15 @@ import {
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
+  const { openPrompt: openCreateListingPrompt } = useCreateListingPrompt();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalRedirectPath, setAuthModalRedirectPath] = useState<string>();
+  const [authModalRedirectState, setAuthModalRedirectState] = useState<unknown>();
 
-  const openAuthModal = (redirectPath?: string) => {
+  const openAuthModal = (redirectPath?: string, redirectState?: unknown) => {
     setAuthModalRedirectPath(redirectPath);
+    setAuthModalRedirectState(redirectState);
     setIsAuthModalOpen(true);
   };
 
@@ -73,9 +77,9 @@ const Navbar = () => {
               className="hidden lg:flex text-sm text-primary-foreground font-semibold px-3 py-2 rounded-full bg-primary hover:bg-primary/80"
               onClick={() => {
                 if (isAuthenticated) {
-                  navigate('/host/create-listing');
+                  openCreateListingPrompt();
                 } else {
-                  openAuthModal('/host/create-listing');
+                  openAuthModal('/host/dashboard', { openCreateListingPrompt: true });
                 }
               }}
             >
@@ -198,8 +202,10 @@ const Navbar = () => {
         onClose={() => {
           setIsAuthModalOpen(false);
           setAuthModalRedirectPath(undefined);
+          setAuthModalRedirectState(undefined);
         }}
         redirectPath={authModalRedirectPath}
+        redirectState={authModalRedirectState}
       />
     </nav>
   );

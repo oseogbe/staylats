@@ -17,6 +17,7 @@ import {
 import { PropertyCard } from "@/components/host/property/PropertyCard";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useCreateListingPrompt } from "@/contexts/CreateListingPromptContext";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useUserListings, useUserDrafts } from "@/hooks/use-listings";
 
@@ -26,6 +27,7 @@ import type { PropertyListing } from "@/components/host/types";
 const PropertyManagementPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openPrompt: openCreateListingPrompt } = useCreateListingPrompt();
   const queryClient = useQueryClient();
   const [listingTab, setListingTab] = useState("published");
   const [publishedPage, setPublishedPage] = useState(1);
@@ -88,7 +90,7 @@ const PropertyManagementPage = () => {
   });
 
   const handleCreateListing = () => {
-    navigate("/host/create-listing");
+    openCreateListingPrompt();
   };
 
   const handleContinueListing = (listing: PropertyListing) => {

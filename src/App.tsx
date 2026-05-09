@@ -11,7 +11,7 @@ import PropertyDetails from "@/pages/PropertyDetails";
 import SavedListings from "@/pages/SavedListings";
 import EmailVerification from "@/pages/EmailVerification";
 import ResendEmailVerification from "@/pages/ResendEmailVerification";
-import CreateListingPrompt from "@/pages/host/CreateListingPrompt";
+import { CreateListingPromptModal } from "@/pages/host/CreateListingPrompt";
 import CreateRentalListing from "@/pages/host/CreateRentalListing";
 import CreateShortletListing from "@/pages/host/CreateShortletListing";
 import NotFound from "@/pages/NotFound";
@@ -43,6 +43,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CreateListingPromptProvider } from "@/contexts/CreateListingPromptContext";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -61,9 +62,11 @@ const App = () => (
       />
       <BrowserRouter>
         <AuthProvider>
-          <ScrollToTop />
-          <Navbar />
-          <Routes>
+          <CreateListingPromptProvider>
+            <ScrollToTop />
+            <Navbar />
+            <CreateListingPromptModal />
+            <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/properties" element={<PropertyListings />} />
@@ -162,14 +165,6 @@ const App = () => (
 
             {/* Protected routes for hosts only */}
             <Route
-              path="/host/create-listing"
-              element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
-                  <CreateListingPrompt />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/host/create-rental-listing"
               element={
                 <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
@@ -248,6 +243,7 @@ const App = () => (
               }
             />
           </Routes>
+          </CreateListingPromptProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

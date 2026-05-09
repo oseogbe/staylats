@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home,
   FileText,
@@ -30,6 +30,7 @@ import { HostVerificationFormModal } from "@/components/host/HostVerificationFor
 import { OverviewSection } from "@/components/host/dashboard/OverviewSection";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useCreateListingPrompt } from "@/contexts/CreateListingPromptContext";
 import { useOverviewListings, type DashboardPeriod } from "@/hooks/use-overview-listings";
 import { useHostVerification } from "@/hooks/use-host-verification";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -42,9 +43,13 @@ const PERIOD_OPTIONS: { value: DashboardPeriod; label: string }[] = [
   { value: "daily", label: "Today" },
 ];
 
+type DashboardNavState = { openCreateListingPrompt?: boolean };
+
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const { openPrompt: openCreateListingPrompt } = useCreateListingPrompt();
   const queryClient = useQueryClient();
 
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
@@ -113,6 +118,15 @@ const DashboardPage = () => {
 
   useNotifications(user?.id || "", { onNotification: handleNotification });
 
+  // After login from "List your property", open the listing-type modal once
+  useEffect(() => {
+    const state = location.state as DashboardNavState | null;
+    if (state?.openCreateListingPrompt) {
+      openCreateListingPrompt();
+      navigate(location.pathname + location.search, { replace: true });
+    }
+  }, [location.state, location.pathname, location.search, navigate, openCreateListingPrompt]);
+
   // Clear verification alert when verified
   useEffect(() => {
     if (isVerified) setShowVerificationAlert(false);
@@ -141,7 +155,7 @@ const DashboardPage = () => {
     setShowFormModal(false);
   }, []);
 
-  const handleCreateListing = () => navigate("/host/create-listing");
+  const handleCreateListing = () => openCreateListingPrompt();
   const handleTabChange = (tab: string) => navigate(`/host/${tab}`);
   const handleVerifyHost = () => setShowFormModal(true);
 

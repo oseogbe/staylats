@@ -327,7 +327,7 @@ export default function CreateRentalListing() {
         variant="ghost"
         size="sm"
         className="w-fit shrink-0 bg-accent sm:bg-transparent"
-        onClick={() => navigate('/host/create-listing')}
+        onClick={() => navigate(-1)}
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back
