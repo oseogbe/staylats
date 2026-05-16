@@ -108,10 +108,13 @@ export function BookingDetailModal({ booking, open, onOpenChange }: BookingDetai
           </p>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className={statusCfg.className}>
             booking {statusCfg.label.toLowerCase()}
           </Badge>
+          <span className="font-mono text-xs text-neutral-500">
+            Receipt {booking.receiptNumber}
+          </span>
         </div>
 
         <Separator />

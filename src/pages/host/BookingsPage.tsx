@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
-import { CalendarDays, List } from "lucide-react";
+import { CalendarDays, List, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookingsCalendar } from "@/components/host/bookings/BookingsCalendar";
 import { BookingDetailModal } from "@/components/host/bookings/BookingDetailModal";
@@ -45,19 +46,33 @@ function filterBookings(bookings: HostBookingItem[], filter: BookingFilter): Hos
   }
 }
 
+function searchBookings(bookings: HostBookingItem[], query: string): HostBookingItem[] {
+  const trimmed = query.trim().toLowerCase();
+  if (!trimmed) return bookings;
+  return bookings.filter((b) =>
+    b.receiptNumber.toLowerCase().includes(trimmed)
+  );
+}
+
 const BookingsPage = () => {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [statusFilter, setStatusFilter] = useState<BookingFilter>("all");
+  const [receiptQuery, setReceiptQuery] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<HostBookingItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const { data, isLoading } = useHostShortletBookings(user?.id);
   const allBookings = data?.bookings || [];
 
+  const searchedBookings = useMemo(
+    () => searchBookings(allBookings, receiptQuery),
+    [allBookings, receiptQuery]
+  );
+
   const filteredBookings = useMemo(
-    () => filterBookings(allBookings, statusFilter),
-    [allBookings, statusFilter]
+    () => filterBookings(searchedBookings, statusFilter),
+    [searchedBookings, statusFilter]
   );
 
   const handleBookingClick = (booking: HostBookingItem) => {
@@ -96,6 +111,19 @@ const BookingsPage = () => {
         </div>
       </div>
 
+      <div className="relative max-w-md">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+        <Input
+          type="search"
+          inputMode="search"
+          placeholder="Search by receipt no. (e.g. STY-A1B2C3D4)"
+          value={receiptQuery}
+          onChange={(e) => setReceiptQuery(e.target.value)}
+          className="pl-9"
+          aria-label="Search bookings by receipt number"
+        />
+      </div>
+
       {viewMode === "calendar" ? (
         <Card>
           <CardContent className="pt-6">
@@ -109,7 +137,7 @@ const BookingsPage = () => {
               </div>
             ) : (
               <BookingsCalendar
-                bookings={allBookings}
+                bookings={searchedBookings}
                 onBookingClick={handleBookingClick}
               />
             )}
@@ -157,7 +185,7 @@ const BookingsPage = () => {
                       ))}
                     </div>
                   ) : filteredBookings.length === 0 ? (
-                    <EmptyState tab={tab} />
+                    <EmptyState tab={tab} hasQuery={receiptQuery.trim().length > 0} />
                   ) : (
                     <BookingsList
                       bookings={filteredBookings}
@@ -180,7 +208,23 @@ const BookingsPage = () => {
   );
 };
 
-function EmptyState({ tab }: { tab?: string }) {
+function EmptyState({ tab, hasQuery }: { tab?: string; hasQuery?: boolean }) {
+  if (hasQuery) {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+          <Search className="w-6 h-6 text-neutral-400" />
+        </div>
+        <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+          No matching booking
+        </h3>
+        <p className="text-neutral-600">
+          No booking matches that receipt number. Double-check the value with the guest.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="text-center py-12">
       <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
@@ -249,6 +293,9 @@ function BookingsList({
                   </span>
                   <span className="mx-1">·</span>
                   {booking.numberOfNights} {booking.numberOfNights === 1 ? "night" : "nights"}
+                </p>
+                <p className="mt-1 font-mono text-[11px] text-neutral-400 break-all">
+                  {booking.receiptNumber}
                 </p>
               </div>
             </div>

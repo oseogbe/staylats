@@ -13,8 +13,6 @@ import type { BookingReceipt } from "@/services/shortlet-bookings";
 const BRAND = "#F59E0B";
 const BRAND_DARK = "#B45309";
 const BRAND_LIGHT = "#FEF3C7";
-const SUCCESS = "#16A34A";
-const SUCCESS_BG = "#DCFCE7";
 const GRAY_50 = "#F9FAFB";
 const GRAY_100 = "#F3F4F6";
 const GRAY_200 = "#E5E7EB";
@@ -48,14 +46,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     marginBottom: 4,
   },
-  logoDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: BRAND,
-    marginRight: 7,
-    marginTop: 2,
-  },
   logoText: {
     fontFamily: "Helvetica-Bold",
     fontSize: 22,
@@ -75,28 +65,6 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: SUCCESS_BG,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: SUCCESS,
-    marginRight: 5,
-  },
-  statusText: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 9,
-    color: SUCCESS,
-    letterSpacing: 0.3,
   },
   receiptLabel: {
     fontFamily: "Helvetica-Bold",
@@ -292,12 +260,15 @@ const s = StyleSheet.create({
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmt = (value: number, currency = "NGN") =>
-  new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency,
+// Helvetica lacks the ₦ glyph, so we format as "NGN 180,000" to avoid
+// rendering a blank box in place of the currency symbol.
+const fmt = (value: number, currency = "NGN") => {
+  const number = new Intl.NumberFormat("en-NG", {
     minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(value);
+  return `${currency} ${number}`;
+};
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-NG", {
@@ -341,7 +312,6 @@ const ShortletReceiptPDF = ({ receipt }: Props) => {
         {/* ── Header band ──────────────────────────────────────── */}
         <View style={s.headerBand}>
           <View style={s.logoRow}>
-            <View style={s.logoDot} />
             <Text style={s.logoText}>STAYLATS</Text>
           </View>
           <Text style={s.tagline}>Short-let & rental booking platform</Text>
@@ -350,10 +320,6 @@ const ShortletReceiptPDF = ({ receipt }: Props) => {
         {/* ── Status bar ───────────────────────────────────────── */}
         <View style={s.statusBar}>
           <Text style={s.receiptLabel}>Payment Receipt</Text>
-          <View style={s.statusBadge}>
-            <View style={s.statusDot} />
-            <Text style={s.statusText}>PAYMENT SUCCESSFUL</Text>
-          </View>
         </View>
 
         {/* ── Body ─────────────────────────────────────────────── */}
@@ -363,14 +329,6 @@ const ShortletReceiptPDF = ({ receipt }: Props) => {
             <View style={s.metaCell}>
               <Text style={s.metaLabel}>Receipt No.</Text>
               <Text style={s.metaValue}>{receipt.receiptNumber}</Text>
-            </View>
-            <View style={s.metaCell}>
-              <Text style={s.metaLabel}>Booking ID</Text>
-              <Text style={s.metaValueMono}>{receipt.bookingId.slice(0, 13)}…</Text>
-            </View>
-            <View style={s.metaCellRight}>
-              <Text style={s.metaLabel}>Issued</Text>
-              <Text style={s.metaValue}>{fmtDateTime(payment?.paidAt ?? null)}</Text>
             </View>
           </View>
 
@@ -443,7 +401,7 @@ const ShortletReceiptPDF = ({ receipt }: Props) => {
                   </View>
                 )}
                 <View style={s.paymentItem}>
-                  <Text style={s.metaLabel}>Paid at</Text>
+                  <Text style={s.metaLabel}>Issued</Text>
                   <Text style={s.metaValue}>{fmtDateTime(payment.paidAt)}</Text>
                 </View>
               </View>

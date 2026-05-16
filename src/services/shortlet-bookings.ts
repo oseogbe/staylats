@@ -146,6 +146,7 @@ export interface HostBookingListing {
 
 export interface HostBookingItem {
   id: string
+  receiptNumber: string
   checkInDate: string
   checkOutDate: string
   numberOfNights: number
