@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
-import { pdf } from "@react-pdf/renderer";
 import toast from "react-hot-toast";
-
-import ShortletReceiptPDF from "@/components/receipts/ShortletReceiptPDF";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useVerifyShortletPayment } from "@/hooks/use-shortlet-bookings";
+import {
+  SHORTLET_RECEIPT_INLINE_PENDING_KEY,
+  useShortletReceiptPdfDownload,
+} from "@/hooks/use-shortlet-receipt-pdf-download";
 import shortletBookingsService from "@/services/shortlet-bookings";
 
 const formatAmount = (value: number, currency = "NGN") =>
@@ -67,24 +68,12 @@ const ShortletBookingConfirmation = () => {
   const receipt = data?.receipt;
   const redirectSlug = receipt?.listing?.slug || listingSlugFromUrl;
 
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const { pendingKey, downloadFromReceipt } = useShortletReceiptPdfDownload();
+  const isGeneratingPDF = pendingKey === SHORTLET_RECEIPT_INLINE_PENDING_KEY;
 
-  const handleDownloadReceipt = async () => {
+  const handleDownloadReceipt = () => {
     if (!receipt) return;
-    setIsGeneratingPDF(true);
-    try {
-      const blob = await pdf(<ShortletReceiptPDF receipt={receipt} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `staylats-receipt-${receipt.receiptNumber}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      toast.error("Failed to generate receipt. Please try again.");
-    } finally {
-      setIsGeneratingPDF(false);
-    }
+    void downloadFromReceipt(receipt);
   };
 
   if (!txRef && !transactionId) {

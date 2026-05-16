@@ -5,6 +5,7 @@ import authAPI from '@/services/auth';
 import profileAPI from '@/services/profile';
 import { unsubscribeFromPush } from '@/lib/pushNotifications';
 import { queryClient } from '@/lib/queryClient';
+import { clearNotificationModuleState } from '@/hooks/use-notifications';
 
 // Define user types
 type UserRole = 'visitor' | 'tenant' | 'host' | 'admin' | 'superadmin';
@@ -75,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             localStorage.removeItem('accessToken');
             queryClient.clear();
+            clearNotificationModuleState();
             setUser(null);
           }
         } else {
@@ -88,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         localStorage.removeItem('accessToken');
         queryClient.clear();
+        clearNotificationModuleState();
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -107,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('hadSession', 'true');
 
       queryClient.clear();
+      clearNotificationModuleState();
 
       // Get user profile
       const profileResponse = await profileAPI.getCurrentUser();
@@ -125,6 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('hadSession');
       unsubscribeFromPush().catch(() => {});
       queryClient.clear();
+      clearNotificationModuleState();
       setUser(null);
       navigate('/');
     } catch (error) {
@@ -160,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('hadSession');
       queryClient.clear();
+      clearNotificationModuleState();
       setUser(null);
       throw error;
     }

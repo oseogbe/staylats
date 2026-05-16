@@ -24,7 +24,25 @@ let notificationCallbacks: Set<(notification: Notification) => void> = new Set()
 let connectionStateCallbacks: Set<(connected: boolean) => void> = new Set();
 let errorStateCallbacks: Set<(error: string | null) => void> = new Set();
 
-export function useNotifications(userId: string, options?: UseNotificationsOptions) {
+/**
+ * Clears in-memory notification state and disconnects the realtime socket.
+ * Call on logout/login so TanStack Query is not the only layer reset — the
+ * module-level notification buffer must not bleed across sessions.
+ */
+export function clearNotificationModuleState(): void {
+    sharedNotifications = []
+    notificationListeners.forEach((listener) => listener([]))
+
+    if (socket) {
+        socket.removeAllListeners()
+        socket.disconnect()
+        socket = null
+    }
+
+    connectionStateCallbacks.forEach((cb) => cb(false))
+}
+
+export function useNotifications(userId: string | undefined, options?: UseNotificationsOptions) {
   const [notifications, setNotifications] = useState<Notification[]>(sharedNotifications);
   const [isConnected, setIsConnected] = useState(socket?.connected || false);
   const [error, setError] = useState<string | null>(null);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Clock3, Loader2, MapPin, ReceiptText, RefreshCw, BedDouble } from 'lucide-react'
+import { CalendarDays, Clock3, Download, Loader2, MapPin, ReceiptText, RefreshCw, BedDouble } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
+import { useShortletReceiptPdfDownload } from '@/hooks/use-shortlet-receipt-pdf-download'
 import shortletBookingsService from '@/services/shortlet-bookings'
 
 const formatAmount = (value: number, currency = 'NGN') =>
@@ -36,6 +37,8 @@ const ReservationsPage = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  const { pendingKey, fetchAndDownloadByBookingId } = useShortletReceiptPdfDownload()
 
   const {
     data,
@@ -191,6 +194,26 @@ const ReservationsPage = () => {
                   >
                     View listing
                   </Button>
+                  {reservation.paymentStatus === 'success' && (
+                    <Button
+                      size="sm"
+                      onClick={() => void fetchAndDownloadByBookingId(reservation.id)}
+                      disabled={pendingKey !== null}
+                      className="gap-2"
+                    >
+                      {pendingKey === reservation.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Generating…
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4" />
+                          Download receipt
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
