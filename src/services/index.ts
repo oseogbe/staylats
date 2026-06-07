@@ -42,6 +42,16 @@ api.interceptors.response.use(
                             const response = await api.post('/auth/refresh-token');
                             const token = response.data.data.accessToken;
                             localStorage.setItem('accessToken', token);
+                            localStorage.setItem('hadSession', 'true');
+                            if (typeof response.data.data.onboardingRequired === 'boolean') {
+                                localStorage.setItem('onboardingRequired', String(response.data.data.onboardingRequired));
+                            }
+                            if (typeof response.data.data.phoneVerified === 'boolean') {
+                                localStorage.setItem('phoneVerified', String(response.data.data.phoneVerified));
+                            }
+                            if (response.data.data.authMethod) {
+                                localStorage.setItem('authMethod', response.data.data.authMethod);
+                            }
                             return token;
                         } finally {
                             refreshTokenPromise = null;

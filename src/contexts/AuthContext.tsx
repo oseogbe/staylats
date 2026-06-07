@@ -14,6 +14,9 @@ interface User {
   id: string;
   firstName?: string;
   lastName?: string;
+  phoneNumber?: string;
+  gender?: 'male' | 'female' | string;
+  dateOfBirth?: string;
   image?: string;
   role: UserRole;
   hostType?: 'landlord' | 'facility_manager' | 'company';
@@ -23,18 +26,43 @@ interface User {
     companyPhoneNumbers?: string[];
     companyAddress?: string;
   };
+  phoneVerifiedAt?: string | null;
+  authMethod?: 'phone' | 'google' | 'facebook';
+  onboardingRequired?: boolean;
 }
+
+type LoginResult =
+  | {
+      isAuthenticated: true;
+      user: User;
+    }
+  | {
+      isAuthenticated: false;
+      userId: string;
+    };
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (phoneNumber: string, otp: string) => Promise<void>;
+  onboardingRequired: boolean;
+  phoneVerified: boolean;
+  authMethod: 'phone' | 'google' | 'facebook';
+  login: (phoneNumber: string, otp: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
   isAuthorized: (allowedRoles: UserRole[]) => boolean;
   setUser: (user: User | null) => void;
   getAccessToken: () => string | null;
   refreshAccessToken: () => Promise<string>;
+  finalizeOAuthLogin: (
+    accessToken: string,
+    metadata?: {
+      onboardingRequired?: boolean;
+      phoneVerified?: boolean;
+      authMethod?: 'phone' | 'google' | 'facebook';
+    }
+  ) => Promise<void>;
+  syncCurrentUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +70,36 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [onboardingRequired, setOnboardingRequired] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [authMethod, setAuthMethod] = useState<'phone' | 'google' | 'facebook'>('phone');
   const navigate = useNavigate();
+
+  const applyUserAuthState = (nextUser: User | null) => {
+    if (!nextUser) {
+      setOnboardingRequired(false);
+      setPhoneVerified(false);
+      setAuthMethod('phone');
+      return;
+    }
+
+    const derivedPhoneVerified = !!nextUser.phoneVerifiedAt;
+    const derivedOnboardingRequired = !!nextUser.onboardingRequired;
+    setPhoneVerified(derivedPhoneVerified);
+    setOnboardingRequired(derivedOnboardingRequired);
+    setAuthMethod(nextUser.authMethod || 'phone');
+  };
+
+  const updateUser = (nextUser: User | null) => {
+    setUser(nextUser);
+    applyUserAuthState(nextUser);
+  };
+
+  const syncCurrentUser = async () => {
+    const response = await profileAPI.getCurrentUser();
+    const { user: currentUser } = response.data;
+    updateUser(currentUser);
+  };
 
   // Check if user is authenticated on mount and validate token
   useEffect(() => {
@@ -55,20 +112,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Get user profile if we have a token
           const response = await profileAPI.getCurrentUser();
           const { user } = response.data;
-          setUser(user);
+          localStorage.setItem('hadSession', 'true');
+          updateUser(user);
         } else if (hadPreviousSession) {
           // Only try to refresh if there was a previous session
           try {
             const refreshResponse = await authAPI.refreshToken();
             const { accessToken } = refreshResponse.data;
             
-            // Store new access token
+            // Store new access token and preserve session marker
             localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('hadSession', 'true');
             
             // Get user profile with new token
             const response = await profileAPI.getCurrentUser();
             const { user } = response.data;
-            setUser(user);
+            updateUser(user);
           } catch (refreshError: any) {
             // Only clear hadSession if refresh token is invalid/expired
             if (refreshError.response?.status === 401) {
@@ -77,11 +136,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             localStorage.removeItem('accessToken');
             queryClient.clear();
             clearNotificationModuleState();
-            setUser(null);
+            updateUser(null);
           }
         } else {
           // No token and no previous session
-          setUser(null);
+          updateUser(null);
         }
       } catch (error: any) {
         // Only clear hadSession on auth errors
@@ -91,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('accessToken');
         queryClient.clear();
         clearNotificationModuleState();
-        setUser(null);
+        updateUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -103,19 +162,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (phoneNumber: string, otp: string) => {
     try {
       const response = await authAPI.verifyPhoneOTP(phoneNumber, otp);
-      const { accessToken } = response.data;
+      const { accessToken, user: verifiedUser, userId } = response.data;
 
-      // Store access token and mark session
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('hadSession', 'true');
+      // Existing user login
+      if (accessToken && verifiedUser) {
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('hadSession', 'true');
 
-      queryClient.clear();
-      clearNotificationModuleState();
+        queryClient.clear();
+        clearNotificationModuleState();
 
-      // Get user profile
-      const profileResponse = await profileAPI.getCurrentUser();
-      const { user } = profileResponse.data;
-      setUser(user);
+        updateUser(verifiedUser);
+        return {
+          isAuthenticated: true as const,
+          user: verifiedUser
+        };
+      }
+
+      // New user registration flow
+      if (userId) {
+        return {
+          isAuthenticated: false as const,
+          userId
+        };
+      }
+
+      throw new Error('Unexpected authentication response');
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -130,7 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       unsubscribeFromPush().catch(() => {});
       queryClient.clear();
       clearNotificationModuleState();
-      setUser(null);
+      updateUser(null);
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -152,13 +224,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const refreshResponse = await authAPI.refreshToken();
       const { accessToken } = refreshResponse.data;
       
-      // Store new access token
+      // Store new access token and preserve session marker
       localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('hadSession', 'true');
       
       // Get user profile with new token
       const response = await profileAPI.getCurrentUser();
       const { user: newUser } = response.data;
-      setUser(newUser);
+      updateUser(newUser);
 
       return accessToken;
     } catch (error) {
@@ -166,9 +239,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('hadSession');
       queryClient.clear();
       clearNotificationModuleState();
-      setUser(null);
+      updateUser(null);
       throw error;
     }
+  };
+
+  const finalizeOAuthLogin: AuthContextType['finalizeOAuthLogin'] = async (accessToken, metadata) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('hadSession', 'true');
+
+    if (metadata?.authMethod) {
+      setAuthMethod(metadata.authMethod);
+    }
+    if (typeof metadata?.phoneVerified === 'boolean') {
+      setPhoneVerified(metadata.phoneVerified);
+    }
+    if (typeof metadata?.onboardingRequired === 'boolean') {
+      setOnboardingRequired(metadata.onboardingRequired);
+    }
+
+    await syncCurrentUser();
   };
 
   return (
@@ -177,12 +267,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isLoading,
         isAuthenticated: !!user,
+        onboardingRequired,
+        phoneVerified,
+        authMethod,
         login,
         logout,
         isAuthorized,
-        setUser,
+        setUser: updateUser,
         getAccessToken,
         refreshAccessToken,
+        finalizeOAuthLogin,
+        syncCurrentUser,
       }}
     >
       {children}

@@ -6,14 +6,16 @@ interface ProtectedRouteProps {
   children: ReactNode;
   allowedRoles?: ('visitor' | 'tenant' | 'host' | 'admin' | 'superadmin')[];
   requireAuth?: boolean;
+  requirePhoneVerified?: boolean;
 }
 
 const ProtectedRoute = ({ 
   children, 
   allowedRoles = [], 
-  requireAuth = true 
+  requireAuth = true,
+  requirePhoneVerified = false
 }: ProtectedRouteProps) => {
-  const { isAuthenticated, isAuthorized, isLoading } = useAuth();
+  const { isAuthenticated, isAuthorized, isLoading, onboardingRequired, phoneVerified } = useAuth();
   const location = useLocation();
 
   // Show nothing while checking authentication status
@@ -34,6 +36,11 @@ const ProtectedRoute = ({
     }
     // If user is authenticated but not authorized, redirect to their appropriate dashboard
     return <Navigate to="/my-account" replace />;
+  }
+
+  // Require completed onboarding/phone verification for sensitive routes
+  if (requirePhoneVerified && isAuthenticated && (!phoneVerified || onboardingRequired)) {
+    return <Navigate to="/auth/onboarding" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

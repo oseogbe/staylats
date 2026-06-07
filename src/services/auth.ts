@@ -1,4 +1,5 @@
 import api from "./index";
+import { API_BASE_URL } from "./index";
 
 export default {
     initiatePhoneAuth: async (phoneNumber: string) => {
@@ -20,6 +21,46 @@ export default {
         dateOfBirth: string;
     }) => {
         const response = await api.post('/auth/register', userData);
+        return response.data;
+    },
+
+    getGoogleStartUrl: (redirectPath = '/auth/oauth-callback') => {
+        const params = new URLSearchParams({ redirect: redirectPath });
+        return `${API_BASE_URL}/auth/google/start?${params.toString()}`;
+    },
+
+    getFacebookStartUrl: (redirectPath = '/auth/oauth-callback') => {
+        const params = new URLSearchParams({ redirect: redirectPath });
+        return `${API_BASE_URL}/auth/facebook/start?${params.toString()}`;
+    },
+
+    startOAuthLinkChallenge: async (linkToken: string) => {
+        const response = await api.post('/auth/oauth/link/challenge/start', { linkToken });
+        return response.data;
+    },
+
+    verifyOAuthLinkChallenge: async (linkToken: string, otp: string) => {
+        const response = await api.post('/auth/oauth/link/challenge/verify', { linkToken, otp });
+        return response.data;
+    },
+
+    startOnboardingPhoneVerification: async (phoneNumber: string) => {
+        const response = await api.post('/auth/onboarding/phone/start', { phoneNumber });
+        return response.data;
+    },
+
+    verifyOnboardingPhone: async (otp: string) => {
+        const response = await api.post('/auth/onboarding/phone/verify', { otp });
+        return response.data;
+    },
+
+    completeOnboarding: async (payload: {
+        firstName?: string;
+        lastName?: string;
+        gender?: "male" | "female";
+        dateOfBirth?: string;
+    }) => {
+        const response = await api.post('/auth/onboarding/complete', payload);
         return response.data;
     },
 

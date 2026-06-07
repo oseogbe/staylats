@@ -25,7 +25,7 @@ export type AuthStep = "phone" | "otp" | "registration";
 
 const AuthModal = ({ isOpen, onClose, redirectPath, redirectState, onAuthSuccess }: AuthModalProps) => {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { login, setUser } = useAuth();
   const [currentStep, setCurrentStep] = useState<AuthStep>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -54,14 +54,10 @@ const AuthModal = ({ isOpen, onClose, redirectPath, redirectState, onAuthSuccess
       try {
         setIsLoading(true);
         
-        const response = await authAPI.verifyPhoneOTP(phoneNumber, otp);
-        const { user, accessToken } = response.data;
-        
-        if (user) {
+        const loginResult = await login(phoneNumber, otp);
+
+        if (loginResult.isAuthenticated) {
           // Existing user - complete login
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('hadSession', 'true');
-          setUser(user);
           handleAuthComplete();
           toast.success("Login successful!");
         } else {
@@ -156,9 +152,13 @@ const AuthModal = ({ isOpen, onClose, redirectPath, redirectState, onAuthSuccess
   };
 
   const handleSocialLogin = (provider: "google" | "facebook") => {
-    // Mock social login
-    console.log(`Logging in with ${provider}`);
-    handleAuthComplete();
+    const redirectPath = "/auth/oauth-callback";
+    if (provider === "google") {
+      window.location.href = authAPI.getGoogleStartUrl(redirectPath);
+      return;
+    }
+
+    window.location.href = authAPI.getFacebookStartUrl(redirectPath);
   };
 
   const handleBack = () => {

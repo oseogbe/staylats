@@ -11,6 +11,9 @@ import PropertyDetails from "@/pages/PropertyDetails";
 import SavedListings from "@/pages/SavedListings";
 import EmailVerification from "@/pages/EmailVerification";
 import ResendEmailVerification from "@/pages/ResendEmailVerification";
+import OAuthCallback from "@/pages/OAuthCallback";
+import LinkOAuthAccount from "@/pages/LinkOAuthAccount";
+import AuthOnboarding from "@/pages/AuthOnboarding";
 import { CreateListingPromptModal } from "@/pages/host/CreateListingPrompt";
 import CreateRentalListing from "@/pages/host/CreateRentalListing";
 import CreateShortletListing from "@/pages/host/CreateShortletListing";
@@ -73,10 +76,20 @@ const App = () => (
             <Route path="/property/:slug" element={<PropertyDetails />} />
             <Route path="/verify-email" element={<EmailVerification />} />
             <Route path="/resend-verification" element={<ResendEmailVerification />} />
+            <Route path="/auth/oauth-callback" element={<OAuthCallback />} />
+            <Route path="/auth/link-account" element={<LinkOAuthAccount />} />
+            <Route
+              path="/auth/onboarding"
+              element={
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requireAuth>
+                  <AuthOnboarding />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/bookings/shortlet/confirmation"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <ShortletBookingConfirmation />
                 </ProtectedRoute>
               }
@@ -167,7 +180,7 @@ const App = () => (
             <Route
               path="/host/create-rental-listing"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <CreateRentalListing />
                 </ProtectedRoute>
               }
@@ -175,7 +188,7 @@ const App = () => (
             <Route
               path="/host/create-shortlet-listing"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <CreateShortletListing />
                 </ProtectedRoute>
               }
@@ -185,7 +198,7 @@ const App = () => (
             <Route
               path="/host/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <HostDashboardLayout>
                     <DashboardPage />
                   </HostDashboardLayout>
@@ -195,7 +208,7 @@ const App = () => (
             <Route
               path="/host/property-management"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <HostDashboardLayout>
                     <PropertyManagementPage />
                   </HostDashboardLayout>
@@ -205,7 +218,7 @@ const App = () => (
             <Route
               path="/host/bookings"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <HostDashboardLayout>
                     <BookingsPage />
                   </HostDashboardLayout>
@@ -215,7 +228,7 @@ const App = () => (
             <Route
               path="/host/finances"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <HostDashboardLayout>
                     <FinancesPage />
                   </HostDashboardLayout>
@@ -225,7 +238,7 @@ const App = () => (
             <Route
               path="/host/tenant-management"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <HostDashboardLayout>
                     <TenantManagementPage />
                   </HostDashboardLayout>
@@ -235,7 +248,7 @@ const App = () => (
             <Route
               path="/host/rental-applications"
               element={
-                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']}>
+                <ProtectedRoute allowedRoles={['host', 'tenant', 'visitor']} requirePhoneVerified>
                   <HostDashboardLayout>
                     <RentalApplicationsPage />
                   </HostDashboardLayout>
