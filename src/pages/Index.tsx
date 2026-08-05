@@ -13,7 +13,7 @@ import { useActiveListings } from "@/hooks/use-listings";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { data: activeListings = [] } = useActiveListings(6);
+  const { data: activeListings = [] } = useActiveListings({ limit: 6 });
 
   const lagosCount = useMemo(
     () => activeListings.filter((l) => l.state?.toLowerCase().includes("lagos")).length,
@@ -127,7 +127,7 @@ const Index = () => {
                     {lagosCount} {lagosCount === 1 ? "property" : "properties"}
                   </span>
                   <Button variant="outline" size="sm" onClick={() => {
-                    navigate("/properties?city=lagos");
+                    navigate("/properties?state=lagos");
                     
                   }}>Explore Lagos</Button>
                 </div>
@@ -150,7 +150,7 @@ const Index = () => {
                     {abujaCount} {abujaCount === 1 ? "property" : "properties"}
                   </span>
                     <Button variant="outline" size="sm" onClick={() => {
-                      navigate("/properties?city=abuja");
+                      navigate("/properties?state=abuja");
                       
                     }}>Explore Abuja</Button>
                 </div>

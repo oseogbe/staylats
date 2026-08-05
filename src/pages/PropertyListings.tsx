@@ -9,6 +9,7 @@ import {
   Home,
   BedDouble,
   House,
+  CalendarIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -38,9 +39,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import PropertyCard from "@/components/PropertyCard";
+import { DateRangePicker, formatDateRange } from "@/components/DateRangePicker";
 
 import { useActiveListings } from "@/hooks/use-listings";
+import type { DraftType } from "@/services/listings";
 import { toPropertyCardData } from "@/lib/listingHelpers";
+import {
+  buildPropertySearchParams,
+  fromSearchDate,
+  toApiDate,
+} from "@/lib/propertySearch";
 import { amenitiesList as rentalAmenities } from "@/components/rental-listing/types";
 import { amenitiesList as shortletAmenities } from "@/components/shortlet-listing/types";
 
@@ -51,7 +59,8 @@ const allAmenities = Array.from(
   new Set([...rentalAmenities, ...shortletAmenities])
 ).sort();
 
-const cities = ["Abuja", "Lagos"];
+// Held as `state` on a listing - `city` is the finer-grained area
+const locations = ["Abuja", "Lagos"];
 
 const typeFilters = [
   { value: "all", label: "All", icon: Home },
@@ -80,22 +89,73 @@ const cardVariants = {
 // Component
 // ---------------------------------------------------------------------------
 const PropertyListings = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Filter state
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCity, setSelectedCity] = useState(
-    searchParams.get("city") || "all"
+  // Filters the API owns — location, type, dates and guests are resolved
+  // server-side because availability depends on reservations the browser cannot
+  // see. Initialised from the URL so a hero search (or a shared link) lands
+  // prefilled.
+  const [selectedState, setSelectedState] = useState(
+    searchParams.get("state") || "all"
   );
   const [selectedType, setSelectedType] = useState(
     searchParams.get("type") || "all"
   );
+  const [dateRange, setDateRange] = useState<{
+    checkIn?: Date;
+    checkOut?: Date;
+  }>(() => ({
+    checkIn: fromSearchDate(searchParams.get("checkIn")),
+    checkOut: fromSearchDate(searchParams.get("checkOut")),
+  }));
+  const [guests, setGuests] = useState(
+    () => Number(searchParams.get("guests")) || 0
+  );
+
+  // Filters applied in the browser over the returned page
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // A lone bound would widen the search rather than narrow it, so dates only
+  // count once both are set.
+  const hasDateRange = Boolean(dateRange.checkIn && dateRange.checkOut);
+
   // Data
-  const { data: activeListings = [], isLoading } = useActiveListings(50);
+  const { data: activeListings = [], isLoading } = useActiveListings({
+    limit: 50,
+    type: selectedType === "all" ? undefined : (selectedType as DraftType),
+    state: selectedState === "all" ? undefined : selectedState,
+    checkInDate: hasDateRange ? toApiDate(dateRange.checkIn) : undefined,
+    checkOutDate: hasDateRange ? toApiDate(dateRange.checkOut) : undefined,
+    guests: guests || undefined,
+  });
+
+  // Keep the URL in step with the server-side filters so results stay
+  // shareable and the back button behaves.
+  useEffect(() => {
+    const next = buildPropertySearchParams({
+      type: selectedType === "all" ? undefined : (selectedType as DraftType),
+      state: selectedState === "all" ? undefined : selectedState,
+      checkIn: dateRange.checkIn,
+      checkOut: dateRange.checkOut,
+      guests,
+    }).toString();
+
+    // Only navigate on a real change. `setSearchParams` is memoised against the
+    // current params, so calling it unconditionally would re-trigger this effect.
+    if (next !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [
+    selectedType,
+    selectedState,
+    dateRange,
+    guests,
+    searchParams,
+    setSearchParams,
+  ]);
 
   const allProperties = useMemo(
     () => activeListings.map(toPropertyCardData),
@@ -111,12 +171,6 @@ const PropertyListings = () => {
       )
         return false;
       if (
-        selectedCity !== "all" &&
-        !p.location.toLowerCase().includes(selectedCity.toLowerCase())
-      )
-        return false;
-      if (selectedType !== "all" && p.type !== selectedType) return false;
-      if (
         selectedAmenities.length > 0 &&
         !selectedAmenities.every((a) => p.amenities.includes(a))
       )
@@ -125,14 +179,7 @@ const PropertyListings = () => {
       if (priceRange.max && p.price > parseInt(priceRange.max)) return false;
       return true;
     });
-  }, [
-    allProperties,
-    searchTerm,
-    selectedCity,
-    selectedType,
-    selectedAmenities,
-    priceRange,
-  ]);
+  }, [allProperties, searchTerm, selectedAmenities, priceRange]);
 
   // Helpers
   const handleAmenityToggle = useCallback(
@@ -146,25 +193,36 @@ const PropertyListings = () => {
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (selectedCity !== "all") count++;
+    if (selectedState !== "all") count++;
     if (selectedType !== "all") count++;
     if (selectedAmenities.length > 0) count += selectedAmenities.length;
     if (priceRange.min || priceRange.max) count++;
+    if (hasDateRange) count++;
+    if (guests > 0) count++;
     return count;
-  }, [selectedCity, selectedType, selectedAmenities, priceRange]);
+  }, [
+    selectedState,
+    selectedType,
+    selectedAmenities,
+    priceRange,
+    hasDateRange,
+    guests,
+  ]);
 
   const clearAllFilters = () => {
     setSearchTerm("");
-    setSelectedCity("all");
+    setSelectedState("all");
     setSelectedType("all");
     setSelectedAmenities([]);
     setPriceRange({ min: "", max: "" });
+    setDateRange({});
+    setGuests(0);
   };
 
   const removeFilter = (type: string, value?: string) => {
     switch (type) {
-      case "city":
-        setSelectedCity("all");
+      case "state":
+        setSelectedState("all");
         break;
       case "type":
         setSelectedType("all");
@@ -175,8 +233,16 @@ const PropertyListings = () => {
       case "price":
         setPriceRange({ min: "", max: "" });
         break;
+      case "dates":
+        setDateRange({});
+        break;
+      case "guests":
+        setGuests(0);
+        break;
     }
   };
+
+  const dateRangeLabel = formatDateRange(dateRange, "Any dates");
 
   // Lock body scroll on mobile sheet
   useEffect(() => {
@@ -201,15 +267,15 @@ const PropertyListings = () => {
       {/* Location */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-neutral-700">Location</label>
-        <Select value={selectedCity} onValueChange={setSelectedCity}>
+        <Select value={selectedState} onValueChange={setSelectedState}>
           <SelectTrigger className="h-10">
             <SelectValue placeholder="All Cities" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Cities</SelectItem>
-            {cities.map((city) => (
-              <SelectItem key={city} value={city.toLowerCase()}>
-                {city}
+            {locations.map((location) => (
+              <SelectItem key={location} value={location.toLowerCase()}>
+                {location}
               </SelectItem>
             ))}
           </SelectContent>
@@ -341,7 +407,7 @@ const PropertyListings = () => {
             </Button>
           </div>
 
-          {/* Row 2: Type pills + city select (desktop) */}
+          {/* Row 2: Type pills + location select (desktop) */}
           <div className="flex items-center gap-3 pt-1 pb-3 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             {typeFilters.map((t) => (
               <button
@@ -364,23 +430,40 @@ const PropertyListings = () => {
 
             <span className="hidden sm:block w-px h-6 bg-neutral-200 flex-shrink-0" />
 
-            {/* Inline city select on desktop */}
+            {/* Inline location select on desktop */}
             <div className="hidden sm:block">
-              <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <Select value={selectedState} onValueChange={setSelectedState}>
                 <SelectTrigger className="h-9 rounded-full border-neutral-200 bg-white text-sm min-w-[130px]">
                   <MapPin className="h-3.5 w-3.5 mr-1.5 text-neutral-400" />
                   <SelectValue placeholder="All Cities" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Cities</SelectItem>
-                  {cities.map((city) => (
-                    <SelectItem key={city} value={city.toLowerCase()}>
-                      {city}
+                  {locations.map((location) => (
+                    <SelectItem key={location} value={location.toLowerCase()}>
+                      {location}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Availability window — only shortlets are booked by night */}
+            {selectedType !== "rental" && (
+              <DateRangePicker value={dateRange} onChange={setDateRange}>
+                <Button
+                  variant="outline"
+                  className={`h-9 rounded-full bg-white text-sm whitespace-nowrap flex-shrink-0 font-normal ${
+                    hasDateRange
+                      ? "border-neutral-900 text-neutral-900"
+                      : "border-neutral-200 text-neutral-600"
+                  }`}
+                >
+                  <CalendarIcon className="h-3.5 w-3.5 mr-1.5 text-neutral-400" />
+                  {dateRangeLabel}
+                </Button>
+              </DateRangePicker>
+            )}
           </div>
         </div>
       </div>
@@ -430,16 +513,28 @@ const PropertyListings = () => {
                 Active:
               </span>
 
-              {selectedCity !== "all" && (
+              {selectedState !== "all" && (
                 <FilterPill
-                  label={cities.find((c) => c.toLowerCase() === selectedCity) || selectedCity}
-                  onRemove={() => removeFilter("city")}
+                  label={locations.find((l) => l.toLowerCase() === selectedState) || selectedState}
+                  onRemove={() => removeFilter("state")}
                 />
               )}
               {selectedType !== "all" && (
                 <FilterPill
                   label={typeFilters.find((t) => t.value === selectedType)?.label || selectedType}
                   onRemove={() => removeFilter("type")}
+                />
+              )}
+              {hasDateRange && (
+                <FilterPill
+                  label={dateRangeLabel}
+                  onRemove={() => removeFilter("dates")}
+                />
+              )}
+              {guests > 0 && (
+                <FilterPill
+                  label={`${guests} guest${guests === 1 ? "" : "s"}`}
+                  onRemove={() => removeFilter("guests")}
                 />
               )}
               {(priceRange.min || priceRange.max) && (
@@ -482,7 +577,7 @@ const PropertyListings = () => {
                   {filteredProperties.length}
                 </span>{" "}
                 {filteredProperties.length === 1 ? "property" : "properties"}{" "}
-                found
+                {hasDateRange ? `available ${dateRangeLabel}` : "found"}
               </>
             )}
           </p>
@@ -520,7 +615,7 @@ const PropertyListings = () => {
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            key={`${selectedCity}-${selectedType}-${selectedAmenities.join()}-${priceRange.min}-${priceRange.max}-${searchTerm}`}
+            key={`${selectedState}-${selectedType}-${selectedAmenities.join()}-${priceRange.min}-${priceRange.max}-${searchTerm}-${searchParams.toString()}`}
           >
             {filteredProperties.map((property) => (
               <motion.div key={property.id} variants={cardVariants}>
@@ -545,8 +640,9 @@ const PropertyListings = () => {
               No properties found
             </h3>
             <p className="text-neutral-500 max-w-sm mb-6">
-              We couldn't find any properties matching your filters. Try
-              adjusting your search criteria.
+              {hasDateRange
+                ? `Nothing is available ${dateRangeLabel} with these filters. Try different dates or widen your search.`
+                : "We couldn't find any properties matching your filters. Try adjusting your search criteria."}
             </p>
             <Button
               variant="outline"
