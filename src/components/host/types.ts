@@ -12,4 +12,13 @@ export interface PropertyListing {
   lastUpdated?: string;
   createdAt?: string;
   updatedAt?: string;
+  // Card summary, derived via toPropertyCardData. Absent on drafts, which have
+  // no location or pricing yet.
+  slug?: string;
+  location?: string;
+  price?: number;
+  priceLabel?: string;
+  rating?: number;
+  reviews?: number;
+  maxGuests?: number;
 }

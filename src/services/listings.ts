@@ -1,6 +1,51 @@
 import api from './index'
 
+import type { PhotoItemPayload } from '@/hooks/use-photo-upload'
+
 export type DraftType = 'rental' | 'shortlet'
+
+/** Files and photo metadata shared by the draft and publish endpoints. */
+export interface ListingMediaPayload {
+    /**
+     * The full photo list in display order. New photos carry a `fileName` the
+     * API uses to swap their local preview URL for the uploaded S3 URL.
+     */
+    photoItems?: PhotoItemPayload[]
+    photoFiles?: File[]
+    tenancyAgreementFile?: File
+    proofOfVisitFile?: File
+    utilityBillFile?: File
+}
+
+/**
+ * Appends the photo list and every document to a multipart body, using the
+ * field names the listing routes expect.
+ */
+const appendListingMedia = (formData: FormData, payload: ListingMediaPayload) => {
+    // Always send photoItems when provided, even if empty - an empty array means
+    // "the host removed every photo", which is different from "not supplied".
+    if (payload.photoItems !== undefined) {
+        formData.append('photoItems', JSON.stringify(payload.photoItems))
+    }
+
+    payload.photoFiles?.forEach((file) => {
+        formData.append('images', file)
+    })
+
+    const documents: Array<[string, File | undefined]> = [
+        ['tenancyAgreement', payload.tenancyAgreementFile],
+        ['proofOfVisitFile', payload.proofOfVisitFile],
+        ['utilityBillFile', payload.utilityBillFile]
+    ]
+
+    documents.forEach(([field, file]) => {
+        if (file) formData.append(field, file)
+    })
+
+    return formData
+}
+
+const multipart = { headers: { 'Content-Type': 'multipart/form-data' } }
 
 export interface DraftSummary {
     id: string
@@ -14,6 +59,7 @@ export interface DraftSummary {
 
 export interface UserListing {
     id: string
+    slug: string
     title: string
     type: DraftType
     description: string
@@ -23,6 +69,9 @@ export interface UserListing {
     propertyType: string
     images: string[]
     amenities: string[]
+    maxOccupants?: { adults: number; kids: number; infants: number; pets: boolean } | null
+    shortletInfo?: { pricePerNight: number; cleaningFee?: number; securityDeposit?: number } | null
+    rentalInfo?: { pricing: Record<string, number>; inspectionFee?: number; serviceCharge?: number; securityDeposit?: number } | null
     status: "draft" | "pending" | "active" | "declined"
     createdAt: string
     updatedAt: string
@@ -99,6 +148,19 @@ export interface ListingDetail {
     }
 }
 
+/** Query filters accepted by the public active-listings endpoint */
+export interface ActiveListingFilters {
+    limit?: number
+    type?: DraftType
+    city?: string
+    /** ISO string — only applied together with checkOutDate */
+    checkInDate?: string
+    /** ISO string — only applied together with checkInDate */
+    checkOutDate?: string
+    /** Adults + children; matched against a listing's max occupants */
+    guests?: number
+}
+
 export interface HostListingDashboardMetric {
     listingId: string
     bookings: number
@@ -127,11 +189,23 @@ export default {
 
     /**
      * Public endpoint — fetches active listings (no auth needed).
+     *
+     * `checkInDate`/`checkOutDate` must be sent as a pair; the server uses them
+     * to drop shortlets that are already reserved for any part of the range.
      */
-    getActiveListings: async (limit?: number, type?: DraftType): Promise<{ listings: ActiveListing[] }> => {
+    getActiveListings: async (
+        filters: ActiveListingFilters = {}
+    ): Promise<{ listings: ActiveListing[] }> => {
+        const { limit, type, city, checkInDate, checkOutDate, guests } = filters
         const params: Record<string, string> = {}
         if (limit) params.limit = limit.toString()
         if (type) params.type = type
+        if (city) params.city = city
+        if (guests) params.guests = guests.toString()
+        if (checkInDate && checkOutDate) {
+            params.checkInDate = checkInDate
+            params.checkOutDate = checkOutDate
+        }
         const res = await api.get('/listing/active', { params })
         return res.data.data
     },
@@ -146,48 +220,31 @@ export default {
         return res.data.data
     },
 
-    saveDraft: async (payload: {
+    saveDraft: async (payload: ListingMediaPayload & {
         draftId?: string
         type: DraftType
         title?: string
         step?: number
         totalSteps?: number
         formData: Record<string, any>
+        /** Alias for `photoFiles`, kept for the create-draft call sites. */
         images?: File[]
-        tenancyAgreementFile?: File
-        proofOfVisitFile?: File
-        utilityBillFile?: File
     }) => {
         const formData = new FormData()
-        
+
         // Add JSON fields
         formData.append('type', payload.type)
         if (payload.title) formData.append('title', payload.title)
         if (payload.step) formData.append('step', payload.step.toString())
         if (payload.totalSteps) formData.append('totalSteps', payload.totalSteps.toString())
         formData.append('formData', JSON.stringify(payload.formData))
-        
-        // Add image files
-        if (payload.images && payload.images.length > 0) {
-            payload.images.forEach((file) => {
-                formData.append('images', file)
-            })
-        }
-        if (payload.tenancyAgreementFile) {
-            formData.append('tenancyAgreement', payload.tenancyAgreementFile)
-        }
-        if (payload.proofOfVisitFile) {
-            formData.append('proofOfVisitFile', payload.proofOfVisitFile)
-        }
-        if (payload.utilityBillFile) {
-            formData.append('utilityBillFile', payload.utilityBillFile)
-        }
-        
-        const res = await api.post('/listing/drafts', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+
+        appendListingMedia(formData, {
+            ...payload,
+            photoFiles: payload.photoFiles ?? payload.images
         })
+
+        const res = await api.post('/listing/drafts', formData, multipart)
         return res.data
     },
 
@@ -201,57 +258,25 @@ export default {
         return res.data.data
     },
 
-    updateDraft: async (id: string, payload: {
+    updateDraft: async (id: string, payload: ListingMediaPayload & {
         type?: DraftType
         title?: string
         step?: number
         totalSteps?: number
         formData?: Record<string, any>
-        photoItems?: Array<{
-            url: string
-            fileName?: string
-            isNew: boolean
-        }>
-        photoFiles?: File[]
-        tenancyAgreementFile?: File
-        proofOfVisitFile?: File
-        utilityBillFile?: File
     }) => {
         const formData = new FormData()
-        
+
         // Add JSON fields
         if (payload.type) formData.append('type', payload.type)
         if (payload.title) formData.append('title', payload.title)
         if (payload.step) formData.append('step', payload.step.toString())
         if (payload.totalSteps) formData.append('totalSteps', payload.totalSteps.toString())
         if (payload.formData) formData.append('formData', JSON.stringify(payload.formData))
-        
-        // Add photo items (always send, even if empty array)
-        if (payload.photoItems !== undefined) {
-            formData.append('photoItems', JSON.stringify(payload.photoItems))
-        }
-        
-        // Add photo files
-        if (payload.photoFiles && payload.photoFiles.length > 0) {
-            payload.photoFiles.forEach((file) => {
-                formData.append('images', file)
-            })
-        }
-        if (payload.tenancyAgreementFile) {
-            formData.append('tenancyAgreement', payload.tenancyAgreementFile)
-        }
-        if (payload.proofOfVisitFile) {
-            formData.append('proofOfVisitFile', payload.proofOfVisitFile)
-        }
-        if (payload.utilityBillFile) {
-            formData.append('utilityBillFile', payload.utilityBillFile)
-        }
-        
-        const res = await api.patch(`/listing/drafts/${id}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
+
+        appendListingMedia(formData, payload)
+
+        const res = await api.patch(`/listing/drafts/${id}`, formData, multipart)
         return res.data
     },
 
@@ -260,55 +285,19 @@ export default {
         return res.data.data
     },
 
-    publishListing: async (payload: {
+    publishListing: async (payload: ListingMediaPayload & {
         draftId?: string
         formData: Record<string, any>
-        photoItems?: Array<{
-            url: string
-            fileName?: string
-            isNew: boolean
-        }>
-        photoFiles?: File[]
-        tenancyAgreementFile?: File
-        proofOfVisitFile?: File
-        utilityBillFile?: File
     }) => {
         const formData = new FormData()
-        
+
         // Add JSON fields
         if (payload.draftId) formData.append('draftId', payload.draftId)
         formData.append('formData', JSON.stringify(payload.formData))
-        
-        // Add photo items
-        if (payload.photoItems && payload.photoItems.length > 0) {
-            formData.append('photoItems', JSON.stringify(payload.photoItems))
-        }
-        
-        // Add photo files
-        if (payload.photoFiles && payload.photoFiles.length > 0) {
-            payload.photoFiles.forEach((file) => {
-                formData.append('images', file)
-            })
-        }
 
-        // Add tenancy agreement file (PDF)
-        if (payload.tenancyAgreementFile) {
-            formData.append('tenancyAgreement', payload.tenancyAgreementFile)
-        }
-        
-        // Add verification documents
-        if (payload.proofOfVisitFile) {
-            formData.append('proofOfVisitFile', payload.proofOfVisitFile)
-        }
-        if (payload.utilityBillFile) {
-            formData.append('utilityBillFile', payload.utilityBillFile)
-        }
-        
-        const res = await api.post('/listing/publish', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
+        appendListingMedia(formData, payload)
+
+        const res = await api.post('/listing/publish', formData, multipart)
         return res.data
     }
 }

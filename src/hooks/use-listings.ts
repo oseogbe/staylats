@@ -1,9 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 
 import listingsService from "@/services/listings";
-import type { DraftType, HostDashboardMetrics } from "@/services/listings";
+import type {
+  ActiveListingFilters,
+  HostDashboardMetrics,
+} from "@/services/listings";
 
 export type DashboardPeriod = "all-time" | "yearly" | "monthly" | "daily";
+
+export const userListingsKey = (userId: string | undefined) =>
+  ['userListings', userId] as const;
 
 /**
  * Hook to fetch user's published listings with React Query caching
@@ -11,7 +17,7 @@ export type DashboardPeriod = "all-time" | "yearly" | "monthly" | "daily";
  */
 export const useUserListings = (userId: string | undefined) => {
   return useQuery({
-    queryKey: ['userListings', userId],
+    queryKey: userListingsKey(userId),
     queryFn: () => listingsService.getUserListings(),
     enabled: Boolean(userId),
     staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 min
@@ -56,10 +62,14 @@ export const useListingBySlug = (slug: string | undefined) => {
  * Hook to fetch publicly available active listings.
  * No auth required — suitable for homepage, search pages, etc.
  */
-export const useActiveListings = (limit?: number, type?: DraftType) => {
+export const useActiveListings = (filters: ActiveListingFilters = {}) => {
+  const { limit, type, city, checkInDate, checkOutDate, guests } = filters;
+
   return useQuery({
-    queryKey: ['activeListings', limit, type],
-    queryFn: () => listingsService.getActiveListings(limit, type),
+    // Every filter is part of the key so changing a date or city refetches
+    // rather than serving the previous search from cache.
+    queryKey: ['activeListings', limit, type, city, checkInDate, checkOutDate, guests],
+    queryFn: () => listingsService.getActiveListings(filters),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 1,

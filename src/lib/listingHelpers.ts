@@ -1,4 +1,21 @@
-import type { ActiveListing } from "@/services/listings";
+/**
+ * The fields a listing needs to render as a card. Both the public
+ * `ActiveListing` and the host's own `UserListing` satisfy it, so the summary
+ * shown on the home page and in the host's listings stays identical.
+ */
+export interface ListingCardSource {
+  id: string;
+  slug: string;
+  title: string;
+  city: string;
+  state: string;
+  type: "shortlet" | "rental";
+  images?: string[];
+  amenities?: string[];
+  maxOccupants?: { adults?: number; kids?: number; infants?: number } | null;
+  shortletInfo?: { pricePerNight?: number } | null;
+  rentalInfo?: { pricing?: Record<string, number> } | null;
+}
 
 /** Maps a rental pricing key to a display label */
 export const PRICING_LABELS: Record<string, string> = {
@@ -27,8 +44,8 @@ export interface PropertyCardData {
   maxGuests: number;
 }
 
-/** Map an API ActiveListing to the shape PropertyCard expects */
-export function toPropertyCardData(listing: ActiveListing): PropertyCardData {
+/** Map an API listing to the shape PropertyCard expects */
+export function toPropertyCardData(listing: ListingCardSource): PropertyCardData {
   const maxGuests =
     (listing.maxOccupants?.adults ?? 0) +
     (listing.maxOccupants?.kids ?? 0) +

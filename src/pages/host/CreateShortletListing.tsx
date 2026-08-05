@@ -39,7 +39,7 @@ import {
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 
 import listingsService from '@/services/listings';
-import { usePhotoUpload } from '@/components/shortlet-listing/use-photo-upload';
+import { usePhotoUpload } from '@/hooks/use-photo-upload';
 import { useHostVerification } from '@/hooks/use-host-verification';
 import { HostVerificationModal } from '@/components/host/HostVerificationModal';
 
@@ -288,7 +288,7 @@ export default function CreateShortletListing() {
           ...cleanFormData,
           type: 'shortlet'
         },
-        photoItems: photoUploadHook.photos,
+        photoItems: photoUploadHook.photoItems, // Carries the isNew flags the API maps files back onto
         photoFiles: photoUploadHook.uploadedFiles,
         proofOfVisitFile: data.proofOfVisitFile,
         utilityBillFile: data.utilityBillFile
@@ -381,7 +381,7 @@ export default function CreateShortletListing() {
                       step: currentStep,
                       totalSteps: steps.length,
                       formData: cleanFormData,
-                      photoItems: photoUploadHook.photos,
+                      photoItems: photoUploadHook.photoItems,
                       photoFiles: photoUploadHook.uploadedFiles,
                       proofOfVisitFile,
                       utilityBillFile,
@@ -393,7 +393,8 @@ export default function CreateShortletListing() {
                       step: currentStep,
                       totalSteps: steps.length,
                       formData: cleanFormData,
-                      images: formData.photoFiles || [],
+                      photoItems: photoUploadHook.photoItems,
+                      images: photoUploadHook.uploadedFiles,
                       proofOfVisitFile,
                       utilityBillFile,
                     });
@@ -437,7 +438,7 @@ export default function CreateShortletListing() {
     <div className="min-h-screen bg-background p-4 relative">
       <LoadingOverlay 
         isLoading={isPublishing || isSavingDraft}
-        message={isPublishing ? 'Publishing your listing...' : 'Saving draft...'}
+        message={isPublishing ? 'Submitting your listing for review...' : 'Saving draft...'}
       />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -529,12 +530,12 @@ export default function CreateShortletListing() {
                       {isPublishing ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                          Publishing...
+                          Submitting for review...
                         </>
                       ) : (
                         <>
                           <CheckCircle className="h-4 w-4 mr-2" />
-                          Publish Listing
+                          Submit for review
                         </>
                       )}
                     </Button>

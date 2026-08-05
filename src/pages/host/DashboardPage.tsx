@@ -95,25 +95,17 @@ const DashboardPage = () => {
 
   // Handle real-time notification updates for host verification
   const handleNotification = useCallback(
-    (notification: any) => {
-      if (notification.type === "host_verification_approved") {
-        queryClient.setQueryData(["userProfile", user?.id], (oldData: any) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            hostProfile: {
-              ...oldData.hostProfile,
-              verified: true,
-              status: "approved",
-            },
-          };
-        });
-        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      } else if (notification.type === "host_verification_rejected") {
+    (notification: { type?: string }) => {
+      // A decision either way rewrites the host profile the dashboard reads,
+      // so refetch it rather than guessing the new shape
+      if (
+        notification.type === "host_verification_approved" ||
+        notification.type === "host_verification_rejected"
+      ) {
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       }
     },
-    [queryClient, user?.id]
+    [queryClient]
   );
 
   useNotifications(user?.id || "", { onNotification: handleNotification });
@@ -452,7 +444,7 @@ const DashboardPage = () => {
             />
             <QuickAction
               icon={<FileText />}
-              label="Manage Properties"
+              label="Manage Listings"
               onClick={() => handleTabChange("property-management")}
               bgColor="bg-gray-50"
               textColor="text-gray-700"

@@ -4,6 +4,9 @@ import { Home, FileText, DollarSign, Users, MessageSquare, CalendarCheck } from 
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { useHostListingsRealtimeSync } from '@/hooks/use-host-listings';
+
 interface HostDashboardLayoutProps {
   children: ReactNode;
 }
@@ -11,13 +14,18 @@ interface HostDashboardLayoutProps {
 const HostDashboardLayout = ({ children }: HostDashboardLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+  const { user } = useAuth();
+
+  // Approval decisions can land on any host screen - keep the listing cache in
+  // step from here so a listing sits in the right tab whenever the host looks
+  useHostListingsRealtimeSync(user?.id);
+
   // Extract the current tab from the pathname
   const currentTab = location.pathname.split('/').pop() || 'dashboard';
 
   const mainTabs = [
     { value: "dashboard", label: "Dashboard", icon: Home },
-    { value: "property-management", label: "Property Management", icon: FileText },
+    { value: "property-management", label: "Listings", icon: FileText },
     { value: "bookings", label: "Bookings", icon: CalendarCheck },
     { value: "finances", label: "Finances", icon: DollarSign },
     { value: "tenant-management", label: "Tenant Management", icon: Users },
