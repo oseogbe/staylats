@@ -33,7 +33,9 @@ import {
   getAmenityIcon,
 } from "@/components/property-details";
 import { useListingBySlug } from "@/hooks/use-listings";
+import { useSavedListingIds, useToggleSavedListing } from "@/hooks/use-saved-listings";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthPrompt } from "@/contexts/AuthPromptContext";
 import { PRICING_LABELS } from "@/lib/listingHelpers";
 import type { ListingDetail } from "@/services/listings";
 
@@ -60,13 +62,31 @@ const PropertyDetails = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [isLiked, setIsLiked] = useState(false);
+  const { openAuthPrompt } = useAuthPrompt();
+  const savedIds = useSavedListingIds();
+  const { mutate: toggleSaved } = useToggleSavedListing();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [resumeTrigger, setResumeTrigger] = useState(0);
 
   const { data: listing, isLoading, isError } = useListingBySlug(slug);
+
+  const isSaved = Boolean(listing && savedIds.has(listing.id));
+
+  const handleSaveClick = () => {
+    if (!listing) return;
+
+    if (!isAuthenticated) {
+      // Save the listing as soon as they are signed in
+      openAuthPrompt({
+        onSuccess: () => toggleSaved({ listingId: listing.id, saved: false }),
+      });
+      return;
+    }
+
+    toggleSaved({ listingId: listing.id, saved: isSaved });
+  };
 
   const openLightbox = useCallback((index: number) => {
     setLightboxIndex(index);
@@ -165,11 +185,12 @@ const PropertyDetails = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsLiked(!isLiked)}
-                className={`flex items-center gap-2 ${isLiked ? "text-red-500" : ""}`}
+                onClick={handleSaveClick}
+                aria-pressed={isSaved}
+                className={`flex items-center gap-2 ${isSaved ? "text-red-500" : ""}`}
               >
-                <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
-                Save
+                <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+                {isSaved ? "Saved" : "Save"}
               </Button>
             </div>
           </div>
