@@ -6,4 +6,4 @@ export * from './Amenities';
 export * from './Pricing';
 export * from './PropertyVerification';
 export * from './Review';
-export * from './use-photo-upload';
+export * from '@/hooks/use-photo-upload';

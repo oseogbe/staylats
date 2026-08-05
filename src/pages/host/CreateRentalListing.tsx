@@ -33,7 +33,7 @@ import {
   rentalListingSchema,
   type RentalListingFormData
 } from '@/components/rental-listing';
-import { usePhotoUpload } from '@/components/rental-listing/use-photo-upload';
+import { usePhotoUpload } from '@/hooks/use-photo-upload';
 import listingsService from '@/services/listings';
 import { useHostVerification } from '@/hooks/use-host-verification';
 import { HostVerificationModal } from '@/components/host/HostVerificationModal';
@@ -287,7 +287,7 @@ export default function CreateRentalListing() {
           ...cleanFormData,
           type: 'rental'
         },
-        photoItems: photoUploadHook.photos, // Use the full PhotoItem array with isNew flags
+        photoItems: photoUploadHook.photoItems, // Carries the isNew flags the API maps files back onto
         photoFiles: photoUploadHook.uploadedFiles,
         tenancyAgreementFile: data.tenancyAgreementFile,
         proofOfVisitFile: data.proofOfVisitFile,
@@ -382,7 +382,7 @@ export default function CreateRentalListing() {
                       step: currentStep,
                       totalSteps: steps.length,
                       formData: cleanFormData,
-                      photoItems: photoUploadHook.photos,
+                      photoItems: photoUploadHook.photoItems,
                       photoFiles: photoUploadHook.uploadedFiles,
                       tenancyAgreementFile,
                       proofOfVisitFile,
@@ -395,7 +395,8 @@ export default function CreateRentalListing() {
                       step: currentStep,
                       totalSteps: steps.length,
                       formData: cleanFormData,
-                      images: formData.photoFiles || [],
+                      photoItems: photoUploadHook.photoItems,
+                      images: photoUploadHook.uploadedFiles,
                       tenancyAgreementFile,
                       proofOfVisitFile,
                       utilityBillFile,
@@ -440,7 +441,7 @@ export default function CreateRentalListing() {
     <div className="min-h-screen bg-background p-4 relative">
       <LoadingOverlay 
         isLoading={isPublishing || isSavingDraft}
-        message={isPublishing ? 'Publishing your listing...' : 'Saving draft...'}
+        message={isPublishing ? 'Submitting your listing for review...' : 'Saving draft...'}
       />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -532,12 +533,12 @@ export default function CreateRentalListing() {
                       {isPublishing ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                          Publishing...
+                          Submitting for review...
                         </>
                       ) : (
                         <>
                           <CheckCircle className="h-4 w-4 mr-2" />
-                          Publish Listing
+                          Submit for review
                         </>
                       )}
                     </Button>
