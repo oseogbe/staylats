@@ -59,6 +59,7 @@ export interface DraftSummary {
 
 export interface UserListing {
     id: string
+    slug: string
     title: string
     type: DraftType
     description: string
@@ -68,6 +69,9 @@ export interface UserListing {
     propertyType: string
     images: string[]
     amenities: string[]
+    maxOccupants?: { adults: number; kids: number; infants: number; pets: boolean } | null
+    shortletInfo?: { pricePerNight: number; cleaningFee?: number; securityDeposit?: number } | null
+    rentalInfo?: { pricing: Record<string, number>; inspectionFee?: number; serviceCharge?: number; securityDeposit?: number } | null
     status: "draft" | "pending" | "active" | "declined"
     createdAt: string
     updatedAt: string

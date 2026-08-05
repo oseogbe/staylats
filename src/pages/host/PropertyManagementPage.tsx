@@ -1,7 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, FileText } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,75 +17,74 @@ import { PropertyCard } from "@/components/host/property/PropertyCard";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateListingPrompt } from "@/contexts/CreateListingPromptContext";
-import { useNotifications } from "@/hooks/use-notifications";
-import { useUserListings, useUserDrafts } from "@/hooks/use-listings";
+import {
+  useHostListings,
+  useListingStatusChanges,
+  tabForStatus,
+  type HostListingTab,
+} from "@/hooks/use-host-listings";
 
-import { type DraftSummary } from "@/services/listings";
 import type { PropertyListing } from "@/components/host/types";
+
+interface TabConfig {
+  value: HostListingTab;
+  label: string;
+  /** Shown above the grid when the tab has listings */
+  heading?: string;
+  emptyTitle: string;
+  emptyBody: string;
+  /** Whether the empty state offers to start a new listing */
+  emptyCta?: boolean;
+}
+
+const TABS: TabConfig[] = [
+  {
+    value: "live",
+    label: "Live",
+    emptyTitle: "No live listings yet",
+    emptyBody: "Listings appear here once an admin approves them.",
+    emptyCta: true,
+  },
+  {
+    value: "pending",
+    label: "Pending",
+    emptyTitle: "Nothing awaiting approval",
+    emptyBody: "Listings you submit stay here until an admin reviews them.",
+  },
+  {
+    value: "drafts",
+    label: "Drafts",
+    heading: "Complete these property listings to publish them on the platform",
+    emptyTitle: "No draft properties found!",
+    emptyBody: "Incomplete listings can be found here.",
+    emptyCta: true,
+  },
+  {
+    value: "rejected",
+    label: "Rejected",
+    emptyTitle: "No rejected listings",
+    emptyBody: "Listings an admin declines appear here so you can fix and resubmit them.",
+  },
+];
+
+const ITEMS_PER_PAGE = 6;
 
 const PropertyManagementPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { openPrompt: openCreateListingPrompt } = useCreateListingPrompt();
-  const queryClient = useQueryClient();
-  const [listingTab, setListingTab] = useState("published");
-  const [publishedPage, setPublishedPage] = useState(1);
-  const [draftPage, setDraftPage] = useState(1);
-  const itemsPerPage = 6;
+  const [activeTab, setActiveTab] = useState<HostListingTab>("live");
+  const [page, setPage] = useState(1);
 
-  // Fetch listings with React Query (cached automatically)
-  const { data: rawPublishedListings = [], isLoading: publishedLoading } = useUserListings(user?.id);
-  const { data: rawDrafts = [], isLoading: draftsLoading } = useUserDrafts(user?.id);
+  const { groups } = useHostListings(user?.id);
 
-  // Transform published listings data
-  const publishedListings = useMemo<PropertyListing[]>(() => {
-    return rawPublishedListings.map(listing => ({
-          id: listing.id,
-          title: listing.title,
-          type: listing.type,
-          status: listing.status,
-          description: listing.description,
-          address: listing.address,
-          propertyType: listing.propertyType,
-          images: listing.images,
-          amenities: listing.amenities,
-          lastUpdated: new Date(listing.updatedAt).toLocaleString()
-        }));
-  }, [rawPublishedListings]);
-
-  // Transform drafts data
-  const draftListings = useMemo<PropertyListing[]>(() => {
-    return rawDrafts.map((d: DraftSummary) => ({
-      id: d.id,
-      title: d.title,
-      type: d.type,
-      status: 'draft',
-      stepsRemaining: d.stepsRemaining,
-      lastUpdated: new Date(d.lastUpdated).toLocaleString()
-    }));
-  }, [rawDrafts]);
-
-  // Handle real-time notification updates
-  const handleNotification = useCallback((notification: any) => {
-    // Update listing status immediately when approved/declined notification arrives
-    if (notification.type === 'listing_approved' || notification.type === 'listing_declined') {
-      const listingId = notification.metadata?.listingId;
-      if (listingId) {
-        // Update the cache directly for immediate UI update
-        queryClient.setQueryData(['userListings', user?.id], (old: any[] = []) =>
-          old.map(listing =>
-            listing.id === listingId
-              ? { ...listing, status: notification.type === 'listing_approved' ? 'active' : 'declined' }
-              : listing
-          )
-        );
-      }
-    }
-  }, [queryClient, user?.id]);
-
-  // Initialize WebSocket with notification callback
-  useNotifications(user?.id || '', {
-    onNotification: handleNotification
+  // A decision arriving over the socket moves a listing out of the tab in view.
+  // Without a status pill on the card, silently vanishing is confusing - follow
+  // it instead. Other tabs are left alone so the host is never yanked around.
+  useListingStatusChanges(user?.id, ({ status }) => {
+    if (activeTab !== "pending") return;
+    setActiveTab(tabForStatus(status));
+    setPage(1);
   });
 
   const handleCreateListing = () => {
@@ -101,41 +99,101 @@ const PropertyManagementPage = () => {
     }
   };
 
-  // Reset page when switching tabs
   const handleTabChange = (value: string) => {
-    setListingTab(value);
-    if (value === "published") {
-      setPublishedPage(1);
-    } else {
-      setDraftPage(1);
-    }
+    setActiveTab(value as HostListingTab);
+    setPage(1);
   };
 
-  // Calculate pagination for published listings
-  const publishedTotalPages = Math.ceil(publishedListings.length / itemsPerPage);
-  const publishedPaginatedListings = useMemo(() => {
-    const startIndex = (publishedPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return publishedListings.slice(startIndex, endIndex);
-  }, [publishedListings, publishedPage, itemsPerPage]);
+  const renderTab = (tab: TabConfig) => {
+    const listings = groups[tab.value];
 
-  // Calculate pagination for draft listings
-  const draftTotalPages = Math.ceil(draftListings.length / itemsPerPage);
-  const draftPaginatedListings = useMemo(() => {
-    const startIndex = (draftPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return draftListings.slice(startIndex, endIndex);
-  }, [draftListings, draftPage, itemsPerPage]);
+    if (listings.length === 0) {
+      return (
+        <Card className="text-center py-12">
+          <CardContent>
+            <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+              <FileText className="w-6 h-6 text-neutral-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-neutral-900 mb-2">{tab.emptyTitle}</h3>
+            <p className="text-neutral-600 mb-6">{tab.emptyBody}</p>
+            {tab.emptyCta && (
+              <Button onClick={handleCreateListing} className="bg-primary hover:bg-primary-hover">
+                Add New Listing
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      );
+    }
 
-  // React Query handles fetching automatically, no useEffect needed
+    const totalPages = Math.max(1, Math.ceil(listings.length / ITEMS_PER_PAGE));
+    // A listing moving tabs under us can shrink the list past the current page
+    const currentPage = Math.min(page, totalPages);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginated = listings.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    return (
+      <>
+        {tab.heading && (
+          <div className="mb-6">
+            <h3 className="text-lg font-medium text-neutral-900 mb-2">{tab.heading}</h3>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {paginated.map((listing) => (
+            <PropertyCard
+              key={listing.id}
+              listing={listing}
+              onContinue={handleContinueListing}
+            />
+          ))}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      onClick={() => setPage(pageNumber)}
+                      isActive={currentPage === pageNumber}
+                      className="cursor-pointer"
+                    >
+                      {pageNumber}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                    className={
+                      currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </>
+    );
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div className="min-w-0">
-          <h2 className="text-xl font-semibold text-neutral-900">Property Management</h2>
+          <h2 className="text-xl font-semibold text-neutral-900">Listings</h2>
           <p className="text-neutral-600 mt-1 text-sm sm:text-base">
-            Manage your property listings, including published and draft properties.
+            Manage your property listings, from drafts through to live.
           </p>
         </div>
         <Button
@@ -148,133 +206,24 @@ const PropertyManagementPage = () => {
       </div>
 
       {/* Property Listings Tabs */}
-      <Tabs value={listingTab} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="flex h-auto min-h-11 w-full gap-1 bg-neutral-100 p-1 sm:inline-flex sm:w-auto sm:min-h-10">
-          <TabsTrigger
-            value="published"
-            className="min-h-10 flex-1 px-2 py-2.5 text-sm sm:flex-none sm:px-3 sm:py-1.5 data-[state=active]:bg-white"
-          >
-            Published ({publishedListings.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="drafts"
-            className="min-h-10 flex-1 px-2 py-2.5 text-sm sm:flex-none sm:px-3 sm:py-1.5 data-[state=active]:bg-white"
-          >
-            Drafts ({draftListings.length})
-          </TabsTrigger>
+          {TABS.map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="min-h-10 flex-1 px-2 py-2.5 text-sm sm:flex-none sm:px-3 sm:py-1.5 data-[state=active]:bg-white"
+            >
+              {tab.label} ({groups[tab.value].length})
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="published" className="mt-6">
-          {publishedListings.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardContent>
-                <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
-                  <FileText className="w-6 h-6 text-neutral-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-neutral-900 mb-2">No Published Properties found!</h3>
-                <p className="text-neutral-600 mb-6">Start managing your properties by publishing your first listing.</p>
-                <Button onClick={handleCreateListing} className="bg-primary hover:bg-primary-hover">
-                  Add New Listing
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {publishedPaginatedListings.map((listing) => (
-                  <PropertyCard key={listing.id} listing={listing} onContinue={handleContinueListing} />
-                ))}
-              </div>
-              {publishedTotalPages > 1 && (
-                <div className="mt-6">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => setPublishedPage((prev) => Math.max(prev - 1, 1))}
-                          className={publishedPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                      {Array.from({ length: publishedTotalPages }, (_, i) => i + 1).map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => setPublishedPage(page)}
-                            isActive={publishedPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() => setPublishedPage((prev) => Math.min(prev + 1, publishedTotalPages))}
-                          className={publishedPage === publishedTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              )}
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="drafts" className="mt-6">
-          {draftListings.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardContent>
-                <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
-                  <FileText className="w-6 h-6 text-neutral-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-neutral-900 mb-2">No Draft Properties found!</h3>
-                <p className="text-neutral-600 mb-6">Incomplete listings can be found here.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-neutral-900 mb-2">Complete these property listings to publish them on the platform</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {draftPaginatedListings.map((listing) => (
-                  <PropertyCard key={listing.id} listing={listing} onContinue={handleContinueListing} />
-                ))}
-              </div>
-              {draftTotalPages > 1 && (
-                <div className="mt-6">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => setDraftPage((prev) => Math.max(prev - 1, 1))}
-                          className={draftPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                      {Array.from({ length: draftTotalPages }, (_, i) => i + 1).map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => setDraftPage(page)}
-                            isActive={draftPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() => setDraftPage((prev) => Math.min(prev + 1, draftTotalPages))}
-                          className={draftPage === draftTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              )}
-            </>
-          )}
-        </TabsContent>
+        {TABS.map((tab) => (
+          <TabsContent key={tab.value} value={tab.value} className="mt-6">
+            {renderTab(tab)}
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
