@@ -10,7 +10,7 @@ import { useActiveListings } from "@/hooks/use-listings";
 import { toPropertyCardData } from "@/lib/listingHelpers";
 
 const FeaturedProperties = () => {
-  const { data: activeListings = [], isLoading } = useActiveListings(6);
+  const { data: activeListings = [], isLoading } = useActiveListings({ limit: 6 });
 
   const featuredProperties = useMemo(
     () => activeListings.slice(0, 9).map(toPropertyCardData),

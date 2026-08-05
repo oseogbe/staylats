@@ -63,12 +63,12 @@ export const useListingBySlug = (slug: string | undefined) => {
  * No auth required — suitable for homepage, search pages, etc.
  */
 export const useActiveListings = (filters: ActiveListingFilters = {}) => {
-  const { limit, type, city, checkInDate, checkOutDate, guests } = filters;
+  const { limit, type, state, checkInDate, checkOutDate, guests } = filters;
 
   return useQuery({
-    // Every filter is part of the key so changing a date or city refetches
+    // Every filter is part of the key so changing a date or location refetches
     // rather than serving the previous search from cache.
-    queryKey: ['activeListings', limit, type, city, checkInDate, checkOutDate, guests],
+    queryKey: ['activeListings', limit, type, state, checkInDate, checkOutDate, guests],
     queryFn: () => listingsService.getActiveListings(filters),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

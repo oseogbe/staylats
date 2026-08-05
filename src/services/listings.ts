@@ -152,7 +152,11 @@ export interface ListingDetail {
 export interface ActiveListingFilters {
     limit?: number
     type?: DraftType
-    city?: string
+    /**
+     * Abuja or Lagos. Listings hold these as their state - `city` is the
+     * finer-grained area (Gwarinpa, Lekki, ...), which the filter never matches.
+     */
+    state?: string
     /** ISO string — only applied together with checkOutDate */
     checkInDate?: string
     /** ISO string — only applied together with checkInDate */
@@ -196,11 +200,11 @@ export default {
     getActiveListings: async (
         filters: ActiveListingFilters = {}
     ): Promise<{ listings: ActiveListing[] }> => {
-        const { limit, type, city, checkInDate, checkOutDate, guests } = filters
+        const { limit, type, state, checkInDate, checkOutDate, guests } = filters
         const params: Record<string, string> = {}
         if (limit) params.limit = limit.toString()
         if (type) params.type = type
-        if (city) params.city = city
+        if (state) params.state = state
         if (guests) params.guests = guests.toString()
         if (checkInDate && checkOutDate) {
             params.checkInDate = checkInDate

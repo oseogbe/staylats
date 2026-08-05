@@ -1,6 +1,7 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-import { format } from "date-fns";
+import { format, startOfToday } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,8 +15,16 @@ import { ChevronLeft } from "lucide-react";
 
 import heroImage from "@/assets/serviced-apartment.png";
 import { GuestPicker, GuestCounts } from "@/components/GuestPicker";
+import {
+  DateRangePicker,
+  formatDateRange,
+  isCompleteRange,
+  type DateRange,
+} from "@/components/DateRangePicker";
+import { buildPropertySearchParams } from "@/lib/propertySearch";
 
-const cities = [
+// Held as `state` on a listing - `city` is the finer-grained area
+const locations = [
   { value: 'abuja', label: 'Abuja' },
   { value: 'lagos', label: 'Lagos' }
 ];
@@ -29,10 +38,11 @@ const contractTerms = [
 ];
 
 const Hero = () => {
+  const navigate = useNavigate();
   const [propertyType, setPropertyType] = React.useState<"shortlets" | "rentals">("shortlets");
-  const [checkInDate, setCheckInDate] = React.useState<Date>();
-  const [checkOutDate, setCheckOutDate] = React.useState<Date>();
+  const [dateRange, setDateRange] = React.useState<DateRange>({});
   const [moveInDate, setMoveInDate] = React.useState<Date>();
+  const today = startOfToday();
 
   const isMobile = () => typeof window !== "undefined" && window.innerWidth < 768;
   const [windowWidth, setWindowWidth] = React.useState(
@@ -57,6 +67,29 @@ const Hero = () => {
 
   const totalGuests = guests.adults + guests.children;
 
+  // One field for both ends of the stay, shared by the desktop grid and the
+  // mobile stepper so they cannot drift apart.
+  const dateRangeField = (
+    <div className="relative">
+      <label className="block text-sm font-medium text-neutral-600 mb-2">
+        Check in / Check out
+      </label>
+      <DateRangePicker value={dateRange} onChange={setDateRange} align="center">
+        <Button
+          variant="outline"
+          className="pl-10 h-12 w-full border-neutral-300 focus:border-primary justify-start font-normal"
+        >
+          <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
+          {isCompleteRange(dateRange) ? (
+            formatDateRange(dateRange, "")
+          ) : (
+            <span className="text-slate-400 !font-normal">Add dates</span>
+          )}
+        </Button>
+      </DateRangePicker>
+    </div>
+  );
+
   const isMobileView = windowWidth < 768;
   const shortletSteps = [
     {
@@ -69,9 +102,9 @@ const Hero = () => {
               <SelectValue placeholder="Select city" />
             </SelectTrigger>
             <SelectContent>
-              {cities.map((city) => (
-                <SelectItem key={city.value} value={city.value}>
-                  {city.label}
+              {locations.map((location) => (
+                <SelectItem key={location.value} value={location.value}>
+                  {location.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -81,62 +114,9 @@ const Hero = () => {
       validate: () => where !== ""
     },
     {
-      label: "Check in",
-      content: (
-        <div className="relative">
-          <label className="block text-sm font-medium text-neutral-600 mb-2">Check in</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className="pl-10 h-12 w-full border-neutral-300 focus:border-primary justify-start"
-              >
-                <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
-                {checkInDate ? format(checkInDate, "PPP") : <span className="text-slate-400 !font-normal">Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={checkInDate}
-                onSelect={setCheckInDate}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      ),
-      validate: () => !!checkInDate
-    },
-    {
-      label: "Check out",
-      content: (
-        <div className="relative">
-          <label className="block text-sm font-medium text-neutral-600 mb-2">Check out</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className="pl-10 h-12 w-full border-neutral-300 focus:border-primary justify-start"
-              >
-                <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
-                {checkOutDate ? format(checkOutDate, "PPP") : <span className="text-slate-400 !font-normal">Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={checkOutDate}
-                onSelect={setCheckOutDate}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      ),
-      validate: () => !!checkOutDate
+      label: "Check in / Check out",
+      content: dateRangeField,
+      validate: () => isCompleteRange(dateRange)
     },
     {
       label: "Guests",
@@ -164,9 +144,9 @@ const Hero = () => {
               <SelectValue placeholder="Select city" />
             </SelectTrigger>
             <SelectContent>
-              {cities.map((city) => (
-                <SelectItem key={city.value} value={city.value}>
-                  {city.label}
+              {locations.map((location) => (
+                <SelectItem key={location.value} value={location.value}>
+                  {location.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -195,6 +175,7 @@ const Hero = () => {
                 mode="single"
                 selected={moveInDate}
                 onSelect={setMoveInDate}
+                disabled={(date) => date < today}
                 initialFocus
                 className="p-3 pointer-events-auto"
               />
@@ -227,6 +208,22 @@ const Hero = () => {
     }
   ];
   const steps = propertyType === "shortlets" ? shortletSteps : rentalSteps;
+
+  const handleSearch = () => {
+    const isShortlet = propertyType === "shortlets";
+
+    const params = buildPropertySearchParams({
+      type: isShortlet ? "shortlet" : "rental",
+      state: where || undefined,
+      // Rentals are let by term, not by night, so the date range and guest
+      // count only narrow a shortlet search.
+      checkIn: isShortlet ? dateRange.checkIn : undefined,
+      checkOut: isShortlet ? dateRange.checkOut : undefined,
+      guests: isShortlet ? totalGuests : undefined,
+    });
+
+    navigate(`/properties?${params.toString()}`);
+  };
 
   return (
     <section className="relative h-screen md:h-[700px] flex items-center justify-center overflow-hidden">
@@ -319,6 +316,7 @@ const Hero = () => {
                   <Button
                     className="w-full ml-auto bg-primary hover:bg-primary-hover"
                     disabled={!steps[step].validate()}
+                    onClick={handleSearch}
                   >
                     <Search className="h-5 w-5 mr-2" />
                     Search {propertyType === 'shortlets' ? 'Shortlets' : 'Rentals'}
@@ -328,7 +326,8 @@ const Hero = () => {
             </div>
           ) : (
             <>
-              <div className={`grid grid-cols-1 gap-4 ${propertyType === "shortlets" ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+              {/* Where + dates + guests for shortlets; where + move-in + term for rentals */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {/* Location - Always visible */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-neutral-600 mb-2">
@@ -339,9 +338,9 @@ const Hero = () => {
                       <SelectValue placeholder="Select city" />
                     </SelectTrigger>
                     <SelectContent>
-                      {cities.map((city) => (
-                        <SelectItem key={city.value} value={city.value}>
-                          {city.label}
+                      {locations.map((location) => (
+                        <SelectItem key={location.value} value={location.value}>
+                          {location.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -350,59 +349,8 @@ const Hero = () => {
 
                 {propertyType === "shortlets" ? (
                   <>
-                    {/* Check-in */}
-                    <div className="relative">
-                      <label className="block text-sm font-medium text-neutral-600 mb-2">
-                        Check in
-                      </label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className="pl-10 h-12 w-full border-neutral-300 focus:border-primary justify-start"
-                          >
-                            <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
-                            {checkInDate ? format(checkInDate, "PPP") : <span className="text-slate-400 !font-normal">Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={checkInDate}
-                            onSelect={setCheckInDate}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    {/* Check-out */}
-                    <div className="relative">
-                      <label className="block text-sm font-medium text-neutral-600 mb-2">
-                        Check out
-                      </label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className="pl-10 h-12 w-full border-neutral-300 focus:border-primary justify-start"
-                          >
-                            <CalendarIcon className="absolute left-3 h-5 w-5 text-neutral-400" />
-                            {checkOutDate ? format(checkOutDate, "PPP") : <span className="text-slate-400 !font-normal">Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={checkOutDate}
-                            onSelect={setCheckOutDate}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                    {/* Check in / Check out */}
+                    {dateRangeField}
 
                     {/* Guests */}
                     <div className="relative">
@@ -439,6 +387,7 @@ const Hero = () => {
                             mode="single"
                             selected={moveInDate}
                             onSelect={setMoveInDate}
+                            disabled={(date) => date < today}
                             initialFocus
                             className="p-3 pointer-events-auto"
                           />
@@ -451,7 +400,7 @@ const Hero = () => {
                       <label className="block text-sm font-medium text-neutral-600 mb-2">
                         Contract term
                       </label>
-                      <Select>
+                      <Select value={contractTerm} onValueChange={setContractTerm}>
                         <SelectTrigger className="h-12 border-neutral-300 focus:border-primary">
                           <SelectValue placeholder="Select term" />
                         </SelectTrigger>
@@ -467,7 +416,10 @@ const Hero = () => {
                   </>
                 )}
               </div>
-              <Button className="w-full md:w-auto mt-6 h-12 px-8 bg-primary hover:bg-primary-hover">
+              <Button
+                onClick={handleSearch}
+                className="w-full md:w-auto mt-6 h-12 px-8 bg-primary hover:bg-primary-hover"
+              >
                 <Search className="h-5 w-5 mr-2" />
                 Search {propertyType === "shortlets" ? "Shortlets" : "Rentals"}
               </Button>
