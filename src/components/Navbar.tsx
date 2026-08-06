@@ -1,5 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 
+import staylatsLogo from '@/assets/staylats-logo.png';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,10 +51,12 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <Link to="/">
-              <h1 className="text-xl sm:text-2xl font-bold text-primary">
-                Staylats
-              </h1>
+            <Link to="/" aria-label="Staylats home">
+              <img
+                src={staylatsLogo}
+                alt="Staylats"
+                className="h-7 w-auto sm:h-8"
+              />
             </Link>
           </div>
 

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
+import staylatsLogo from "@/assets/staylats-logo.png";
 import Hero from "@/components/Hero";
 import FeaturedProperties from "@/components/FeaturedProperties";
 import { Button } from "@/components/ui/button";
@@ -231,7 +232,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-primary mb-4">Staylats</h3>
+              <img src={staylatsLogo} alt="Staylats" className="h-8 w-auto mb-4" />
               <p className="text-neutral-400">
                 Your trusted platform for finding quality accommodations across Nigeria.
               </p>
