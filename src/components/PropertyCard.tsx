@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Heart, Star, MapPin, Users } from "lucide-react";
@@ -6,6 +5,10 @@ import { Heart, Star, MapPin, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { useAuthPrompt } from "@/contexts/AuthPromptContext";
+import { useSavedListingIds, useToggleSavedListing } from "@/hooks/use-saved-listings";
 
 interface PropertyCardProps {
   property: {
@@ -26,8 +29,28 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property }: PropertyCardProps) => {
-  const [isLiked, setIsLiked] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { openAuthPrompt } = useAuthPrompt();
+  const savedIds = useSavedListingIds();
+  const { mutate: toggleSaved } = useToggleSavedListing();
+
+  const isSaved = savedIds.has(property.id);
+
+  const handleSaveClick = (event: React.MouseEvent) => {
+    // The whole card navigates; the heart must not take the visitor with it
+    event.stopPropagation();
+
+    if (!isAuthenticated) {
+      // Save the listing they clicked as soon as they are signed in
+      openAuthPrompt({
+        onSuccess: () => toggleSaved({ listingId: property.id, saved: false }),
+      });
+      return;
+    }
+
+    toggleSaved({ listingId: property.id, saved: isSaved });
+  };
 
   return (
     <Card 
@@ -44,15 +67,14 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
         <Button
           variant="ghost"
           size="icon"
+          aria-label={isSaved ? "Remove from favourites" : "Save to favourites"}
+          aria-pressed={isSaved}
           className={`absolute top-3 right-3 rounded-full bg-white/80 hover:bg-white ${
-            isLiked ? "text-red-500" : "text-neutral-600"
+            isSaved ? "text-red-500" : "text-neutral-600"
           }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsLiked(!isLiked);
-          }}
+          onClick={handleSaveClick}
         >
-          <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
+          <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
         </Button>
         <Badge
           variant="secondary"

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import {
@@ -9,10 +8,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import AuthModal from '@/components/auth/AuthModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuthPrompt } from '@/contexts/AuthPromptContext';
 import { useCreateListingPrompt } from '@/contexts/CreateListingPromptContext';
 
 import {
@@ -31,15 +30,10 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
   const { openPrompt: openCreateListingPrompt } = useCreateListingPrompt();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalRedirectPath, setAuthModalRedirectPath] = useState<string>();
-  const [authModalRedirectState, setAuthModalRedirectState] = useState<unknown>();
+  const { openAuthPrompt } = useAuthPrompt();
 
-  const openAuthModal = (redirectPath?: string, redirectState?: unknown) => {
-    setAuthModalRedirectPath(redirectPath);
-    setAuthModalRedirectState(redirectState);
-    setIsAuthModalOpen(true);
-  };
+  const openAuthModal = (redirectPath?: string, redirectState?: unknown) =>
+    openAuthPrompt({ redirectPath, redirectState });
 
   const handleLogout = async () => {
     try {
@@ -152,7 +146,7 @@ const Navbar = () => {
                       onClick={() => navigate('/saved-listings')}
                     >
                         <Heart className="h-4 w-4 mr-3 text-neutral-600" />
-                        <span className="text-sm font-medium">Saved Listings</span>
+                        <span className="text-sm font-medium">Favourites</span>
                     </DropdownMenuItem>
                   </>
                 )}
@@ -197,16 +191,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => {
-          setIsAuthModalOpen(false);
-          setAuthModalRedirectPath(undefined);
-          setAuthModalRedirectState(undefined);
-        }}
-        redirectPath={authModalRedirectPath}
-        redirectState={authModalRedirectState}
-      />
     </nav>
   );
 };

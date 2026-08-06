@@ -47,6 +47,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CreateListingPromptProvider } from "@/contexts/CreateListingPromptContext";
+import { AuthPromptProvider } from "@/contexts/AuthPromptContext";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -65,6 +66,7 @@ const App = () => (
       />
       <BrowserRouter>
         <AuthProvider>
+          <AuthPromptProvider>
           <CreateListingPromptProvider>
             <ScrollToTop />
             <Navbar />
@@ -257,6 +259,7 @@ const App = () => (
             />
           </Routes>
           </CreateListingPromptProvider>
+          </AuthPromptProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
