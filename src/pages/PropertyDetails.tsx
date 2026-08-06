@@ -32,6 +32,8 @@ import {
   RentalDetails,
   getAmenityIcon,
 } from "@/components/property-details";
+import { ShareMenu } from "@/components/ShareMenu";
+import { buildListingShareUrl } from "@/lib/share";
 import { useListingBySlug } from "@/hooks/use-listings";
 import { useSavedListingIds, useToggleSavedListing } from "@/hooks/use-saved-listings";
 import { useAuth } from "@/contexts/AuthContext";
@@ -178,10 +180,16 @@ const PropertyDetails = () => {
               Back
             </Button>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                <Share className="h-4 w-4" />
-                Share
-              </Button>
+              <ShareMenu
+                url={buildListingShareUrl(listing.slug)}
+                title={listing.title}
+                text={`${listing.title} — ${location} on Staylats`}
+              >
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Share className="h-4 w-4" />
+                  Share
+                </Button>
+              </ShareMenu>
               <Button
                 variant="ghost"
                 size="sm"

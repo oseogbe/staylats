@@ -12,8 +12,8 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Staylats';
   const options = {
     body: payload.body || '',
-    icon: '/placeholder.svg',
-    badge: '/placeholder.svg',
+    icon: '/staylats-icon.png',
+    badge: '/staylats-icon.png',
     data: {
       url: payload.url || '/',
       type: payload.type,
