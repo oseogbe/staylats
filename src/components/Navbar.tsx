@@ -14,7 +14,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
-import { useCreateListingPrompt } from '@/contexts/CreateListingPromptContext';
+import { useListPropertyCta } from '@/hooks/use-list-property-cta';
 
 import {
   Menu,
@@ -31,8 +31,8 @@ import {
 const Navbar = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
-  const { openPrompt: openCreateListingPrompt } = useCreateListingPrompt();
   const { openAuthPrompt } = useAuthPrompt();
+  const listProperty = useListPropertyCta();
 
   const openAuthModal = (redirectPath?: string, redirectState?: unknown) =>
     openAuthPrompt({ redirectPath, redirectState });
@@ -73,13 +73,7 @@ const Navbar = () => {
             <Button
               variant="ghost"
               className="hidden lg:flex text-sm text-primary-foreground font-semibold px-3 py-2 rounded-full bg-primary hover:bg-primary/80"
-              onClick={() => {
-                if (isAuthenticated) {
-                  openCreateListingPrompt();
-                } else {
-                  openAuthModal('/host/dashboard', { openCreateListingPrompt: true });
-                }
-              }}
+              onClick={listProperty}
             >
               List your property
             </Button>
