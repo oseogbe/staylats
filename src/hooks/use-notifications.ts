@@ -117,6 +117,14 @@ export function useNotifications(userId: string | undefined, options?: UseNotifi
       });
 
       socket.on('new_notification', (notification: Notification) => {
+        // A payload with no id is not a notification. Read receipts used to
+        // arrive on this event and rendered as empty rows in the list; drop
+        // anything malformed rather than trusting the wire.
+        if (!notification?.id) {
+          console.warn('Ignored a notification payload with no id', notification);
+          return;
+        }
+
         // Prevent duplicate notifications
         const exists = sharedNotifications.some(n => n.id === notification.id);
         if (!exists) {
@@ -129,13 +137,16 @@ export function useNotifications(userId: string | undefined, options?: UseNotifi
         notificationCallbacks.forEach(callback => callback(notification));
       });
 
-      // Handle read status updates
-      socket.on('notification_read', ({ userId: readUserId }) => {
-        if (readUserId === userId) {
-          sharedNotifications = sharedNotifications.map(n => ({ ...n, read: true }));
-          // Notify all hook instances
-          notificationListeners.forEach(listener => listener(sharedNotifications));
-        }
+      // Handle read status updates. `ids` narrows it to the notifications that
+      // were actually read; absent means all of them, from "mark all as read".
+      socket.on('notification_read', ({ userId: readUserId, ids }: { userId: string; ids?: string[] }) => {
+        if (readUserId !== userId) return;
+
+        sharedNotifications = sharedNotifications.map(n =>
+          !ids || ids.includes(n.id) ? { ...n, read: true } : n
+        );
+        // Notify all hook instances
+        notificationListeners.forEach(listener => listener(sharedNotifications));
       });
 
     } catch (err) {
