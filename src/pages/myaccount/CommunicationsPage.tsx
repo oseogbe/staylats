@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -38,8 +37,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 
 import { useAuth } from '@/contexts/AuthContext';
-import notificationsAPI from '@/services/notifications';
-import { Notification } from '@/components/notifications/NotificationBell';
+import { formatRelativeTime } from '@/lib/relativeTime';
+import {
+  useNotificationList,
+  useMarkNotificationRead,
+  useMarkNotificationsRead,
+  type Notification,
+} from '@/hooks/use-notification-list';
 
 const messageSchema = z.object({
   title: z.string().min(1, 'Message title is required').max(100, 'Title must be under 100 characters'),
@@ -55,7 +59,8 @@ const formatNotificationType = (type: string) =>
 
 const CommunicationsPage = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { mutateAsync: markAllRead } = useMarkNotificationsRead(user?.id);
+  const { mutate: markRead } = useMarkNotificationRead(user?.id);
   const [activeSubTab, setActiveSubTab] = useState("notifications");
   const [notificationFilter, setNotificationFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -71,15 +76,13 @@ const CommunicationsPage = () => {
     },
   });
 
-  const { 
-    data: notifications = [], 
+  // Shares the bell's cache and key, so marking read in either place is
+  // reflected in the other immediately.
+  const {
+    data: notifications = [],
     isLoading: notificationsLoading,
-    refetch: refetchNotifications 
-  } = useQuery({
-    queryKey: ["userNotifications", user?.id],
-    queryFn: () => notificationsAPI.getUserNotifications({ limit: 50 }),
-    enabled: !!user?.id && activeSubTab === 'notifications',
-  });
+    refetch: refetchNotifications
+  } = useNotificationList(user?.id);
 
   const notificationTypes = [...new Set(notifications.map((n: Notification) => n.type as string))].sort() as string[];
 
@@ -99,12 +102,7 @@ const CommunicationsPage = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationsAPI.markNotificationAsRead();
-      queryClient.setQueryData(
-        ["userNotifications", user?.id],
-        (old: Notification[] | undefined) => 
-          old?.map(n => ({ ...n, read: true })) || []
-      );
+      await markAllRead();
     } catch (error) {
       console.error('Failed to mark notifications as read:', error);
     }
@@ -119,20 +117,6 @@ const CommunicationsPage = () => {
     } catch (error) {
       console.error('Failed to send message:', error);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.abs(now.getTime() - date.getTime()) / 36e5;
-
-    if (diffInHours < 24) {
-      return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(
-        -Math.round(diffInHours),
-        'hour'
-      );
-    }
-    return date.toLocaleDateString();
   };
 
   return (
@@ -279,14 +263,21 @@ const CommunicationsPage = () => {
                           {notification.title}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {formatDate(notification.createdAt)}
+                          {formatRelativeTime(notification.createdAt)}
                         </span>
                       </div>
                       <p className="text-sm text-foreground line-clamp-2">
                         {notification.message}
                       </p>
                       {!notification.read && (
-                        <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => markRead(notification.id)}
+                          className="mt-2 h-auto p-0 text-xs text-primary hover:bg-transparent hover:underline"
+                        >
+                          Mark as read
+                        </Button>
                       )}
                     </div>
                   </div>

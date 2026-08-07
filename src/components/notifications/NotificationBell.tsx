@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Bell, AlertCircle, Wifi, WifiOff, ArrowRight } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -14,18 +13,20 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useAuth } from '@/contexts/AuthContext';
-import notificationsAPI from '@/services/notifications';
 import { useNotifications } from '@/hooks/use-notifications';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
+import {
+  useNotificationList,
+  useMarkNotificationRead,
+  useMarkNotificationsRead,
+  type Notification,
+} from '@/hooks/use-notification-list';
+import { formatRelativeTime } from '@/lib/relativeTime';
 
-export interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-}
+export type { Notification };
+
+/** The dropdown is a preview; the full history lives on the communications page. */
+const PREVIEW_LIMIT = 10;
 
 /** Merge two notification rows with the same id; prefer defined snapshot fields so socket payloads cannot wipe DB-backed dates. */
 function mergeDuplicateNotifications(existing: Notification, incoming: Notification): Notification {
@@ -42,7 +43,6 @@ function mergeDuplicateNotifications(existing: Notification, incoming: Notificat
 
 const NotificationBell = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { 
     notifications: realtimeNotifications, 
@@ -53,15 +53,14 @@ const NotificationBell = () => {
 
   usePushNotifications(user?.id);
 
-  const { 
-    data: persistedNotifications, 
+  const {
+    data: persistedNotifications,
     isLoading,
     error: queryError,
-  } = useQuery({
-    queryKey: ["persistedNotification", user?.id],
-    queryFn: () => notificationsAPI.getUserNotifications(),
-    enabled: !!user?.id,
-  });
+  } = useNotificationList(user?.id);
+
+  const { mutateAsync: markAllRead } = useMarkNotificationsRead(user?.id);
+  const { mutate: markRead } = useMarkNotificationRead(user?.id);
 
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +71,7 @@ const NotificationBell = () => {
     ...(persistedNotifications || []),
     ...(realtimeNotifications || []),
   ]
+    .filter((notification) => notification?.id)
     .reduce((unique, notification) => {
       const idx = unique.findIndex((n) => n.id === notification.id);
       if (idx === -1) {
@@ -87,10 +87,12 @@ const NotificationBell = () => {
       const nb = Number.isNaN(tb) ? -Infinity : tb;
       const na = Number.isNaN(ta) ? -Infinity : ta;
       return nb - na;
-    })
-    .slice(0, 10);
+    });
 
-  const unreadCount = allNotifications?.filter(n => !n.read).length || 0;
+  // Counted before the preview is trimmed - the badge was reading only the
+  // first ten, so an eleventh unread notification never showed on it.
+  const unreadCount = allNotifications.filter((n) => !n.read).length;
+  const previewNotifications = allNotifications.slice(0, PREVIEW_LIMIT);
 
   useEffect(() => {
     if (socketError) setError(socketError);
@@ -98,56 +100,36 @@ const NotificationBell = () => {
     else setError(null);
   }, [socketError, queryError]);
 
-  const handleOpenChange = async (open: boolean) => {
+  /**
+   * Opening the bell no longer marks anything read - that measured whether the
+   * user had glanced at the bell, not what they had read. A notification is
+   * read when it is opened, or when they say so explicitly.
+   */
+  const markOneRead = (notification: Notification) => {
+    if (notification.read) return;
+
+    markRead(notification.id);
+    // The socket-held copies are this hook's own state, kept in step by hand
+    setRealtimeNotifications(
+      realtimeNotifications.map((n) =>
+        n.id === notification.id ? { ...n, read: true } : n
+      )
+    );
+  };
+
+  const handleMarkAllRead = async () => {
     try {
-      setIsOpen(open);
-      
-      // Only mark as read when opening (not when closing)
-      if (open && unreadCount > 0) {
-        await notificationsAPI.markNotificationAsRead();
-        
-        // Update both persisted and realtime notifications
-        queryClient.setQueryData(
-          ["persistedNotification", user?.id],
-          (old: Notification[] | undefined) => 
-            old?.map(n => ({ ...n, read: true })) || []
-        );
-        
-        // Also update realtime notifications
-        const updatedRealtime = realtimeNotifications.map(n => ({ ...n, read: true }));
-        setRealtimeNotifications(updatedRealtime);
-      }
+      await markAllRead();
+      setRealtimeNotifications(
+        realtimeNotifications.map((n) => ({ ...n, read: true }))
+      );
     } catch (err) {
       setError('Failed to mark notifications as read');
     }
   };
 
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString?.trim()) {
-      return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(0, 'minute');
-    }
-
-    const date = new Date(dateString);
-    
-    // Check if date is invalid
-    if (isNaN(date.getTime())) {
-      return 'Invalid date';
-    }
-    
-    const now = new Date();
-    const diffInHours = Math.abs(now.getTime() - date.getTime()) / 36e5;
-
-    if (diffInHours < 24) {
-      return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(
-        -Math.round(diffInHours),
-        'hour'
-      );
-    }
-    return date.toLocaleDateString();
-  };
-
   return (
-    <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <div className="relative">
           <Button
@@ -201,6 +183,26 @@ const NotificationBell = () => {
           </>
         )}
 
+        {/* Opening no longer clears the badge, so the bulk action is offered here */}
+        {unreadCount > 0 && (
+          <>
+            <div className="flex items-center justify-between px-4 py-2">
+              <span className="text-xs font-medium text-neutral-500">
+                {unreadCount} unread
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 text-xs text-primary hover:bg-transparent hover:underline"
+                onClick={handleMarkAllRead}
+              >
+                Mark all as read
+              </Button>
+            </div>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
         {isLoading ? (
           <div className="p-4 text-center text-neutral-500">
             <p className="text-sm">Loading notifications...</p>
@@ -211,9 +213,10 @@ const NotificationBell = () => {
           </div>
         ) : (
           <div className="max-h-[360px] overflow-y-auto scrollbar-thin">
-            {allNotifications.map((notification) => (
+            {previewNotifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
+                onSelect={() => markOneRead(notification)}
                 className={`p-4 hover:bg-neutral-50 cursor-pointer ${
                   !notification.read ? 'bg-neutral-50' : ''
                 }`}
@@ -222,7 +225,7 @@ const NotificationBell = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{notification.title}</span>
                     <span className="text-xs text-neutral-500">
-                      {formatDate(notification.createdAt)}
+                      {formatRelativeTime(notification.createdAt)}
                     </span>
                   </div>
                   <p className="text-xs text-neutral-600 line-clamp-2">

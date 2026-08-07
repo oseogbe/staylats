@@ -12,7 +12,13 @@ export default {
         return response.data.data.notifications;
     },
 
-    markNotificationAsRead: async () => {
+    /** Marks a single notification read — what a click on one does. */
+    markNotificationAsRead: async (id: string) => {
+        const response = await api.patch(`/notifications/${id}/read`);
+        return response.data.data;
+    },
+
+    markAllNotificationsAsRead: async () => {
         const response = await api.put('/notifications/mark-as-read');
         return response.data.data;
     },
