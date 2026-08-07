@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, type Location } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Check, ChevronLeft, Loader2, Phone, ShieldCheck, User } from "lucide-react";
 
@@ -35,7 +35,29 @@ const STEPS: { id: StepId; label: string; icon: typeof Phone }[] = [
 
 const AuthOnboarding = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, onboardingRequired, syncCurrentUser } = useAuth();
+
+  /**
+   * Where the guard interrupted them. ProtectedRoute redirects here with the
+   * whole location, so its own state - "open the create-listing modal", say -
+   * rides along and can be handed back once onboarding is done. Without this,
+   * someone who signed up by clicking "List your property" would finish
+   * onboarding on the home page with nothing to show for the intent.
+   */
+  const interrupted = (location.state as { from?: Location } | null)?.from;
+
+  const resume = () => {
+    if (!interrupted?.pathname) {
+      navigate("/", { replace: true });
+      return;
+    }
+
+    navigate(`${interrupted.pathname}${interrupted.search || ""}`, {
+      state: interrupted.state,
+      replace: true,
+    });
+  };
 
   const hasPhoneVerified = useMemo(() => !!user?.phoneVerifiedAt, [user?.phoneVerifiedAt]);
 
@@ -112,7 +134,13 @@ const AuthOnboarding = () => {
       });
       toast.success(response.message || "Profile updated.");
       await syncCurrentUser();
-      navigate(response.data.onboardingRequired ? "/auth/onboarding" : "/", { replace: true });
+
+      if (response.data.onboardingRequired) {
+        navigate("/auth/onboarding", { replace: true });
+        return;
+      }
+
+      resume();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to update onboarding profile.");
     } finally {
@@ -128,7 +156,7 @@ const AuthOnboarding = () => {
         </div>
         <h1 className="text-2xl font-semibold">Onboarding complete</h1>
         <p className="text-sm text-muted-foreground">You're all set to book and host on Staylats.</p>
-        <Button onClick={() => navigate("/", { replace: true })}>Go to home</Button>
+        <Button onClick={resume}>{interrupted ? "Continue" : "Go to home"}</Button>
       </div>
     );
   }

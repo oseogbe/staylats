@@ -1,5 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 
+import staylatsLogo from '@/assets/staylats-logo.png';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +14,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthPrompt } from '@/contexts/AuthPromptContext';
-import { useCreateListingPrompt } from '@/contexts/CreateListingPromptContext';
+import { useListPropertyCta } from '@/hooks/use-list-property-cta';
 
 import {
   Menu,
@@ -29,8 +31,8 @@ import {
 const Navbar = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
-  const { openPrompt: openCreateListingPrompt } = useCreateListingPrompt();
   const { openAuthPrompt } = useAuthPrompt();
+  const listProperty = useListPropertyCta();
 
   const openAuthModal = (redirectPath?: string, redirectState?: unknown) =>
     openAuthPrompt({ redirectPath, redirectState });
@@ -49,10 +51,12 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <Link to="/">
-              <h1 className="text-xl sm:text-2xl font-bold text-primary">
-                Staylats
-              </h1>
+            <Link to="/" aria-label="Staylats home">
+              <img
+                src={staylatsLogo}
+                alt="Staylats"
+                className="h-7 w-auto sm:h-8"
+              />
             </Link>
           </div>
 
@@ -69,13 +73,7 @@ const Navbar = () => {
             <Button
               variant="ghost"
               className="hidden lg:flex text-sm text-primary-foreground font-semibold px-3 py-2 rounded-full bg-primary hover:bg-primary/80"
-              onClick={() => {
-                if (isAuthenticated) {
-                  openCreateListingPrompt();
-                } else {
-                  openAuthModal('/host/dashboard', { openCreateListingPrompt: true });
-                }
-              }}
+              onClick={listProperty}
             >
               List your property
             </Button>

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
+import staylatsLogo from "@/assets/staylats-logo.png";
 import Hero from "@/components/Hero";
 import FeaturedProperties from "@/components/FeaturedProperties";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Shield, Users, CheckCircle, BedDouble, House } from "lucide-react";
 
 import { useActiveListings } from "@/hooks/use-listings";
+import { useListPropertyCta } from "@/hooks/use-list-property-cta";
 
 const Index = () => {
   const navigate = useNavigate();
+  const listProperty = useListPropertyCta();
   const { data: activeListings = [] } = useActiveListings({ limit: 6 });
 
   const lagosCount = useMemo(
@@ -216,7 +219,12 @@ const Index = () => {
             Join thousands of hosts earning extra income by listing their properties on Staylats
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="secondary" size="lg" className="text-primary">
+            <Button
+              variant="secondary"
+              size="lg"
+              className="text-primary"
+              onClick={listProperty}
+            >
               List Your Property
             </Button>
             <Button variant="secondary" size="lg" className="text-primary">
@@ -231,7 +239,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-primary mb-4">Staylats</h3>
+              <img src={staylatsLogo} alt="Staylats" className="h-8 w-auto mb-4" />
               <p className="text-neutral-400">
                 Your trusted platform for finding quality accommodations across Nigeria.
               </p>
@@ -247,7 +255,15 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">For Hosts</h4>
               <ul className="space-y-2 text-neutral-400">
-                <li><a href="#" className="hover:text-white transition-colors">List Your Property</a></li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={listProperty}
+                    className="hover:text-white transition-colors"
+                  >
+                    List Your Property
+                  </button>
+                </li>
                 <li><a href="#" className="hover:text-white transition-colors">Host Resources</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Pricing Tips</a></li>
               </ul>
